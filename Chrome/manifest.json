@@ -5,7 +5,8 @@
   "description": "Preview links in a popup without leaving your current page",
   "icons": {
     "48": "icons/link-previewer 48x48.png",
-    "96": "icons/link-previewer 96x96.png"
+    "96": "icons/link-previewer 96x96.png",
+    "128": "icons/link-previewer 128x128.png"
   },
   "permissions": [
     "activeTab",
@@ -31,7 +32,7 @@
     }
   ],
   "action": {
-    "default_icon": "icons/link-previewer 96x96.png",
+    "default_icon": "icons/link-previewer 128x128.png",
     "default_title": "Link Previewer Settings",
     "default_popup": "options/options.html"
   }
