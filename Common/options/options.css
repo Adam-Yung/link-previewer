@@ -127,6 +127,7 @@ h1 {
 /* --- Form Groups & Hover Descriptions --- */
 .form-group {
   margin-bottom: 16px;
+  padding: 0 2px;
   position: relative;
 }
 
@@ -166,8 +167,8 @@ body.dark-theme .description {
 
 input[type="number"], input[type="text"], select, .key-capture {
   width: 100%;
-  min-height: 42px;
-  padding: 10px;
+  min-height: 38px;
+  padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid;
   box-sizing: border-box;
@@ -249,7 +250,7 @@ button[type="submit"].is-saved .button-icon { opacity: 1; transform: scale(1); }
 body.light-theme .site-toggle-container { background-color: #e9ecef; }
 body.dark-theme .site-toggle-container { background-color: #495057; }
 #current-hostname { font-family: monospace; font-size: 16px; font-weight: bold; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 15px; }
-.toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; }
+.toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; top: 3px;}
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; border-radius: 28px; transition: .4s; }
 body.light-theme .slider { background-color: var(--toggle-bg-off); }
