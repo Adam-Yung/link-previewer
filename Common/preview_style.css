@@ -157,3 +157,42 @@
 .resize-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
 .resize-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
 .resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+
+/* Styling for the sleek, insecure link warning pop-up */
+#link-preview-http-warning-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 350px;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 2147483647;
+  text-align: center;
+  color: #333;
+}
+
+/* Style for the buttons in the pop-up */
+.link-preview-popup-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.link-preview-popup-buttons button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.link-preview-popup-buttons button:first-child { background-color: #ddd; }
+.link-preview-popup-buttons button:last-child { background-color: #007bff; color: white; }
+.link-preview-popup-buttons button:hover { background-color: #bbb; }
+.link-preview-popup-buttons button:last-child:hover { background-color: #0056b3; }

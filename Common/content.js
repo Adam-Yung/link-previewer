@@ -1,5 +1,47 @@
 // content.js
 
+/**
+ * Debugging Code
+ */
+
+const ALLOW_DEBUGGING = true;
+
+const LEVEL = {
+  INFO: 0,
+  LOG: 1,
+  ERROR: 2,
+};
+
+// A simple function to format the date
+function formatDate(date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(2);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+function log(msg, level = LEVEL.LOG) {
+  if (!ALLOW_DEBUGGING) return;
+  const time = new Date();
+  const message = `${formatDate(time)}:\n[CONTENT] ${msg}`;
+  switch (level) {
+    case LEVEL.INFO:
+      console.info(message);
+      break;
+    case LEVEL.LOG:
+      console.log(message);
+      break;
+    case LEVEL.ERROR:
+      console.error(message);
+      break;
+  }
+}
+
+
 // Timer for detecting a long click on a link.
 let longClickTimer;
 // Flag to prevent multiple previews from opening simultaneously.
@@ -90,6 +132,12 @@ function createPreview(url) {
   if (isPreviewing) return;
   isPreviewing = true;
   clearTimeout(longClickTimer); // Cancel any pending long-click timer.
+
+  // If the link is insecure HTTP, show a warning pop-up instead of a preview
+  if (url.startsWith('http://')) {
+    createHttpWarningPopup(url);
+    return;
+  }
 
   // console.log(`[CONTENT] Starting preview for: ${url}`);
   // NEW: Save scroll position before applying any styles
@@ -276,6 +324,46 @@ function createPreview(url) {
 
   clickInterceptor.addEventListener('click', closePreview);
   document.addEventListener('keydown', handleEsc);
+}
+
+/**
+ * Creates a sleek, styled pop-up to warn users about insecure HTTP links.
+ * This pop-up provides options to either cancel the action or open the link in a new tab.
+ * @param {string} url The insecure URL that triggered the warning.
+ */
+function createHttpWarningPopup(url) {
+  // Create the pop-up container
+  const popup = document.createElement('div');
+  popup.id = 'link-preview-http-warning-popup';
+  popup.className = 'link-preview-popup'; // Use a general class for styling
+
+  // Add the warning message
+  const message = document.createElement('p');
+  message.textContent = 'This link is insecure (HTTP). Previews are disabled for insecure connections.';
+  log(message.textContent);
+  popup.appendChild(message);
+
+  // Create a button container for actions
+  const buttonContainer = document.createElement('div');
+  buttonContainer.className = 'link-preview-popup-buttons';
+
+  // Add the "Cancel" button
+  const cancelButton = document.createElement('button');
+  cancelButton.textContent = 'Cancel';
+  cancelButton.onclick = () => document.body.removeChild(popup);
+  buttonContainer.appendChild(cancelButton);
+
+  // Add the "Open in New Tab" button
+  const openButton = document.createElement('button');
+  openButton.textContent = 'Open in New Tab';
+  openButton.onclick = () => {
+    window.open(url, '_blank');
+    document.body.removeChild(popup);
+  };
+  buttonContainer.appendChild(openButton);
+
+  popup.appendChild(buttonContainer);
+  document.body.appendChild(popup);
 }
 
 /**
