@@ -1,3 +1,11 @@
+## [1.0.3] - 2025-08-03
+
+### Added
+
+* Support previewing images and gifs
+
+---
+
 ## [1.0.2] - 2025-08-03
 
 ### Changed
