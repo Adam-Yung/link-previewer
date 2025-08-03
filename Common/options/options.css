@@ -80,6 +80,8 @@ body {
   background-color: var(--bg-light);
   color: var(--text-light);
   transition: background-color 0.3s, color 0.3s;
+
+  zoom: 0.9;
 }
 body.dark-theme {
   background-color: var(--bg-dark);
