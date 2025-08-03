@@ -281,6 +281,7 @@ function createPreview(url) {
         }
     };
     container.appendChild(img);
+    addressBar.addEventListener('mousedown', (e) => initDrag(e, container, img));
   } else {
     // Create the iframe where the link content will be loaded.
     const iframe = document.createElement('iframe');
