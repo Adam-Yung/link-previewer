@@ -1,3 +1,12 @@
+## [1.0.2] - 2025-08-03
+
+### Changed
+
+* Reimagined Options UI to a more stylish and sleeker look
+* Made it easier for users to choose Close Preview Key by letting users press the desired key
+
+---
+
 ## [1.0.1] - 2025-08-02
 
 ### Fixed
