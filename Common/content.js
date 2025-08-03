@@ -6,7 +6,7 @@
 
 const ALLOW_DEBUGGING = true;
 
-const LEVEL = {
+const LOGGING = {
   INFO: 0,
   LOG: 1,
   ERROR: 2,
@@ -24,18 +24,18 @@ function formatDate(date) {
   return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 }
 
-function log(msg, level = LEVEL.LOG) {
+function log(msg, level = LOGGING.LOG) {
   if (!ALLOW_DEBUGGING) return;
   const time = new Date();
   const message = `${formatDate(time)}:\n[CONTENT] ${msg}`;
   switch (level) {
-    case LEVEL.INFO:
+    case LOGGING.INFO:
       console.info(message);
       break;
-    case LEVEL.LOG:
+    case LOGGING.LOG:
       console.log(message);
       break;
-    case LEVEL.ERROR:
+    case LOGGING.ERROR:
       console.error(message);
       break;
   }
@@ -139,7 +139,7 @@ function createPreview(url) {
     return;
   }
 
-  // console.log(`[CONTENT] Starting preview for: ${url}`);
+  log(`Starting preview for: ${url}`);
   // NEW: Save scroll position before applying any styles
   scrollX = window.scrollX;
   scrollY = window.scrollY;
@@ -266,17 +266,47 @@ function createPreview(url) {
   loader.innerHTML = `<div class="loader"></div>`;
   container.appendChild(loader);
 
-  // Create the iframe where the link content will be loaded.
-  const iframe = document.createElement('iframe');
-  iframe.id = 'link-preview-iframe';
-  // Add the sandbox attribute specifically for Firefox
-  if (typeof browser !== 'undefined') {
-    iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-presentation';
-  }
-  container.appendChild(iframe);
-  window.scrollTo(scrollX, scrollY);
-  // Enable dragging of the preview window via the address bar.
-  addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
+  // Check if the URL is an image.
+  log("Checking if link is an image!");
+  if (/.*\.(jpeg|jpg|gif|png)$/i.test(url)) {
+    log("Previewing an image!");
+    const img = document.createElement('img');
+    img.id = 'link-preview-image';
+    img.src = url;
+    img.onload = () => {
+        // Hide the loader when the image is loaded.
+        const loader = shadowRoot.getElementById('loader-container');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    };
+    container.appendChild(img);
+  } else {
+    // Create the iframe where the link content will be loaded.
+    const iframe = document.createElement('iframe');
+    iframe.id = 'link-preview-iframe';
+    // Add the sandbox attribute specifically for Firefox
+    if (typeof browser !== 'undefined') {
+        iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-presentation';
+    }
+    container.appendChild(iframe);
+    window.scrollTo(scrollX, scrollY);
+    // Enable dragging of the preview window via the address bar.
+    addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
+
+    // Send a message to the background script to prepare for the preview (e.g., modify headers).
+    chrome.runtime.sendMessage({ action: 'prepareToPreview', url: url })
+        .then(response => {
+            if (response && response.ready) {
+                // Once the background script is ready, set the iframe source.
+                iframe.src = url;
+                checkForIframeReady(iframe, shadowRoot);
+            } else {
+                log('Background script not ready.', LOGGING.ERROR);
+                closePreview();
+            }
+        });
+    }
 
   // Create and attach resize handles for all directions.
   const resizeHandles = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
@@ -284,21 +314,10 @@ function createPreview(url) {
     const handle = document.createElement('div');
     handle.className = `resize-handle ${dir}`;
     container.appendChild(handle);
-    handle.addEventListener('mousedown', (e) => initResize(e, container, iframe, dir));
+    handle.addEventListener('mousedown', (e) => initResize(e, container, container.querySelector('iframe, img'), dir));
   });
 
-  // Send a message to the background script to prepare for the preview (e.g., modify headers).
-  chrome.runtime.sendMessage({ action: 'prepareToPreview', url: url })
-    .then(response => {
-      if (response && response.ready) {
-        // Once the background script is ready, set the iframe source.
-        iframe.src = url;
-        checkForIframeReady(iframe, shadowRoot);
-      } else {
-        console.error('[CONTENT] Background script not ready.');
-        closePreview();
-      }
-    });
+
 
   // --- UI Event Listeners ---
   shadowRoot.getElementById('link-preview-close').addEventListener('click', closePreview);
@@ -411,9 +430,9 @@ function convertToPixels(element) {
  * Initializes the dragging functionality for the preview window.
  * @param {MouseEvent} e The initial mousedown event.
  * @param {HTMLElement} element The element to be dragged (the preview container).
- * @param {HTMLIFrameElement} iframe The iframe inside the container.
+ * @param {HTMLElement} contentElement The iframe or image inside the container.
  */
-function initDrag(e, element, iframe) {
+function initDrag(e, element, contentElement) {
   // Only allow dragging with the primary mouse button and not on control buttons.
   if (e.button !== 0 || e.target.closest('button')) {
     return;
@@ -425,8 +444,10 @@ function initDrag(e, element, iframe) {
   const offsetX = e.clientX - element.offsetLeft;
   const offsetY = e.clientY - element.offsetTop;
 
-  // Disable pointer events on the iframe to prevent it from capturing mouse events during drag.
-  iframe.style.pointerEvents = 'none';
+  // Disable pointer events on the content element to prevent it from capturing mouse events during drag.
+  if (contentElement) {
+    contentElement.style.pointerEvents = 'none';
+  }
 
   /**
    * Updates the element's position as the mouse moves.
@@ -441,7 +462,10 @@ function initDrag(e, element, iframe) {
    * Cleans up event listeners and saves the final position when dragging stops.
    */
   function stopDrag() {
-    iframe.style.pointerEvents = 'auto'; // Re-enable pointer events on the iframe.
+    // Re-enable pointer events on the content element.
+    if (contentElement) {
+        contentElement.style.pointerEvents = 'auto';
+    }
     document.documentElement.removeEventListener('mousemove', doDrag, false);
     document.documentElement.removeEventListener('mouseup', stopDrag, false);
 
@@ -462,13 +486,16 @@ function initDrag(e, element, iframe) {
  * Initializes the resizing functionality for the preview window.
  * @param {MouseEvent} e The initial mousedown event.
  * @param {HTMLElement} element The element to be resized (the preview container).
- * @param {HTMLIFrameElement} iframe The iframe inside the container.
+ * @param {HTMLElement} contentElement The iframe or image inside the container.
  * @param {string} dir The direction of the resize (e.g., 'n', 'se', 'w').
  */
-function initResize(e, element, iframe, dir) {
+function initResize(e, element, contentElement, dir) {
   e.preventDefault();
   convertToPixels(element); // Ensure dimensions and position are in pixels.
-  iframe.style.pointerEvents = 'none'; // Disable iframe interaction during resize.
+  if (contentElement) {
+      contentElement.style.pointerEvents = 'none'; // Disable content interaction during resize.
+  }
+
 
   // Store initial dimensions and mouse position.
   const startX = e.clientX;
@@ -510,7 +537,9 @@ function initResize(e, element, iframe, dir) {
    * Cleans up event listeners and saves the final size and position when resizing stops.
    */
   function stopDrag() {
-    iframe.style.pointerEvents = 'auto'; // Re-enable iframe interaction.
+    if (contentElement) {
+        contentElement.style.pointerEvents = 'auto'; // Re-enable content interaction.
+    }
     document.documentElement.removeEventListener('mousemove', doDrag, false);
     document.documentElement.removeEventListener('mouseup', stopDrag, false);
 
@@ -571,7 +600,6 @@ function closePreview() {
     document.removeEventListener('keydown', handleEsc);
     chrome.runtime.sendMessage({ action: 'clearPreview' }); // Tell background to clean up.
     isPreviewing = false;
-    // console.log('[CONTENT] Preview closed and cleaned up.');
   }, 200); // Delay should be slightly less than animation duration.
 }
 
@@ -600,7 +628,7 @@ document.addEventListener('mousedown', e => {
   if (isPreviewing) return;
   const link = e.target.closest('a');
   // Check if the target is a valid link to preview.
-  if (link && link.href && !link.href.startsWith('javascript:') && link.target !== '_blank') {
+  if (link && link.href && !link.href.startsWith('javascript:')) {
     // If the modifier key is pressed, create the preview immediately.
     if (e[settings.modifier]) {
       e.preventDefault();
