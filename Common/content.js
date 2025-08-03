@@ -332,39 +332,62 @@ function createPreview(url) {
  * @param {string} url The insecure URL that triggered the warning.
  */
 function createHttpWarningPopup(url) {
+  // Create a full-page overlay to dim the background.
+  const overlay = document.createElement('div');
+  overlay.id = 'link-preview-warning-overlay';
+  document.body.appendChild(overlay);
+
   // Create the pop-up container
   const popup = document.createElement('div');
   popup.id = 'link-preview-http-warning-popup';
-  popup.className = 'link-preview-popup'; // Use a general class for styling
+  popup.classList.add(settings.theme); // Add theme class for styling
 
-  // Add the warning message
-  const message = document.createElement('p');
-  message.textContent = 'This link is insecure (HTTP). Previews are disabled for insecure connections.';
-  log(message.textContent);
-  popup.appendChild(message);
+  // Define the SVG icon for the warning.
+  const warningIconSVG = `
+    <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+    </svg>
+  `;
 
-  // Create a button container for actions
-  const buttonContainer = document.createElement('div');
-  buttonContainer.className = 'link-preview-popup-buttons';
-
-  // Add the "Cancel" button
-  const cancelButton = document.createElement('button');
-  cancelButton.textContent = 'Cancel';
-  cancelButton.onclick = () => document.body.removeChild(popup);
-  buttonContainer.appendChild(cancelButton);
-
-  // Add the "Open in New Tab" button
-  const openButton = document.createElement('button');
-  openButton.textContent = 'Open in New Tab';
-  openButton.onclick = () => {
-    window.open(url, '_blank');
-    document.body.removeChild(popup);
-  };
-  buttonContainer.appendChild(openButton);
-
-  popup.appendChild(buttonContainer);
+  // Set the complete inner HTML for the popup.
+  popup.innerHTML = `
+    ${warningIconSVG}
+    <h3>Insecure Link</h3>
+    <p>Link Previewer thinks non-encrypted (HTTP) connections are scary</p>
+    <div class="link-preview-popup-buttons">
+      <button id="warning-cancel">Cancel</button>
+      <button id="warning-open">Open in New Tab</button>
+    </div>
+  `;
   document.body.appendChild(popup);
+
+  // --- Event Handlers & Cleanup ---
+
+  // Define a single function to close the popup and clean up listeners.
+  const closeWarningPopup = () => {
+    popup.remove();
+    overlay.remove();
+    document.removeEventListener('keydown', handleWarningEsc);
+    isPreviewing = false; // Reset the flag to allow new previews.
+  };
+
+  // Handler for the 'Escape' key.
+  const handleWarningEsc = (e) => {
+    if (e.key === settings.closeKey) {
+      closeWarningPopup();
+    }
+  };
+
+  // Attach all event listeners.
+  popup.querySelector('#warning-cancel').addEventListener('click', closeWarningPopup);
+  popup.querySelector('#warning-open').addEventListener('click', () => {
+    window.open(url, '_blank');
+    closeWarningPopup();
+  });
+  overlay.addEventListener('click', closeWarningPopup);
+  document.addEventListener('keydown', handleWarningEsc);
 }
+
 
 /**
  * Converts percentage-based or centered positioning to absolute pixel values.
