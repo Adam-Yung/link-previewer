@@ -1,4 +1,4 @@
-// background.js
+// background.js for Firefox (Manifest V2)
 
 const DEBUG = false;
 function debug(msg) {
@@ -38,11 +38,11 @@ function responseHeadersListener(details) {
   const isPreconnectRequest = details.type === 'xhr' || details.type === 'xmlhttprequest';
 
   if (isPreviewFrame || isPreconnectRequest) {
-    const newHeaders = details.responseHeaders.filter(header => {
+    // Filter out the headers we want to remove or modify.
+    let newHeaders = details.responseHeaders.filter(header => {
       const headerName = header.name.toLowerCase();
-      debug(`[BACKGROUND] Cleaned the response header for iframe display: ${previewingUrl}`);
       return !(
-        headerName === 'content-security-policy' ||
+        headerName === 'content-security-policy' || // Remove the original CSP
         headerName === 'x-frame-options' ||
         headerName === 'x-content-type-options' ||
         headerName === 'cross-origin-embedder-policy' ||
@@ -51,6 +51,13 @@ function responseHeadersListener(details) {
         headerName === 'referrer-policy'
       );
     });
+
+    newHeaders.push({
+      name: 'Content-Security-Policy',
+      value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation;"
+    });
+
+    debug(`[BACKGROUND] Modified response headers for iframe display: ${previewingUrl}`);
     return { responseHeaders: newHeaders };
   }
   return { responseHeaders: details.responseHeaders };
@@ -68,7 +75,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(
 browser.webRequest.onHeadersReceived.addListener(
   responseHeadersListener,
   { urls: ["<all_urls>"], types: ["sub_frame", "xhr", "xmlhttprequest"] },
-  ["blocking", "responseHeaders"]
+  ["blocking", "responseHeaders", "responseHeaders"]
 );
 
 
@@ -105,6 +112,5 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case 'closePreviewFromIframe':
       browser.tabs.sendMessage(sender.tab.id, {action: 'closePreviewFromIframe'});
       break;
-
   }
 });

@@ -293,9 +293,6 @@ function createPreview(url) {
     } else {
       const iframe = document.createElement('iframe');
       iframe.id = 'link-preview-iframe';
-      if (typeof browser !== 'undefined') {
-        iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-presentation';
-      }
       container.appendChild(iframe);
       addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
       try {
