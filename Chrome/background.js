@@ -82,6 +82,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   } else if (request.action === 'updatePreviewUrl') {
       chrome.tabs.sendMessage(sender.tab.id, {action: 'updatePreviewUrl', url: request.url});
+  } else if (request.action === 'closePreviewFromIframe') {
+      chrome.tabs.sendMessage(sender.tab.id, {action: 'closePreviewFromIframe'});
   } else if (request.action === 'clearPreview') {
     const tabId = sender.tab.id;
     if (previewingTabIds.has(tabId)) {

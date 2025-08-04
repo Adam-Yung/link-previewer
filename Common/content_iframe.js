@@ -2,6 +2,18 @@
 
 // Check if this script is running inside an iframe
 if (window.self !== window.top) {
+  let closeKey = "Escape";
+
+  chrome.storage.local.get('closeKey').then(result => {
+    closeKey = result.closeKey || "Escape";
+  });
+
+  document.addEventListener('keydown', (e) => {
+      if (e.key === closeKey) {
+        chrome.runtime.sendMessage({ action: 'closePreviewFromIframe'})
+    }
+  });
+
   // Listen for 'mousedown' to initiate either a long-press or a modifier-key preview.
   // Using the capture phase (true) to catch the event early.
   document.addEventListener('mousedown', e => {

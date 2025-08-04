@@ -386,6 +386,9 @@ function createPreview(url) {
         if (request.action === 'updatePreviewUrl') {
             navigateTo(request.url);
         }
+        else if (request.action === 'closePreviewFromIframe') {
+            closePreview();
+        }
     };
     chrome.runtime.onMessage.addListener(messageListener);
 
