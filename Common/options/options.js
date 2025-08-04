@@ -21,7 +21,8 @@ const defaults = {
     closeKey: 'Escape',
     width: '90vw',
     height: '90vh',
-    disabledSites: [] // Now an array of hostnames
+    disabledSites: [], // Now an array of hostnames
+    loadingAnimation: 'blue' // Default loading animation
 };
 
 /**
@@ -51,7 +52,8 @@ function saveOptions(e) {
     theme: themeToggle.checked ? 'dark' : 'light',
     closeKey: keyToSave,
     width: document.getElementById('width').value,
-    height: document.getElementById('height').value
+    height: document.getElementById('height').value,
+    loadingAnimation: document.getElementById('loadingAnimation').value
   };
 
   chrome.storage.local.get('disabledSites').then(data => {
@@ -127,6 +129,7 @@ function restoreOptions() {
 
         document.getElementById('width').value = items.width;
         document.getElementById('height').value = items.height;
+        document.getElementById('loadingAnimation').value = items.loadingAnimation;
         applyTheme(items.theme);
 
         if (currentHostname) {
