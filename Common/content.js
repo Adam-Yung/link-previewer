@@ -41,28 +41,12 @@ function log(msg, level = LOGGING.LOG) {
   }
 }
 
-
-// Check if this script is running inside an iframe
-if (window.self !== window.top) {
-  // Listen for 'mousedown' to initiate either a long-press or a modifier-key preview.
-  // Using the capture phase (true) to catch the event early.
-  document.addEventListener('mousedown', e => {
-    const link = e.target.closest('a');
-    // Check if the target is a valid link to preview.
-    if (link && link.href && !link.href.startsWith('javascript:')) {
-      const url = link.href;
-      log(`User clicked a link inside of the iFrame: ${url}`);
-      chrome.runtime.sendMessage({ action: 'updatePreviewUrl', url: url })
-    }
-  }, true);
-}
-else {
-  // Timer for detecting a long click on a link.
-  let longClickTimer;
-  // Flag to prevent multiple previews from opening simultaneously.
-  let isPreviewing = false;
-  // Default settings for the preview window. These can be overridden by user settings from chrome.storage.
-  let settings = {
+// Timer for detecting a long click on a link.
+let longClickTimer;
+// Flag to prevent multiple previews from opening simultaneously.
+let isPreviewing = false;
+// Default settings for the preview window. These can be overridden by user settings from chrome.storage.
+let settings = {
     duration: 500,       // Milliseconds for a long press to trigger the preview.
     modifier: 'shiftKey',// Modifier key (e.g., 'shiftKey', 'ctrlKey', 'altKey') to trigger preview on click.
     theme: 'light',      // The color theme for the preview window ('light' or 'dark').
@@ -72,77 +56,77 @@ else {
     top: '50%',          // Default top position.
     left: '50%',          // Default left position.
     disabledSites: []    // Array of disabled hostnames.
-  };
+};
 
-  // Variables to store the original overflow styles of the page to restore them later.
-  let originalBodyOverflow;
-  let originalDocumentOverflow;
-  let originalVisibilityStates = [];
-  let isCurrentSiteDisabled = false;
-  // NEW: Variables to store scroll position
-  let scrollX = 0;
-  let scrollY = 0;
+// Variables to store the original overflow styles of the page to restore them later.
+let originalBodyOverflow;
+let originalDocumentOverflow;
+let originalVisibilityStates = [];
+let isCurrentSiteDisabled = false;
+// NEW: Variables to store scroll position
+let scrollX = 0;
+let scrollY = 0;
 
 
-  // --- Initialization ---
+// --- Initialization ---
 
-  // Load user settings from chrome.storage and check if this site is disabled.
-  chrome.storage.local.get(settings).then(loadedSettings => {
+// Load user settings from chrome.storage and check if this site is disabled.
+chrome.storage.local.get(settings).then(loadedSettings => {
     Object.assign(settings, loadedSettings);
     // Check if the current page's hostname is in the disabled list.
     if (Array.isArray(settings.disabledSites)) {
-      isCurrentSiteDisabled = settings.disabledSites.includes(window.location.hostname);
-    }
-  });
-
-  // Listen for changes in storage and update the local settings object in real-time.
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local') {
-      let settingsChanged = false;
-      for (let key in changes) {
-        if (settings.hasOwnProperty(key)) {
-          settings[key] = changes[key].newValue;
-          settingsChanged = true;
-        }
-      }
-      if (settingsChanged && Array.isArray(settings.disabledSites)) {
         isCurrentSiteDisabled = settings.disabledSites.includes(window.location.hostname);
-      }
     }
-  });
+});
+
+// Listen for changes in storage and update the local settings object in real-time.
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+        let settingsChanged = false;
+        for (let key in changes) {
+            if (settings.hasOwnProperty(key)) {
+                settings[key] = changes[key].newValue;
+                settingsChanged = true;
+            }
+        }
+        if (settingsChanged && Array.isArray(settings.disabledSites)) {
+            isCurrentSiteDisabled = settings.disabledSites.includes(window.location.hostname);
+        }
+    }
+});
 
 
-  /**
-   * Recursively checks if an iframe's content has finished loading.
-   * Once loaded, it adds a 'loaded' class to the iframe and hides the loading spinner.
-   * @param {HTMLIFrameElement} frame The iframe element to check.
-   * @param {ShadowRoot} shadowRoot The shadow root containing the loader element.
-   */
-  function checkForIframeReady(frame, shadowRoot) {
+/**
+ * Recursively checks if an iframe's content has finished loading.
+ * Once loaded, it adds a 'loaded' class to the iframe and hides the loading spinner.
+ * @param {HTMLIFrameElement} frame The iframe element to check.
+ * @param {ShadowRoot} shadowRoot The shadow root containing the loader element.
+ */
+function checkForIframeReady(frame, shadowRoot) {
     const iframeDoc = frame && (frame.contentDocument || (frame.contentWindow && frame.contentWindow.document));
 
     // Check if the iframe document is fully loaded or interactive.
     if (iframeDoc && (iframeDoc.readyState === 'interactive' || iframeDoc.readyState === 'complete')) {
-      frame.classList.add('loaded'); // Add class for fade-in animation.
-      // Hide the loader with a small delay to allow the fade-in to be smooth.
-      setTimeout(() => {
-        const loader = shadowRoot.getElementById('loader-container');
-        if (loader) {
-          loader.style.display = 'none';
-        }
-      }, 400);
+        frame.classList.add('loaded'); // Add class for fade-in animation.
+        // Hide the loader with a small delay to allow the fade-in to be smooth.
+        setTimeout(() => {
+            const loader = shadowRoot.getElementById('loader-container');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }, 400);
     } else {
-      // If not ready, check again on the next animation frame.
-      requestAnimationFrame(() => { checkForIframeReady(frame, shadowRoot) });
+        // If not ready, check again on the next animation frame.
+        requestAnimationFrame(() => { checkForIframeReady(frame, shadowRoot) });
     }
-  }
+}
 
-  /**
-   * Creates and displays the link preview modal.
-   * This includes the overlay, shadow DOM container, iframe, and all UI controls.
-   * @param {string} url The URL to be loaded in the preview iframe.
-   */
-  function createPreview(url) {
+/**
+ * Creates and displays the link preview modal.
+ * This includes the overlay, shadow DOM container, iframe, and all UI controls.
+ * @param {string} url The URL to be loaded in the preview iframe.
+ */
+function createPreview(url) {
     // Prevent multiple previews.
     if (isPreviewing) return;
     isPreviewing = true;
@@ -150,8 +134,8 @@ else {
 
     // If the link is insecure HTTP, show a warning pop-up instead of a preview
     if (url.startsWith('http://')) {
-      createHttpWarningPopup(url);
-      return;
+        createHttpWarningPopup(url);
+        return;
     }
 
     log(`Starting preview for: ${url}`);
@@ -173,15 +157,15 @@ else {
     const pageOverlay = document.createElement('div');
     pageOverlay.id = 'link-preview-page-overlay';
     Object.assign(pageOverlay.style, {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      zIndex: '2147483646', // High z-index to be on top of most elements.
-      opacity: '0',
-      transition: 'opacity 0.3s ease'
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        zIndex: '2147483646', // High z-index to be on top of most elements.
+        opacity: '0',
+        transition: 'opacity 0.3s ease'
     });
     document.body.appendChild(pageOverlay);
 
@@ -214,20 +198,20 @@ else {
 
     // Save original states and then hide elements
     for (const child of document.body.children) {
-      if (child.id !== 'link-preview-host' && child.tagName !== 'SCRIPT') {
-        // Save the original value (even if it's empty)
-        originalVisibilityStates.push({
-          element: child,
-          originalValue: child.style.getPropertyValue('content-visibility')
-        });
-        // Now, set the new value
-        child.style.setProperty('content-visibility', 'auto', 'important');
-      }
+        if (child.id !== 'link-preview-host' && child.tagName !== 'SCRIPT') {
+            // Save the original value (even if it's empty)
+            originalVisibilityStates.push({
+                element: child,
+                originalValue: child.style.getPropertyValue('content-visibility')
+            });
+            // Now, set the new value
+            child.style.setProperty('content-visibility', 'auto', 'important');
+        }
     }
 
     // Animate the overlay's opacity for a smooth fade-in effect.
     requestAnimationFrame(() => {
-      pageOverlay.style.opacity = '1';
+        pageOverlay.style.opacity = '1';
     });
 
     // Attach a shadow root to encapsulate the preview's styles and DOM.
@@ -257,7 +241,7 @@ else {
 
     // If using percentage-based positioning, add a class for CSS transform-based centering.
     if (settings.top.includes('%') || settings.left.includes('%')) {
-      container.classList.add('is-centered');
+        container.classList.add('is-centered');
     }
 
     shadowRoot.appendChild(container);
@@ -271,20 +255,20 @@ else {
     addressBar.id = 'link-preview-address-bar';
     addressBar.innerHTML = `
       <div class="link-preview-nav-controls">
-        <button id="link-preview-back" title="Go back" disabled><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-        <button id="link-preview-forward" title="Go forward" disabled><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        <button id="link-preview-back" title="Go back" disabled>${backIcon}</button>
+        <button id="link-preview-forward" title="Go forward" disabled>${forwardIcon}</button>
       </div>
       <div class="url-container">
         <span class="link-preview-url">${url}</span>
         <button id="link-preview-copy" title="Copy URL">
-            <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <svg class="tick-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            ${copyIcon}
+            ${tickIcon}
         </button>
       </div>
       <div class="link-preview-controls">
-        <button id="link-preview-restore" title="Restore default size and position"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M3 15l6-6M21 9l-6 6"/></svg></button>
-        <button id="link-preview-enlarge" title="Open in new tab"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></button>
-        <button id="link-preview-close" title="Close preview"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        <button id="link-preview-restore" title="Restore default size and position">${restoreIcon}</button>
+        <button id="link-preview-enlarge" title="Open in new tab">${enlargeIcon}</button>
+        <button id="link-preview-close" title="Close preview">${closeIcon}</button>
       </div>
     `;
     container.appendChild(addressBar);
@@ -294,8 +278,8 @@ else {
     const copyButton = shadowRoot.getElementById('link-preview-copy');
 
     function updateNavButtons() {
-      backButton.disabled = historyIndex === 0;
-      forwardButton.disabled = historyIndex >= history.length - 1;
+        backButton.disabled = historyIndex === 0;
+        forwardButton.disabled = historyIndex >= history.length - 1;
     }
 
     // Create the loading spinner.
@@ -305,103 +289,103 @@ else {
     container.appendChild(loader);
 
     function renderUrl(urlToRender) {
-      const urlSpan = shadowRoot.querySelector('.link-preview-url');
-      if (urlSpan) {
-        urlSpan.textContent = urlToRender;
-      }
-
-      const isImage = /.*\.(jpeg|jpg|gif|png)$/i.test(urlToRender);
-      const existingIframe = shadowRoot.getElementById('link-preview-iframe');
-      const existingImage = shadowRoot.getElementById('link-preview-image');
-
-      if (existingIframe) existingIframe.remove();
-      if (existingImage) existingImage.remove();
-
-      const loader = shadowRoot.getElementById('loader-container');
-      if (loader) loader.style.display = 'flex';
-
-
-      if (isImage) {
-        log("Previewing an image!");
-        const img = document.createElement('img');
-        img.id = 'link-preview-image';
-        img.src = urlToRender;
-        img.onload = () => {
-          if (loader) {
-            loader.style.display = 'none';
-          }
-        };
-        container.appendChild(img);
-        addressBar.addEventListener('mousedown', (e) => initDrag(e, container, img));
-      } else {
-        const iframe = document.createElement('iframe');
-        iframe.id = 'link-preview-iframe';
-        if (typeof browser !== 'undefined') {
-          iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-presentation';
+        const urlSpan = shadowRoot.querySelector('.link-preview-url');
+        if (urlSpan) {
+            urlSpan.textContent = urlToRender;
         }
-        container.appendChild(iframe);
-        addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
-        try {
-          chrome.runtime.sendMessage({ action: 'prepareToPreview', url: urlToRender })
-            .then(response => {
-              if (response && response.ready) {
-                iframe.src = urlToRender;
-                checkForIframeReady(iframe, shadowRoot);
-              } else {
-                log('Background script not ready.', LOGGING.ERROR);
+
+        const isImage = /.*\.(jpeg|jpg|gif|png)$/i.test(urlToRender);
+        const existingIframe = shadowRoot.getElementById('link-preview-iframe');
+        const existingImage = shadowRoot.getElementById('link-preview-image');
+
+        if (existingIframe) existingIframe.remove();
+        if (existingImage) existingImage.remove();
+
+        const loader = shadowRoot.getElementById('loader-container');
+        if (loader) loader.style.display = 'flex';
+
+
+        if (isImage) {
+            log("Previewing an image!");
+            const img = document.createElement('img');
+            img.id = 'link-preview-image';
+            img.src = urlToRender;
+            img.onload = () => {
+                if (loader) {
+                    loader.style.display = 'none';
+                }
+            };
+            container.appendChild(img);
+            addressBar.addEventListener('mousedown', (e) => initDrag(e, container, img));
+        } else {
+            const iframe = document.createElement('iframe');
+            iframe.id = 'link-preview-iframe';
+            if (typeof browser !== 'undefined') {
+                iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-presentation';
+            }
+            container.appendChild(iframe);
+            addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
+            try {
+                chrome.runtime.sendMessage({ action: 'prepareToPreview', url: urlToRender })
+                    .then(response => {
+                        if (response && response.ready) {
+                            iframe.src = urlToRender;
+                            checkForIframeReady(iframe, shadowRoot);
+                        } else {
+                            log('Background script not ready.', LOGGING.ERROR);
+                            showContextExpiredPopup();
+                        }
+                    }).catch(error => {
+                        log(`Error sending prepareToPreview message: ${error}`, LOGGING.ERROR);
+                        showContextExpiredPopup();
+                    });
+            } catch (error) {
+                log(`Error: ${error}`, LOGGING.ERROR);
                 showContextExpiredPopup();
-              }
-            }).catch(error => {
-                log(`Error sending prepareToPreview message: ${error}`, LOGGING.ERROR);
-                showContextExpiredPopup();
-            });
-        } catch (error) {
-          log(`Error: ${error}`, LOGGING.ERROR);
-          showContextExpiredPopup();
+            }
         }
-      }
     }
 
     function navigateTo(newUrl) {
-      // If we are navigating from a point in history, truncate the future history
-      if (historyIndex < history.length - 1) {
-        history = history.slice(0, historyIndex + 1);
-      }
-      history.push(newUrl);
-      historyIndex = history.length - 1;
-      updateNavButtons();
-      renderUrl(newUrl);
+        // If we are navigating from a point in history, truncate the future history
+        if (historyIndex < history.length - 1) {
+            history = history.slice(0, historyIndex + 1);
+        }
+        history.push(newUrl);
+        historyIndex = history.length - 1;
+        updateNavButtons();
+        renderUrl(newUrl);
     }
 
     backButton.addEventListener('click', () => {
-      if (historyIndex > 0) {
-        historyIndex--;
-        updateNavButtons();
-        renderUrl(history[historyIndex]);
-      }
+        if (historyIndex > 0) {
+            historyIndex--;
+            updateNavButtons();
+            renderUrl(history[historyIndex]);
+        }
     });
 
     forwardButton.addEventListener('click', () => {
-      if (historyIndex < history.length - 1) {
-        historyIndex++;
-        updateNavButtons();
-        renderUrl(history[historyIndex]);
-      }
+        if (historyIndex < history.length - 1) {
+            historyIndex++;
+            updateNavButtons();
+            renderUrl(history[historyIndex]);
+        }
     });
 
     copyButton.addEventListener('click', () => {
-      navigator.clipboard.writeText(history[historyIndex]).then(() => {
-        if (!copyButton.classList.contains('copied')) {
-          copyButton.classList.add('copied');
-          setTimeout(() => copyButton.classList.remove('copied'), 1500);
-        }
-      });
+        navigator.clipboard.writeText(history[historyIndex]).then(() => {
+            if (!copyButton.classList.contains('copied')) {
+                copyButton.classList.add('copied');
+                setTimeout(() => copyButton.classList.remove('copied'), 1500);
+            }
+        });
     });
 
     const messageListener = (request) => {
-      if (request.action === 'updatePreviewUrl') {
-        navigateTo(request.url);
-      }
+        if (request.action === 'updatePreviewUrl') {
+            navigateTo(request.url);
+        }
     };
     chrome.runtime.onMessage.addListener(messageListener);
 
@@ -412,10 +396,10 @@ else {
     // Create and attach resize handles for all directions.
     const resizeHandles = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
     resizeHandles.forEach(dir => {
-      const handle = document.createElement('div');
-      handle.className = `resize-handle ${dir}`;
-      container.appendChild(handle);
-      handle.addEventListener('mousedown', (e) => initResize(e, container, container.querySelector('iframe, img'), dir));
+        const handle = document.createElement('div');
+        handle.className = `resize-handle ${dir}`;
+        container.appendChild(handle);
+        handle.addEventListener('mousedown', (e) => initResize(e, container, container.querySelector('iframe, img'), dir));
     });
 
 
@@ -423,43 +407,43 @@ else {
     // --- UI Event Listeners ---
     shadowRoot.getElementById('link-preview-close').addEventListener('click', closePreview);
     shadowRoot.getElementById('link-preview-enlarge').addEventListener('click', () => {
-      const _url = shadowRoot.getElementById('link-preview-iframe')?.src || url;
-      log(`Opening URL in new tab: ${_url}`);
-      window.open(_url, '_blank');
-      closePreview();
+        const _url = shadowRoot.getElementById('link-preview-iframe')?.src || url;
+        log(`Opening URL in new tab: ${_url}`);
+        window.open(_url, '_blank');
+        closePreview();
     });
     // Restore the preview window to its default size and position and save it.
     shadowRoot.getElementById('link-preview-restore').addEventListener('click', () => {
-      container.style.width = '90vw';
-      container.style.height = '90vh';
-      container.style.top = '50%';
-      container.style.left = '50%';
-      container.classList.add('is-centered');
-      // Save the restored state to storage.
-      chrome.storage.local.set({
-        width: container.style.width,
-        height: container.style.height,
-        top: container.style.top,
-        left: container.style.left
-      });
+        container.style.width = '90vw';
+        container.style.height = '90vh';
+        container.style.top = '50%';
+        container.style.left = '50%';
+        container.classList.add('is-centered');
+        // Save the restored state to storage.
+        chrome.storage.local.set({
+            width: container.style.width,
+            height: container.style.height,
+            top: container.style.top,
+            left: container.style.left
+        });
     });
 
     clickInterceptor.addEventListener('click', closePreview);
     document.addEventListener('keydown', handleEsc);
-  }
+}
 
-  /**
- * Creates a generic, styled pop-up for warnings or information.
- * @param {object} options - Configuration for the popup.
- * @param {string} options.id - The ID for the popup element.
- * @param {string} options.icon - SVG string for the icon.
- * @param {string} options.title - The title of the popup.
- * @param {string} options.message - The main message body.
- * @param {Array<object>} options.buttons - Array of button configurations.
- * - {string} id - The ID for the button.
- * - {string} text - The text content of the button.
- * - {function} onClick - The click handler for the button.
- */
+/**
+* Creates a generic, styled pop-up for warnings or information.
+* @param {object} options - Configuration for the popup.
+* @param {string} options.id - The ID for the popup element.
+* @param {string} options.icon - SVG string for the icon.
+* @param {string} options.title - The title of the popup.
+* @param {string} options.message - The main message body.
+* @param {Array<object>} options.buttons - Array of button configurations.
+* - {string} id - The ID for the button.
+* - {string} text - The text content of the button.
+* - {function} onClick - The click handler for the button.
+*/
 function createWarningPopup({ id, icon, title, message, buttons }) {
     // Create a full-page overlay to dim the background.
     const overlay = document.createElement('div');
@@ -558,34 +542,34 @@ function showContextExpiredPopup() {
 }
 
 
-  /**
-   * Converts percentage-based or centered positioning to absolute pixel values.
-   * This is necessary before starting a drag or resize operation to ensure smooth interaction.
-   * @param {HTMLElement} element The element to convert (the preview container).
-   */
-  function convertToPixels(element) {
+/**
+ * Converts percentage-based or centered positioning to absolute pixel values.
+ * This is necessary before starting a drag or resize operation to ensure smooth interaction.
+ * @param {HTMLElement} element The element to convert (the preview container).
+ */
+function convertToPixels(element) {
     // If the element is centered using transforms, calculate its absolute pixel position.
     if (element.classList.contains('is-centered')) {
-      const rect = element.getBoundingClientRect();
-      element.style.left = `${rect.left}px`;
-      element.style.top = `${rect.top}px`;
-      element.style.width = `${rect.width}px`;
-      element.style.height = `${rect.height}px`;
-      element.classList.remove('is-centered'); // Remove the class that applies the transform.
-      element.style.animation = 'none'; // Disable animations that might interfere.
+        const rect = element.getBoundingClientRect();
+        element.style.left = `${rect.left}px`;
+        element.style.top = `${rect.top}px`;
+        element.style.width = `${rect.width}px`;
+        element.style.height = `${rect.height}px`;
+        element.classList.remove('is-centered'); // Remove the class that applies the transform.
+        element.style.animation = 'none'; // Disable animations that might interfere.
     }
-  }
+}
 
-  /**
-   * Initializes the dragging functionality for the preview window.
-   * @param {MouseEvent} e The initial mousedown event.
-   * @param {HTMLElement} element The element to be dragged (the preview container).
-   * @param {HTMLElement} contentElement The iframe or image inside the container.
-   */
-  function initDrag(e, element, contentElement) {
+/**
+ * Initializes the dragging functionality for the preview window.
+ * @param {MouseEvent} e The initial mousedown event.
+ * @param {HTMLElement} element The element to be dragged (the preview container).
+ * @param {HTMLElement} contentElement The iframe or image inside the container.
+ */
+function initDrag(e, element, contentElement) {
     // Only allow dragging with the primary mouse button and not on control buttons.
     if (e.button !== 0 || e.target.closest('button')) {
-      return;
+        return;
     }
     e.preventDefault();
     convertToPixels(element); // Ensure positioning is in pixels.
@@ -596,7 +580,7 @@ function showContextExpiredPopup() {
 
     // Disable pointer events on the content element to prevent it from capturing mouse events during drag.
     if (contentElement) {
-      contentElement.style.pointerEvents = 'none';
+        contentElement.style.pointerEvents = 'none';
     }
 
     /**
@@ -604,46 +588,46 @@ function showContextExpiredPopup() {
      * @param {MouseEvent} e The mousemove event.
      */
     function doDrag(e) {
-      element.style.left = `${e.clientX - offsetX}px`;
-      element.style.top = `${e.clientY - offsetY}px`;
+        element.style.left = `${e.clientX - offsetX}px`;
+        element.style.top = `${e.clientY - offsetY}px`;
     }
 
     /**
      * Cleans up event listeners and saves the final position when dragging stops.
      */
     function stopDrag() {
-      // Re-enable pointer events on the content element.
-      if (contentElement) {
-        contentElement.style.pointerEvents = 'auto';
-      }
-      document.documentElement.removeEventListener('mousemove', doDrag, false);
-      document.documentElement.removeEventListener('mouseup', stopDrag, false);
+        // Re-enable pointer events on the content element.
+        if (contentElement) {
+            contentElement.style.pointerEvents = 'auto';
+        }
+        document.documentElement.removeEventListener('mousemove', doDrag, false);
+        document.documentElement.removeEventListener('mouseup', stopDrag, false);
 
-      // Save the new position to user settings.
-      chrome.storage.local.set({
-        top: element.style.top,
-        left: element.style.left
-      });
+        // Save the new position to user settings.
+        chrome.storage.local.set({
+            top: element.style.top,
+            left: element.style.left
+        });
     }
 
     // Add the listeners to the entire document to handle mouse movement anywhere on the page.
     document.documentElement.addEventListener('mousemove', doDrag, false);
     document.documentElement.addEventListener('mouseup', stopDrag, false);
-  }
+}
 
 
-  /**
-   * Initializes the resizing functionality for the preview window.
-   * @param {MouseEvent} e The initial mousedown event.
-   * @param {HTMLElement} element The element to be resized (the preview container).
-   * @param {HTMLElement} contentElement The iframe or image inside the container.
-   * @param {string} dir The direction of the resize (e.g., 'n', 'se', 'w').
-   */
-  function initResize(e, element, contentElement, dir) {
+/**
+ * Initializes the resizing functionality for the preview window.
+ * @param {MouseEvent} e The initial mousedown event.
+ * @param {HTMLElement} element The element to be resized (the preview container).
+ * @param {HTMLElement} contentElement The iframe or image inside the container.
+ * @param {string} dir The direction of the resize (e.g., 'n', 'se', 'w').
+ */
+function initResize(e, element, contentElement, dir) {
     e.preventDefault();
     convertToPixels(element); // Ensure dimensions and position are in pixels.
     if (contentElement) {
-      contentElement.style.pointerEvents = 'none'; // Disable content interaction during resize.
+        contentElement.style.pointerEvents = 'none'; // Disable content interaction during resize.
     }
 
 
@@ -660,56 +644,56 @@ function showContextExpiredPopup() {
      * @param {MouseEvent} e The mousemove event.
      */
     function doDrag(e) {
-      let newWidth = startWidth;
-      let newHeight = startHeight;
-      let newLeft = startLeft;
-      let newTop = startTop;
+        let newWidth = startWidth;
+        let newHeight = startHeight;
+        let newLeft = startLeft;
+        let newTop = startTop;
 
-      // Calculate new width, height, and position based on the resize direction.
-      if (dir.includes('e')) { newWidth = startWidth + e.clientX - startX; }
-      if (dir.includes('w')) {
-        newWidth = startWidth - (e.clientX - startX);
-        newLeft = startLeft + e.clientX - startX;
-      }
-      if (dir.includes('s')) { newHeight = startHeight + e.clientY - startY; }
-      if (dir.includes('n')) {
-        newHeight = startHeight - (e.clientY - startY);
-        newTop = startTop + e.clientY - startY;
-      }
+        // Calculate new width, height, and position based on the resize direction.
+        if (dir.includes('e')) { newWidth = startWidth + e.clientX - startX; }
+        if (dir.includes('w')) {
+            newWidth = startWidth - (e.clientX - startX);
+            newLeft = startLeft + e.clientX - startX;
+        }
+        if (dir.includes('s')) { newHeight = startHeight + e.clientY - startY; }
+        if (dir.includes('n')) {
+            newHeight = startHeight - (e.clientY - startY);
+            newTop = startTop + e.clientY - startY;
+        }
 
-      element.style.width = `${newWidth}px`;
-      element.style.height = `${newHeight}px`;
-      element.style.left = `${newLeft}px`;
-      element.style.top = `${newTop}px`;
+        element.style.width = `${newWidth}px`;
+        element.style.height = `${newHeight}px`;
+        element.style.left = `${newLeft}px`;
+        element.style.top = `${newTop}px`;
     }
 
     /**
      * Cleans up event listeners and saves the final size and position when resizing stops.
      */
     function stopDrag() {
-      if (contentElement) {
-        contentElement.style.pointerEvents = 'auto'; // Re-enable content interaction.
-      }
-      document.documentElement.removeEventListener('mousemove', doDrag, false);
-      document.documentElement.removeEventListener('mouseup', stopDrag, false);
+        if (contentElement) {
+            contentElement.style.pointerEvents = 'auto'; // Re-enable content interaction.
+        }
+        document.documentElement.removeEventListener('mousemove', doDrag, false);
+        document.documentElement.removeEventListener('mouseup', stopDrag, false);
 
-      // Save the new dimensions and position to user settings.
-      chrome.storage.local.set({
-        width: element.style.width,
-        height: element.style.height,
-        top: element.style.top,
-        left: element.style.left
-      });
+        // Save the new dimensions and position to user settings.
+        chrome.storage.local.set({
+            width: element.style.width,
+            height: element.style.height,
+            top: element.style.top,
+            left: element.style.left
+        });
     }
     // Add listeners to the document to handle resizing from anywhere on the page.
     document.documentElement.addEventListener('mousemove', doDrag, false);
     document.documentElement.addEventListener('mouseup', stopDrag, false);
-  }
+}
 
-  /**
-   * Closes the preview window and cleans up all related elements and event listeners.
-   */
-  function closePreview() {
+/**
+ * Closes the preview window and cleans up all related elements and event listeners.
+ */
+function closePreview() {
     if (!isPreviewing) return;
 
     const previewHost = document.getElementById('link-preview-host');
@@ -718,125 +702,124 @@ function showContextExpiredPopup() {
 
     // Trigger fade-out animations.
     if (previewHost) {
-      const container = previewHost.shadowRoot.getElementById('link-preview-container');
-      if (container) {
-        container.style.animation = 'fadeOut 0.3s forwards ease-out';
-      }
+        const container = previewHost.shadowRoot.getElementById('link-preview-container');
+        if (container) {
+            container.style.animation = 'fadeOut 0.3s forwards ease-out';
+        }
     }
     if (pageOverlay) { pageOverlay.style.opacity = '0'; }
 
     // After the animations, remove elements and restore the page state.
     setTimeout(() => {
-      if (previewHost) previewHost.remove();
-      if (pageOverlay) pageOverlay.remove();
-      if (pauseStyle) pauseStyle.remove();
+        if (previewHost) previewHost.remove();
+        if (pageOverlay) pageOverlay.remove();
+        if (pauseStyle) pauseStyle.remove();
 
-      // Restore the original content-visibility states
-      for (const state of originalVisibilityStates) {
-        state.element.style.setProperty('content-visibility', state.originalValue);
-      }
-      // Clean up the array
-      originalVisibilityStates = [];
+        // Restore the original content-visibility states
+        for (const state of originalVisibilityStates) {
+            state.element.style.setProperty('content-visibility', state.originalValue);
+        }
+        // Clean up the array
+        originalVisibilityStates = [];
 
-      // Restore page functionality.
-      document.body.style.pointerEvents = 'auto';
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalDocumentOverflow;
+        // Restore page functionality.
+        document.body.style.pointerEvents = 'auto';
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalDocumentOverflow;
 
-      // NEW: Restore scroll position
-      window.scrollTo(scrollX, scrollY);
+        // NEW: Restore scroll position
+        window.scrollTo(scrollX, scrollY);
 
-      // Clean up global listeners and state.
-      document.removeEventListener('keydown', handleEsc);
-      chrome.runtime.sendMessage({ action: 'clearPreview' }); // Tell background to clean up.
-      isPreviewing = false;
+        // Clean up global listeners and state.
+        document.removeEventListener('keydown', handleEsc);
+        chrome.runtime.sendMessage({ action: 'clearPreview' }); // Tell background to clean up.
+        isPreviewing = false;
     }, 200); // Delay should be slightly less than animation duration.
-  }
+}
 
 
-  /**
-   * Handles the keydown event to close the preview on 'Escape'.
-   * @param {KeyboardEvent} e The keydown event.
-   */
-  function handleEsc(e) {
+/**
+ * Handles the keydown event to close the preview on 'Escape'.
+ * @param {KeyboardEvent} e The keydown event.
+ */
+function handleEsc(e) {
     if (e.key === settings.closeKey) {
-      closePreview();
+        closePreview();
     }
-  }
+}
 
 
-  // --- Global Event Listeners for Triggering Previews ---
+// --- Global Event Listeners for Triggering Previews ---
 
-  // Listen for 'mousedown' to initiate either a long-press or a modifier-key preview.
-  // Using the capture phase (true) to catch the event early.
-  document.addEventListener('mousedown', e => {
+// Listen for 'mousedown' to initiate either a long-press or a modifier-key preview.
+// Using the capture phase (true) to catch the event early.
+document.addEventListener('mousedown', e => {
     // Check if the current site is disabled
     if (isCurrentSiteDisabled) {
-      return;
+        return;
     }
     // Don't do anything if a preview is already active.
     if (isPreviewing) return;
     const link = e.target.closest('a');
     // Check if the target is a valid link to preview.
     if (link && link.href && !link.href.startsWith('javascript:')) {
-      // If the modifier key is pressed, create the preview immediately.
-      if (e[settings.modifier]) {
-        e.preventDefault();
-        e.stopPropagation();
-        createPreview(link.href);
-        return;
-      }
-      // Otherwise, start a timer for a long press.
-      longClickTimer = setTimeout(() => {
-        createPreview(link.href);
-      }, settings.duration);
+        // If the modifier key is pressed, create the preview immediately.
+        if (e[settings.modifier]) {
+            e.preventDefault();
+            e.stopPropagation();
+            createPreview(link.href);
+            return;
+        }
+        // Otherwise, start a timer for a long press.
+        longClickTimer = setTimeout(() => {
+            createPreview(link.href);
+        }, settings.duration);
     }
-  }, true);
+}, true);
 
-  // Listen for 'mouseup' to cancel the long-press timer if the mouse is released early.
-  document.addEventListener('mouseup', () => {
+// Listen for 'mouseup' to cancel the long-press timer if the mouse is released early.
+document.addEventListener('mouseup', () => {
     clearTimeout(longClickTimer);
-  }, true);
+}, true);
 
-  // Listen for 'click' with the modifier key to prevent the default navigation action.
-  document.addEventListener('click', e => {
+// Listen for 'click' with the modifier key to prevent the default navigation action.
+document.addEventListener('click', e => {
     const link = e.target.closest('a');
     if (link && e[settings.modifier]) {
-      e.preventDefault();
-      e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
     }
-  }, true);
+}, true);
 
 
-  // --- Preconnect Optimization ---
+// --- Preconnect Optimization ---
 
-  let hoverTimer = null;
-  let lastHoveredUrl = null;
+let hoverTimer = null;
+let lastHoveredUrl = null;
 
-  // When a user hovers over a link, send a message to the background script to preconnect.
-  // This can speed up the eventual loading of the page in the preview.
-  document.addEventListener('mouseover', e => {
+// When a user hovers over a link, send a message to the background script to preconnect.
+// This can speed up the eventual loading of the page in the preview.
+document.addEventListener('mouseover', e => {
     // Check if the current site is disabled
     if (isCurrentSiteDisabled) {
-      return;
+        return;
     }
     const link = e.target.closest('a');
     if (link && link.href && link.href !== lastHoveredUrl) {
-      lastHoveredUrl = link.href;
-      clearTimeout(hoverTimer); // Debounce the event.
-      // Wait a moment before preconnecting to avoid doing it for every link the mouse passes over.
-      hoverTimer = setTimeout(() => {
-        chrome.runtime.sendMessage({ action: 'preconnect', url: link.href });
-      }, 100);
+        lastHoveredUrl = link.href;
+        clearTimeout(hoverTimer); // Debounce the event.
+        // Wait a moment before preconnecting to avoid doing it for every link the mouse passes over.
+        hoverTimer = setTimeout(() => {
+            chrome.runtime.sendMessage({ action: 'preconnect', url: link.href });
+        }, 100);
     }
-  });
+});
 
-  // When the mouse leaves a link, clear the preconnect timer.
-  document.addEventListener('mouseout', e => {
+// When the mouse leaves a link, clear the preconnect timer.
+document.addEventListener('mouseout', e => {
     const link = e.target.closest('a');
     if (link) {
-      clearTimeout(hoverTimer);
-      lastHoveredUrl = null;
+        clearTimeout(hoverTimer);
+        lastHoveredUrl = null;
     }
-  });
-}
+});
