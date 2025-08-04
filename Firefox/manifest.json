@@ -26,7 +26,7 @@
         "<all_urls>"
       ],
       "js": [
-        "svg.js",
+        "utils/svg.js",
         "content.js"
       ],
       "css": [
@@ -39,6 +39,7 @@
         "<all_urls>"
       ],
       "js": [
+        "utils/debug.js",
         "content_iframe.js"
       ],
       "all_frames": true

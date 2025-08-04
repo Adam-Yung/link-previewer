@@ -1,46 +1,5 @@
 // content.js
 
-/**
- * Debugging Code
- */
-
-const ALLOW_DEBUGGING = true;
-
-const LOGGING = {
-  INFO: 0,
-  LOG: 1,
-  ERROR: 2,
-};
-
-// A simple function to format the date
-function formatDate(date) {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = String(date.getFullYear()).slice(2);
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-
-  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-}
-
-function log(msg, level = LOGGING.LOG) {
-  if (!ALLOW_DEBUGGING) return;
-  const time = new Date();
-  const message = `${formatDate(time)}:\n[CONTENT] ${msg}`;
-  switch (level) {
-    case LOGGING.INFO:
-      console.info(message);
-      break;
-    case LOGGING.LOG:
-      console.log(message);
-      break;
-    case LOGGING.ERROR:
-      console.error(message);
-      break;
-  }
-}
-
 // Timer for detecting a long click on a link.
 let longClickTimer;
 // Flag to prevent multiple previews from opening simultaneously.
@@ -532,10 +491,7 @@ function createWarningPopup({ id, icon, title, message, buttons }) {
 function createHttpWarningPopup(url) {
   createWarningPopup({
     id: 'link-preview-http-warning',
-    icon: `
-            <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-            </svg>`,
+    icon: warningIcon,
     title: 'Insecure Link',
     message: 'Previews are disabled for non-encrypted (HTTP) pages for your security.',
     buttons: [
@@ -554,10 +510,7 @@ function showContextExpiredPopup() {
 
   createWarningPopup({
     id: 'link-preview-context-warning',
-    icon: `
-            <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 512 512">
-                <path d="M449.9 315.9c-2.4-6.4-8.9-10.4-15.6-9.3s-12.2 7.7-11.1 14.4c13.2 80.3-33.9 159.2-114.2 172.4S150.6 460 137.4 379.7s33.9-159.2 114.2-172.4c6.7-1.1 11.1-7.5 9.9-14.2s-7.5-11.1-14.2-9.9C167.3 200.5 89.2 284.2 102.5 364.5s89.2 137.8 169.5 124.5C352.2 475.8 430.3 392 417 311.7c-1.1-6.7 2.1-13.2 8.8-15.6s13.2-2.1 15.6 4.6c15.8 88-34.8 174.9-122.8 190.7S123.3 456.4 107.5 368.4s34.8-174.9 122.8-190.7c86.4-15.5 168.3 32.7 186.7 116.5c1.4 6.7-2.1 13.5-8.8 15.1s-13.5 2.1-15.1-1.4z"/>
-            </svg>`,
+    icon: expiredIcon,
     title: 'Context Expired',
     message: 'Link Previewer needs to be re-initialized. Please reload the page to continue using previews.',
     buttons: [
