@@ -102,6 +102,9 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case 'updatePreviewUrl':
       browser.tabs.sendMessage(sender.tab.id, {action: 'updatePreviewUrl', url: request.url});
       break;
+    case 'closePreviewFromIframe':
+      browser.tabs.sendMessage(sender.tab.id, {action: 'closePreviewFromIframe'});
+      break;
 
   }
 });
