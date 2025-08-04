@@ -1,5 +1,12 @@
 // content_iframe.js
 
+// Do not allow window.open >:(
+window.open = function(url, name, features) {
+  log(`[IFRAME] Blocked attempt to open new tab for: ${url}`);
+  // Return null to indicate failure to open a window.
+  return null;
+};
+
 // Check if this script is running inside an iframe
 if (window.self !== window.top) {
   let closeKey = "Escape";
@@ -21,7 +28,7 @@ if (window.self !== window.top) {
     // Check if the target is a valid link to preview.
     if (link && link.href && !link.href.startsWith('javascript:')) {
       const url = link.href;
-      console.log(`User clicked a link inside of the iFrame: ${url}`);
+      log(`[IFRAME] User clicked a link inside of the iFrame: ${url}`);
       chrome.runtime.sendMessage({ action: 'updatePreviewUrl', url: url })
     }
   }, true);
