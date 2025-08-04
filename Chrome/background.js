@@ -23,7 +23,12 @@ const headerRule = {
         operation: 'set', 
         value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation;"
       },
-      { header: 'x-content-type-options', operation: 'remove' }
+      { header: 'x-content-type-options', operation: 'remove' },
+      {
+        "header": "Set-Cookie",
+        "operation": "append",
+        "value": "; SameSite=None; Secure"
+      }
     ]
   },
   condition: {
