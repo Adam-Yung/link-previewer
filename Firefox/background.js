@@ -21,9 +21,9 @@ function requestHeadersListener(details) {
       // Add the origin header if it doesn't exist
       details.requestHeaders.push({ name: 'Origin', value: targetOrigin });
     }
-    
+
     // Also spoof the Referer for good measure
-     details.requestHeaders.push({ name: 'Referer', value: details.url });
+    details.requestHeaders.push({ name: 'Referer', value: details.url });
 
     debug(`[BACKGROUND] Spoofed the header request to use appear as same origin: ${details.url}`);
     return { requestHeaders: details.requestHeaders };
@@ -50,6 +50,13 @@ function responseHeadersListener(details) {
         headerName === 'cross-origin-resource-policy' ||
         headerName === 'referrer-policy'
       );
+    });
+
+    // Modify Set-Cookie headers to allow cross-site usage
+    newHeaders.forEach(header => {
+      if (header.name.toLowerCase() === 'set-cookie') {
+        header.value += '; SameSite=None; Secure';
+      }
     });
 
     newHeaders.push({
@@ -98,7 +105,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       debug(`[BACKGROUND] Preconnecting to: ${request.url}`);
       // Use GET as it's more widely supported than HEAD
       fetch(request.url, { method: 'GET', mode: 'cors', signal }).catch(() => {
-          // Errors are expected as we abort the request. This is fine.
+        // Errors are expected as we abort the request. This is fine.
       });
 
       // Abort the request immediately. We don't need the body,
@@ -107,10 +114,10 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
 
     case 'updatePreviewUrl':
-      browser.tabs.sendMessage(sender.tab.id, {action: 'updatePreviewUrl', url: request.url});
+      browser.tabs.sendMessage(sender.tab.id, { action: 'updatePreviewUrl', url: request.url });
       break;
     case 'closePreviewFromIframe':
-      browser.tabs.sendMessage(sender.tab.id, {action: 'closePreviewFromIframe'});
+      browser.tabs.sendMessage(sender.tab.id, { action: 'closePreviewFromIframe' });
       break;
   }
 });
