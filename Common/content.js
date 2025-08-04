@@ -262,18 +262,39 @@ else {
 
     shadowRoot.appendChild(container);
 
+    // History for back/forward functionality
+    let history = [url];
+    let historyIndex = 0;
+
     // Create the address bar with URL display and control buttons.
     const addressBar = document.createElement('div');
     addressBar.id = 'link-preview-address-bar';
     addressBar.innerHTML = `
-    <span class="link-preview-url">${url}</span>
-    <div class="link-preview-controls">
-      <button id="link-preview-restore" title="Restore default size and position">&#x26F6;</button>
-      <button id="link-preview-enlarge" title="Open in new tab">↗</button>
-      <button id="link-preview-close" title="Close preview">×</button>
-    </div>
-  `;
+      <div class="link-preview-nav-controls">
+        <button id="link-preview-back" title="Go back" disabled><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button id="link-preview-forward" title="Go forward" disabled><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>
+      <span class="link-preview-url">${url}</span>
+      <div class="link-preview-controls">
+        <button id="link-preview-copy" title="Copy URL">
+            <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <svg class="tick-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </button>
+        <button id="link-preview-restore" title="Restore default size and position"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M3 15l6-6M21 9l-6 6"/></svg></button>
+        <button id="link-preview-enlarge" title="Open in new tab"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></button>
+        <button id="link-preview-close" title="Close preview"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+    `;
     container.appendChild(addressBar);
+
+    const backButton = shadowRoot.getElementById('link-preview-back');
+    const forwardButton = shadowRoot.getElementById('link-preview-forward');
+    const copyButton = shadowRoot.getElementById('link-preview-copy');
+
+    function updateNavButtons() {
+        backButton.disabled = historyIndex === 0;
+        forwardButton.disabled = historyIndex >= history.length - 1;
+    }
 
     // Create the loading spinner.
     const loader = document.createElement('div');
@@ -281,48 +302,102 @@ else {
     loader.innerHTML = `<div class="loader"></div>`;
     container.appendChild(loader);
 
-    // Check if the URL is an image.
-    log("Checking if link is an image!");
-    if (/.*\.(jpeg|jpg|gif|png)$/i.test(url)) {
-      log("Previewing an image!");
-      const img = document.createElement('img');
-      img.id = 'link-preview-image';
-      img.src = url;
-      img.onload = () => {
-        // Hide the loader when the image is loaded.
-        const loader = shadowRoot.getElementById('loader-container');
-        if (loader) {
-          loader.style.display = 'none';
+    function renderUrl(urlToRender) {
+        const urlSpan = shadowRoot.querySelector('.link-preview-url');
+        if (urlSpan) {
+            urlSpan.textContent = urlToRender;
         }
-      };
-      container.appendChild(img);
-      addressBar.addEventListener('mousedown', (e) => initDrag(e, container, img));
-    } else {
-      // Create the iframe where the link content will be loaded.
-      const iframe = document.createElement('iframe');
-      iframe.id = 'link-preview-iframe';
-      // Add the sandbox attribute specifically for Firefox
-      if (typeof browser !== 'undefined') {
-        iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-presentation';
-      }
-      container.appendChild(iframe);
-      window.scrollTo(scrollX, scrollY);
-      // Enable dragging of the preview window via the address bar.
-      addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
 
-      // Send a message to the background script to prepare for the preview (e.g., modify headers).
-      chrome.runtime.sendMessage({ action: 'prepareToPreview', url: url })
-        .then(response => {
-          if (response && response.ready) {
-            // Once the background script is ready, set the iframe source.
-            iframe.src = url;
-            checkForIframeReady(iframe, shadowRoot);
-          } else {
-            log('Background script not ready.', LOGGING.ERROR);
-            closePreview();
-          }
-        });
+        const isImage = /.*\.(jpeg|jpg|gif|png)$/i.test(urlToRender);
+        const existingIframe = shadowRoot.getElementById('link-preview-iframe');
+        const existingImage = shadowRoot.getElementById('link-preview-image');
+
+        if (existingIframe) existingIframe.remove();
+        if (existingImage) existingImage.remove();
+        
+        const loader = shadowRoot.getElementById('loader-container');
+        if(loader) loader.style.display = 'flex';
+
+
+        if (isImage) {
+            log("Previewing an image!");
+            const img = document.createElement('img');
+            img.id = 'link-preview-image';
+            img.src = urlToRender;
+            img.onload = () => {
+                if (loader) {
+                    loader.style.display = 'none';
+                }
+            };
+            container.appendChild(img);
+            addressBar.addEventListener('mousedown', (e) => initDrag(e, container, img));
+        } else {
+            const iframe = document.createElement('iframe');
+            iframe.id = 'link-preview-iframe';
+            if (typeof browser !== 'undefined') {
+                iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-presentation';
+            }
+            container.appendChild(iframe);
+            addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
+            chrome.runtime.sendMessage({ action: 'prepareToPreview', url: urlToRender })
+                .then(response => {
+                    if (response && response.ready) {
+                        iframe.src = urlToRender;
+                        checkForIframeReady(iframe, shadowRoot);
+                    } else {
+                        log('Background script not ready.', LOGGING.ERROR);
+                        closePreview();
+                    }
+                });
+        }
     }
+
+    function navigateTo(newUrl) {
+        // If we are navigating from a point in history, truncate the future history
+        if (historyIndex < history.length - 1) {
+            history = history.slice(0, historyIndex + 1);
+        }
+        history.push(newUrl);
+        historyIndex = history.length - 1;
+        updateNavButtons();
+        renderUrl(newUrl);
+    }
+
+    backButton.addEventListener('click', () => {
+        if (historyIndex > 0) {
+            historyIndex--;
+            updateNavButtons();
+            renderUrl(history[historyIndex]);
+        }
+    });
+
+    forwardButton.addEventListener('click', () => {
+        if (historyIndex < history.length - 1) {
+            historyIndex++;
+            updateNavButtons();
+            renderUrl(history[historyIndex]);
+        }
+    });
+
+    copyButton.addEventListener('click', () => {
+        navigator.clipboard.writeText(history[historyIndex]).then(() => {
+            if (!copyButton.classList.contains('copied')) {
+                copyButton.classList.add('copied');
+                setTimeout(() => copyButton.classList.remove('copied'), 1500);
+            }
+        });
+    });
+
+    const messageListener = (request) => {
+        if (request.action === 'updatePreviewUrl') {
+            navigateTo(request.url);
+        }
+    };
+    chrome.runtime.onMessage.addListener(messageListener);
+
+
+    // Initial render
+    renderUrl(url);
 
     // Create and attach resize handles for all directions.
     const resizeHandles = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];

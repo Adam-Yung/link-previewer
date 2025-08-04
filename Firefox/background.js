@@ -98,5 +98,10 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // just the act of making the request is enough to warm up the connection.
       controller.abort();
       break;
+
+    case 'updatePreviewUrl':
+      browser.tabs.sendMessage(sender.tab.id, {action: 'updatePreviewUrl', url: request.url});
+      break;
+
   }
 });

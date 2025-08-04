@@ -73,25 +73,91 @@
   min-width: 0;
   max-width: 80%;
 }
+.link-preview-nav-controls {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.link-preview-nav-controls button {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 5px;
+    color: inherit;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.link-preview-nav-controls button svg {
+    width: 20px;
+    height: 20px;
+}
+
+
+.link-preview-nav-controls button:disabled {
+    opacity: 0.3;
+    cursor: default;
+    transform: none;
+}
+
+.link-preview-nav-controls button:not(:disabled):hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
 .link-preview-controls {
   margin-left: auto;
   padding-left: 15px;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 .link-preview-controls button {
   background: transparent;
   border: none;
-  font-size: 20px;
   cursor: pointer;
   padding: 0 8px;
   color: inherit;
   opacity: 0.7;
   transition: opacity 0.2s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
+.link-preview-controls button svg {
+    width: 20px;
+    height: 20px;
+}
+
+
 .link-preview-controls button:hover {
   opacity: 1;
   transform: scale(1.1);
 }
+
+#link-preview-copy .tick-icon {
+    position: absolute;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+#link-preview-copy.copied .copy-icon {
+    opacity: 0;
+}
+
+#link-preview-copy.copied .tick-icon {
+    opacity: 1;
+    transform: scale(1);
+}
+
+
 #loader-container {
   position: absolute; top: 40px; left: 0; right: 0; bottom: 0;
   display: flex; align-items: center; justify-content: center; background: transparent;
