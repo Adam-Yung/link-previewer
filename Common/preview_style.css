@@ -65,13 +65,19 @@
 #link-preview-container.light #link-preview-address-bar {
   color: #111;
 }
+.url-container {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    overflow: hidden; /* Important for text-overflow to work */
+    margin: 0 10px; /* Adds some space around the url block */
+}
+
 .link-preview-url {
-  flex-grow: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-  max-width: 80%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px; /* Slightly larger font */
 }
 .link-preview-nav-controls {
     display: flex;
@@ -94,10 +100,10 @@
     justify-content: center;
 }
 
-.link-preview-nav-controls button svg {
+/* .link-preview-nav-controls button svg {
     width: 20px;
     height: 20px;
-}
+} */
 
 
 .link-preview-nav-controls button:disabled {
@@ -117,7 +123,7 @@
   display: flex;
   align-items: center;
 }
-.link-preview-controls button {
+.link-preview-controls button, #link-preview-copy {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -130,11 +136,11 @@
   justify-content: center;
   position: relative;
 }
-.link-preview-controls button svg {
-    width: 20px;
-    height: 20px;
+.link-preview-controls button svg,
+#link-preview-copy svg {
+    width: 18px;
+    height: 18px;
 }
-
 
 .link-preview-controls button:hover {
   opacity: 1;
