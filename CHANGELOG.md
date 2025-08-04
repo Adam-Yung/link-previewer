@@ -1,3 +1,31 @@
+## [1.1.0] - 2025-08-04
+
+### Added
+
+* Added back/forward navigation for previewed pages.
+* Added a loading animation to the address bar.
+
+### Fixed
+
+* Fixed an issue where the close preview key did not work consistently within the iframe.
+* Fixed an issue where the preview popup could be dragged outside of the window.
+* Fixed an issue with the popup preview buttons overflowing.
+* Fixed an issue where "Open in New Tab" would not use the latest URL.
+* Fixed an issue with reliably handling clicks within the iframe.
+* Fixed a missing address bar hook.
+
+### Changed
+
+* Improved the address bar gradient with transparent frames.
+* Set custom Content Security Policy (CSP) filters for both Chrome and Firefox.
+* Refactored and modularized `Content.js`.
+* Updated Firefox `background.js` for new iframe messages.
+* Refactored `Content.js` to separate in-iframe code and move SVGs to a separate file.
+* Made the warning popup function more general and updated the popup style.
+* Moved the copy button next to the address.
+
+---
+
 ## [1.0.3] - 2025-08-03
 
 ### Added
