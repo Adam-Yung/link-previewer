@@ -588,8 +588,26 @@ function initDrag(e, element, contentElement) {
      * @param {MouseEvent} e The mousemove event.
      */
     function doDrag(e) {
-        element.style.left = `${e.clientX - offsetX}px`;
-        element.style.top = `${e.clientY - offsetY}px`;
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
+
+        // Get window dimensions
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+
+        // Get element dimensions
+        const elemWidth = element.offsetWidth;
+        const elemHeight = element.offsetHeight;
+
+        // Constrain the new position
+        if (newLeft < 0) newLeft = 0;
+        if (newTop < 0) newTop = 0;
+        if (newLeft + elemWidth > winWidth) newLeft = winWidth - elemWidth;
+        if (newTop + elemHeight > winHeight) newTop = winHeight - elemHeight;
+
+
+        element.style.left = `${newLeft}px`;
+        element.style.top = `${newTop}px`;
     }
 
     /**
