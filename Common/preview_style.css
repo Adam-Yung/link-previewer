@@ -83,6 +83,7 @@
     display: flex;
     align-items: center;
     margin-right: 10px;
+    overflow:hidden;
 }
 
 .link-preview-nav-controls button {
@@ -122,6 +123,7 @@
   white-space: nowrap;
   display: flex;
   align-items: center;
+  overflow: hidden;
 }
 .link-preview-controls button, #link-preview-copy {
   background: transparent;
