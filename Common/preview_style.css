@@ -76,26 +76,25 @@
 
 /* --- Light Theme Animation Colors --- */
 #link-preview-container.light #link-preview-address-bar.ocean-blue {
-  background-image: linear-gradient(90deg, rgba(0, 188, 255, 0.1), rgba(0, 150, 255, 0.6), rgba(60, 190, 255, 0.8), rgba(0, 150, 255, 0.6), rgba(0, 188, 255, 0.1));
+  background-image: linear-gradient(90deg, transparent, transparent, rgba(0, 188, 255, 0.1), rgba(0, 150, 255, 0.6), rgba(60, 190, 255, 0.8), rgba(0, 150, 255, 0.6), rgba(0, 188, 255, 0.1));
 }
 #link-preview-container.light #link-preview-address-bar.ocean-orange {
-  background-image: linear-gradient(90deg, rgba(255, 140, 0, 0.1), rgba(255, 165, 0, 0.6), rgba(255, 180, 50, 0.8), rgba(255, 165, 0, 0.6), rgba(255, 140, 0, 0.1));
+  background-image: linear-gradient(90deg, transparent, transparent, rgba(255, 140, 0, 0.1), rgba(255, 165, 0, 0.6), rgba(255, 180, 50, 0.8), rgba(255, 165, 0, 0.6), rgba(255, 140, 0, 0.1));
 }
 #link-preview-container.light #link-preview-address-bar.ocean-magenta {
-  background-image: linear-gradient(90deg, rgba(255, 0, 255, 0.1), rgba(255, 80, 220, 0.6), rgba(255, 120, 240, 0.8), rgba(255, 80, 220, 0.6), rgba(255, 0, 255, 0.1));
+  background-image: linear-gradient(90deg, transparent, transparent, rgba(255, 0, 255, 0.1), rgba(255, 80, 220, 0.6), rgba(255, 120, 240, 0.8), rgba(255, 80, 220, 0.6), rgba(255, 0, 255, 0.1));
 }
 
 /* --- Dark Theme Animation Colors --- */
 #link-preview-container.dark #link-preview-address-bar.ocean-blue {
-  background-image: linear-gradient(90deg, rgba(10, 132, 255, 0.1), rgba(10, 132, 255, 0.7), rgba(50, 170, 255, 0.9), rgba(10, 132, 255, 0.7), rgba(10, 132, 255, 0.1));
+  background-image: linear-gradient(90deg, transparent, transparent, rgba(10, 132, 255, 0.1), rgba(10, 132, 255, 0.7), rgba(50, 170, 255, 0.9), rgba(10, 132, 255, 0.7), rgba(10, 132, 255, 0.1));
 }
 #link-preview-container.dark #link-preview-address-bar.ocean-orange {
-  background-image: linear-gradient(90deg, rgba(255, 159, 10, 0.1), rgba(255, 159, 10, 0.7), rgba(255, 180, 60, 0.9), rgba(255, 159, 10, 0.7), rgba(255, 159, 10, 0.1));
+  background-image: linear-gradient(90deg, transparent, transparent, rgba(255, 159, 10, 0.1), rgba(255, 159, 10, 0.7), rgba(255, 180, 60, 0.9), rgba(255, 159, 10, 0.7), rgba(255, 159, 10, 0.1));
 }
 #link-preview-container.dark #link-preview-address-bar.ocean-magenta {
-  background-image: linear-gradient(90deg, rgba(191, 90, 242, 0.1), rgba(191, 90, 242, 0.7), rgba(220, 130, 255, 0.9), rgba(191, 90, 242, 0.7), rgba(191, 90, 242, 0.1));
+  background-image: linear-gradient(90deg, transparent, transparent, rgba(191, 90, 242, 0.1), rgba(191, 90, 242, 0.7), rgba(220, 130, 255, 0.9), rgba(191, 90, 242, 0.7), rgba(191, 90, 242, 0.1));
 }
-
 
 #link-preview-container.light #link-preview-address-bar {
   color: #111;
