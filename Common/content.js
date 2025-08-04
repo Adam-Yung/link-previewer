@@ -119,7 +119,7 @@ else {
    * @param {ShadowRoot} shadowRoot The shadow root containing the loader element.
    */
   function checkForIframeReady(frame, shadowRoot) {
-    const iframeDoc = frame.contentDocument || frame.contentWindow.document;
+    const iframeDoc = frame && (frame.contentDocument || (frame.contentWindow && frame.contentWindow.document));
 
     // Check if the iframe document is fully loaded or interactive.
     if (iframeDoc && (iframeDoc.readyState === 'interactive' || iframeDoc.readyState === 'complete')) {
@@ -294,8 +294,8 @@ else {
     const copyButton = shadowRoot.getElementById('link-preview-copy');
 
     function updateNavButtons() {
-        backButton.disabled = historyIndex === 0;
-        forwardButton.disabled = historyIndex >= history.length - 1;
+      backButton.disabled = historyIndex === 0;
+      forwardButton.disabled = historyIndex >= history.length - 1;
     }
 
     // Create the loading spinner.
@@ -305,95 +305,99 @@ else {
     container.appendChild(loader);
 
     function renderUrl(urlToRender) {
-        const urlSpan = shadowRoot.querySelector('.link-preview-url');
-        if (urlSpan) {
-            urlSpan.textContent = urlToRender;
+      const urlSpan = shadowRoot.querySelector('.link-preview-url');
+      if (urlSpan) {
+        urlSpan.textContent = urlToRender;
+      }
+
+      const isImage = /.*\.(jpeg|jpg|gif|png)$/i.test(urlToRender);
+      const existingIframe = shadowRoot.getElementById('link-preview-iframe');
+      const existingImage = shadowRoot.getElementById('link-preview-image');
+
+      if (existingIframe) existingIframe.remove();
+      if (existingImage) existingImage.remove();
+
+      const loader = shadowRoot.getElementById('loader-container');
+      if (loader) loader.style.display = 'flex';
+
+
+      if (isImage) {
+        log("Previewing an image!");
+        const img = document.createElement('img');
+        img.id = 'link-preview-image';
+        img.src = urlToRender;
+        img.onload = () => {
+          if (loader) {
+            loader.style.display = 'none';
+          }
+        };
+        container.appendChild(img);
+        addressBar.addEventListener('mousedown', (e) => initDrag(e, container, img));
+      } else {
+        const iframe = document.createElement('iframe');
+        iframe.id = 'link-preview-iframe';
+        if (typeof browser !== 'undefined') {
+          iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-presentation';
         }
-
-        const isImage = /.*\.(jpeg|jpg|gif|png)$/i.test(urlToRender);
-        const existingIframe = shadowRoot.getElementById('link-preview-iframe');
-        const existingImage = shadowRoot.getElementById('link-preview-image');
-
-        if (existingIframe) existingIframe.remove();
-        if (existingImage) existingImage.remove();
-        
-        const loader = shadowRoot.getElementById('loader-container');
-        if(loader) loader.style.display = 'flex';
-
-
-        if (isImage) {
-            log("Previewing an image!");
-            const img = document.createElement('img');
-            img.id = 'link-preview-image';
-            img.src = urlToRender;
-            img.onload = () => {
-                if (loader) {
-                    loader.style.display = 'none';
-                }
-            };
-            container.appendChild(img);
-            addressBar.addEventListener('mousedown', (e) => initDrag(e, container, img));
-        } else {
-            const iframe = document.createElement('iframe');
-            iframe.id = 'link-preview-iframe';
-            if (typeof browser !== 'undefined') {
-                iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-presentation';
-            }
-            container.appendChild(iframe);
-            addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
-            chrome.runtime.sendMessage({ action: 'prepareToPreview', url: urlToRender })
-                .then(response => {
-                    if (response && response.ready) {
-                        iframe.src = urlToRender;
-                        checkForIframeReady(iframe, shadowRoot);
-                    } else {
-                        log('Background script not ready.', LOGGING.ERROR);
-                        closePreview();
-                    }
-                });
+        container.appendChild(iframe);
+        addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
+        try {
+          chrome.runtime.sendMessage({ action: 'prepareToPreview', url: urlToRender })
+            .then(response => {
+              if (response && response.ready) {
+                iframe.src = urlToRender;
+                checkForIframeReady(iframe, shadowRoot);
+              } else {
+                log('Background script not ready.', LOGGING.ERROR);
+                closePreview();
+              }
+            });
+        } catch (error) {
+          log(`Error: ${error}`, LOGGING.ERROR);
         }
+      }
     }
 
     function navigateTo(newUrl) {
-        // If we are navigating from a point in history, truncate the future history
-        if (historyIndex < history.length - 1) {
-            history = history.slice(0, historyIndex + 1);
-        }
-        history.push(newUrl);
-        historyIndex = history.length - 1;
-        updateNavButtons();
-        renderUrl(newUrl);
+      // If we are navigating from a point in history, truncate the future history
+      if (historyIndex < history.length - 1) {
+        history = history.slice(0, historyIndex + 1);
+      }
+      history.push(newUrl);
+      historyIndex = history.length - 1;
+      updateNavButtons();
+      renderUrl(newUrl);
     }
 
     backButton.addEventListener('click', () => {
-        if (historyIndex > 0) {
-            historyIndex--;
-            updateNavButtons();
-            renderUrl(history[historyIndex]);
-        }
+      if (historyIndex > 0) {
+        historyIndex--;
+        updateNavButtons();
+        renderUrl(history[historyIndex]);
+      }
     });
 
     forwardButton.addEventListener('click', () => {
-        if (historyIndex < history.length - 1) {
-            historyIndex++;
-            updateNavButtons();
-            renderUrl(history[historyIndex]);
-        }
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        updateNavButtons();
+        renderUrl(history[historyIndex]);
+      }
     });
 
     copyButton.addEventListener('click', () => {
-        navigator.clipboard.writeText(history[historyIndex]).then(() => {
-            if (!copyButton.classList.contains('copied')) {
-                copyButton.classList.add('copied');
-                setTimeout(() => copyButton.classList.remove('copied'), 1500);
-            }
-        });
+      navigator.clipboard.writeText(history[historyIndex]).then(() => {
+        if (!copyButton.classList.contains('copied')) {
+          copyButton.classList.add('copied');
+          setTimeout(() => copyButton.classList.remove('copied'), 1500);
+        }
+      });
     });
 
     const messageListener = (request) => {
-        if (request.action === 'updatePreviewUrl') {
-            navigateTo(request.url);
-        }
+      if (request.action === 'updatePreviewUrl') {
+        navigateTo(request.url);
+      }
     };
     chrome.runtime.onMessage.addListener(messageListener);
 
@@ -415,7 +419,9 @@ else {
     // --- UI Event Listeners ---
     shadowRoot.getElementById('link-preview-close').addEventListener('click', closePreview);
     shadowRoot.getElementById('link-preview-enlarge').addEventListener('click', () => {
-      window.open(url, '_blank');
+      const _url = shadowRoot.getElementById('link-preview-iframe')?.src || url;
+      log(`Opening URL in new tab: ${_url}`);
+      window.open(_url, '_blank');
       closePreview();
     });
     // Restore the preview window to its default size and position and save it.
