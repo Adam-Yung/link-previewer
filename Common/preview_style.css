@@ -238,9 +238,9 @@
 .resize-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
 .resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
 
-/* --- HTTP Warning Popup Styles --- */
+/* --- Generic Warning Popup Styles --- */
 
-#link-preview-warning-overlay {
+.link-preview-warning-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -253,13 +253,13 @@
   pointer-events: auto;
 }
 
-#link-preview-http-warning-popup {
+.link-preview-warning-popup {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 360px;
-  padding: 24px;
+  width: 380px;
+  padding: 20px;
   border-radius: 16px;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   z-index: 2147483647;
@@ -274,45 +274,62 @@
 }
 
 /* Glassmorphism Styles */
-#link-preview-http-warning-popup.light {
-  background: rgba(255, 255, 255, 0.55);
+.link-preview-warning-popup.light {
+  background: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px) saturate(180%);
   -webkit-backdrop-filter: blur(10px) saturate(180%);
   color: #1a1a1a;
 }
 
-#link-preview-http-warning-popup.dark {
-  background: rgba(40, 40, 40, 0.6);
+.link-preview-warning-popup.dark {
+  background: rgba(40, 40, 40, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px) saturate(180%);
   -webkit-backdrop-filter: blur(10px) saturate(180%);
   color: #f0f0f0;
 }
 
-#link-preview-http-warning-popup .warning-icon {
-  width: 48px;
-  height: 48px;
+.popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.link-preview-warning-popup .warning-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+#link-preview-http-warning .warning-icon {
   color: #ffc107; /* A nice warning yellow */
-  margin-bottom: 8px;
+}
+#link-preview-context-warning .warning-icon {
+  color: #0d6efd; /* Blue for info */
 }
 
-#link-preview-http-warning-popup h3 {
+
+.link-preview-warning-popup h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
+  text-align: left;
 }
 
-#link-preview-http-warning-popup p {
+.link-preview-warning-popup p {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
   opacity: 0.9;
+  text-align: center;
+  width: 100%;
 }
 
 /* Button Styles */
 .link-preview-popup-buttons {
-  margin-top: 16px;
+  margin-top: 12px;
   display: flex;
   justify-content: center;
   gap: 12px;
@@ -331,33 +348,33 @@
 }
 
 /* Light Theme Buttons */
-#link-preview-http-warning-popup.light .link-preview-popup-buttons button#warning-cancel {
+.link-preview-warning-popup.light .link-preview-popup-buttons button:first-child {
   background-color: rgba(0, 0, 0, 0.08);
   color: #333;
 }
-#link-preview-http-warning-popup.light .link-preview-popup-buttons button#warning-cancel:hover {
+.link-preview-warning-popup.light .link-preview-popup-buttons button:first-child:hover {
   background-color: rgba(0, 0, 0, 0.12);
 }
-#link-preview-http-warning-popup.light .link-preview-popup-buttons button#warning-open {
+.link-preview-warning-popup.light .link-preview-popup-buttons button:last-child {
   background-color: #007bff;
   color: white;
 }
-#link-preview-http-warning-popup.light .link-preview-popup-buttons button#warning-open:hover {
+.link-preview-warning-popup.light .link-preview-popup-buttons button:last-child:hover {
   background-color: #0056b3;
 }
 
 /* Dark Theme Buttons */
-#link-preview-http-warning-popup.dark .link-preview-popup-buttons button#warning-cancel {
+.link-preview-warning-popup.dark .link-preview-popup-buttons button:first-child {
   background-color: rgba(255, 255, 255, 0.1);
   color: #f0f0f0;
 }
-#link-preview-http-warning-popup.dark .link-preview-popup-buttons button#warning-cancel:hover {
+.link-preview-warning-popup.dark .link-preview-popup-buttons button:first-child:hover {
   background-color: rgba(255, 255, 255, 0.15);
 }
-#link-preview-http-warning-popup.dark .link-preview-popup-buttons button#warning-open {
+.link-preview-warning-popup.dark .link-preview-popup-buttons button:last-child {
   background-color: #0d6efd;
   color: white;
 }
-#link-preview-http-warning-popup.dark .link-preview-popup-buttons button#warning-open:hover {
+.link-preview-warning-popup.dark .link-preview-popup-buttons button:last-child:hover {
   background-color: #0b5ed7;
 }

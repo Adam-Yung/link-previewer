@@ -349,11 +349,15 @@ else {
                 checkForIframeReady(iframe, shadowRoot);
               } else {
                 log('Background script not ready.', LOGGING.ERROR);
-                closePreview();
+                showContextExpiredPopup();
               }
+            }).catch(error => {
+                log(`Error sending prepareToPreview message: ${error}`, LOGGING.ERROR);
+                showContextExpiredPopup();
             });
         } catch (error) {
           log(`Error: ${error}`, LOGGING.ERROR);
+          showContextExpiredPopup();
         }
       }
     }
@@ -445,66 +449,113 @@ else {
   }
 
   /**
-   * Creates a sleek, styled pop-up to warn users about insecure HTTP links.
-   * This pop-up provides options to either cancel the action or open the link in a new tab.
-   * @param {string} url The insecure URL that triggered the warning.
-   */
-  function createHttpWarningPopup(url) {
+ * Creates a generic, styled pop-up for warnings or information.
+ * @param {object} options - Configuration for the popup.
+ * @param {string} options.id - The ID for the popup element.
+ * @param {string} options.icon - SVG string for the icon.
+ * @param {string} options.title - The title of the popup.
+ * @param {string} options.message - The main message body.
+ * @param {Array<object>} options.buttons - Array of button configurations.
+ * - {string} id - The ID for the button.
+ * - {string} text - The text content of the button.
+ * - {function} onClick - The click handler for the button.
+ */
+function createWarningPopup({ id, icon, title, message, buttons }) {
     // Create a full-page overlay to dim the background.
     const overlay = document.createElement('div');
-    overlay.id = 'link-preview-warning-overlay';
+    overlay.id = `${id}-overlay`;
+    overlay.className = 'link-preview-warning-overlay';
     document.body.appendChild(overlay);
 
     // Create the pop-up container
     const popup = document.createElement('div');
-    popup.id = 'link-preview-http-warning-popup';
+    popup.id = id;
+    popup.className = 'link-preview-warning-popup';
     popup.classList.add(settings.theme); // Add theme class for styling
 
-    // Define the SVG icon for the warning.
-    const warningIconSVG = `
-    <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-    </svg>
-  `;
+    // Generate button HTML
+    const buttonsHTML = buttons.map(btn => `<button id="${btn.id}">${btn.text}</button>`).join('');
 
     // Set the complete inner HTML for the popup.
     popup.innerHTML = `
-    ${warningIconSVG}
-    <h3>Insecure Link</h3>
-    <p>Link Previewer thinks non-encrypted (HTTP) connections are scary</p>
-    <div class="link-preview-popup-buttons">
-      <button id="warning-cancel">Cancel</button>
-      <button id="warning-open">Open in New Tab</button>
-    </div>
-  `;
+        <div class="popup-header">
+            ${icon}
+            <h3>${title}</h3>
+        </div>
+        <p>${message}</p>
+        <div class="link-preview-popup-buttons">
+            ${buttonsHTML}
+        </div>
+    `;
     document.body.appendChild(popup);
 
     // --- Event Handlers & Cleanup ---
-
-    // Define a single function to close the popup and clean up listeners.
-    const closeWarningPopup = () => {
-      popup.remove();
-      overlay.remove();
-      document.removeEventListener('keydown', handleWarningEsc);
-      isPreviewing = false; // Reset the flag to allow new previews.
+    const closePopup = () => {
+        popup.remove();
+        overlay.remove();
+        document.removeEventListener('keydown', handleWarningEsc);
+        isPreviewing = false; // Reset the flag to allow new previews.
     };
 
-    // Handler for the 'Escape' key.
     const handleWarningEsc = (e) => {
-      if (e.key === settings.closeKey) {
-        closeWarningPopup();
-      }
+        if (e.key === settings.closeKey) {
+            closePopup();
+        }
     };
 
-    // Attach all event listeners.
-    popup.querySelector('#warning-cancel').addEventListener('click', closeWarningPopup);
-    popup.querySelector('#warning-open').addEventListener('click', () => {
-      window.open(url, '_blank');
-      closeWarningPopup();
+    // Attach event listeners
+    buttons.forEach(btnConfig => {
+        popup.querySelector(`#${btnConfig.id}`).addEventListener('click', () => {
+            btnConfig.onClick();
+            closePopup(); // Close popup after any button click
+        });
     });
-    overlay.addEventListener('click', closeWarningPopup);
+
+    overlay.addEventListener('click', closePopup);
     document.addEventListener('keydown', handleWarningEsc);
-  }
+}
+
+/**
+ * Shows a specific warning popup for insecure HTTP links.
+ * @param {string} url - The insecure URL.
+ */
+function createHttpWarningPopup(url) {
+    createWarningPopup({
+        id: 'link-preview-http-warning',
+        icon: `
+            <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>`,
+        title: 'Insecure Link',
+        message: 'Previews are disabled for non-encrypted (HTTP) pages for your security.',
+        buttons: [
+            { id: 'warning-cancel', text: 'Cancel', onClick: () => {} },
+            { id: 'warning-open', text: 'Open in New Tab', onClick: () => window.open(url, '_blank') }
+        ]
+    });
+}
+
+/**
+ * Shows a popup informing the user that the extension context is lost and the page needs to be reloaded.
+ */
+function showContextExpiredPopup() {
+    // First, ensure any existing preview elements are cleaned up.
+    closePreview();
+    
+    createWarningPopup({
+        id: 'link-preview-context-warning',
+        icon: `
+            <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 512 512">
+                <path d="M449.9 315.9c-2.4-6.4-8.9-10.4-15.6-9.3s-12.2 7.7-11.1 14.4c13.2 80.3-33.9 159.2-114.2 172.4S150.6 460 137.4 379.7s33.9-159.2 114.2-172.4c6.7-1.1 11.1-7.5 9.9-14.2s-7.5-11.1-14.2-9.9C167.3 200.5 89.2 284.2 102.5 364.5s89.2 137.8 169.5 124.5C352.2 475.8 430.3 392 417 311.7c-1.1-6.7 2.1-13.2 8.8-15.6s13.2-2.1 15.6 4.6c15.8 88-34.8 174.9-122.8 190.7S123.3 456.4 107.5 368.4s34.8-174.9 122.8-190.7c86.4-15.5 168.3 32.7 186.7 116.5c1.4 6.7-2.1 13.5-8.8 15.1s-13.5 2.1-15.1-1.4z"/>
+            </svg>`,
+        title: 'Context Expired',
+        message: 'Link Previewer needs to be re-initialized. Please reload the page to continue using previews.',
+        buttons: [
+            { id: 'context-cancel', text: 'Dismiss', onClick: () => {} },
+            { id: 'context-reload', text: 'Reload Page', onClick: () => window.location.reload() }
+        ]
+    });
+}
 
 
   /**
