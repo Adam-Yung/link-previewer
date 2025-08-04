@@ -18,7 +18,11 @@ const headerRule = {
     type: 'modifyHeaders',
     responseHeaders: [
       { header: 'x-frame-options', operation: 'remove' },
-      { header: 'content-security-policy', operation: 'remove' },
+      { 
+        header: 'content-security-policy', 
+        operation: 'set', 
+        value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation;"
+      },
       { header: 'x-content-type-options', operation: 'remove' }
     ]
   },

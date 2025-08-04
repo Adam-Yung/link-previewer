@@ -1,12 +1,5 @@
 // content_iframe.js
 
-// Do not allow window.open >:(
-window.open = function(url, name, features) {
-  log(`[IFRAME] Blocked attempt to open new tab for: ${url}`);
-  // Return null to indicate failure to open a window.
-  return null;
-};
-
 // Check if this script is running inside an iframe
 if (window.self !== window.top) {
   let closeKey = "Escape";
