@@ -16,7 +16,6 @@
       </label>
     </header>
 
-    <!-- Per-site toggle is now outside the scrollable area -->
     <div class="site-toggle-container" title="Toggle enabling for this site">
         <strong id="current-hostname">this site</strong>
         <label class="toggle-switch">
@@ -27,7 +26,6 @@
     
     <div class="separator"></div>
 
-    <!-- This wrapper contains the scrollable form content -->
     <div class="content-wrapper">
       <form id="settings-form">
           <div class="form-group">
@@ -51,7 +49,6 @@
             <p class="description">Key to close the preview window.</p>
           </div>
     
-          <!-- "More Options" are now part of the main form -->
           <div class="form-group">
             <label for="width">Default Width</label>
             <input type="text" id="width" name="width">
@@ -62,10 +59,19 @@
             <input type="text" id="height" name="height">
             <p class="description">Default height of the preview (e.g., 600px, 90vh).</p>
           </div>
+          <div class="form-group">
+            <label for="loadingAnimation">Loading Animation</label>
+            <select id="loadingAnimation" name="loadingAnimation">
+              <option value="off">Off</option>
+              <option value="blue">Blue</option>
+              <option value="orange">Orange</option>
+              <option value="magenta">Magenta</option>
+            </select>
+            <p class="description">Style of the address bar animation during loading.</p>
+          </div>
       </form>
     </div>
 
-    <!-- Save button is now in a fixed footer -->
     <div class="footer-container">
         <button type="submit" id="save-button" form="settings-form">
             <span class="button-text">Save Settings</span>
