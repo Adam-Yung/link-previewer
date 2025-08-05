@@ -7,12 +7,37 @@
 #   ./build.sh firefox     - Builds the Firefox extension
 #   ./build.sh clean       - Removes build artifacts
 
+FLAG_MINIMAL=false
+FLAGS=
+
 set -e
 
 clean() {
   echo "🧹 Cleaning up previous build artifacts..."
   rm -rf dist
   rm -f link-previewer-*.zip
+}
+
+copy_common_files() {
+  local exclude_patterns=('*.gif')
+  if $FLAG_MINIMAL; then
+    # CORRECT: The path is relative to 'Common/', so it's just 'icons'
+    exclude_patterns+=('icons')
+  fi
+
+  local rsync_opts=('-a')
+  for pattern in "${exclude_patterns[@]}"; do
+    rsync_opts+=('--exclude' "$pattern")
+  done
+
+  echo "📂 Copying Common files..."
+  rsync "${rsync_opts[@]}" Common/ dist/
+}
+
+zip_files() {
+  local target="$1"
+  echo "📎 Zipping into ${target}..."
+  (cd dist && zip -r ../${target} .) > /dev/null 2>&1
 }
 
 build_chrome() {
@@ -22,15 +47,12 @@ build_chrome() {
   clean
   mkdir -p dist
 
-  # Use rsync to copy Common files while excluding .gif files.
-  echo "📂 Copying Common files (excluding .gif)..."
-  rsync -a --exclude='*.gif' Common/ dist/
+  copy_common_files
 
   echo "📂 Copying Chrome-specific files..."
   cp -r Chrome/* dist/
 
-  echo "📎 Zipping into ${target}..."
-  (cd dist && zip -r ../${target} .) > /dev/null 2>&1
+  zip_files "${target}"
 
   echo
   echo "✅ Chrome build complete: ${target}"
@@ -43,8 +65,7 @@ build_firefox() {
   clean
   mkdir -p dist
 
-  echo "📂 Copying Common files (excluding .gif)..."
-  rsync -a --exclude='*.gif' Common/ dist/
+  copy_common_files
 
   echo "📂 Copying Firefox-specific files..."
   cp -r Firefox/* dist/
@@ -60,27 +81,33 @@ build_firefox() {
   echo "🔧 Replacing 'chrome' with 'browser' for Firefox compatibility..."
   find ./dist -type f -name '*.js' -print0 | xargs -0 $sed_inplace 's/chrome/browser/g'
 
-  echo "📎 Zipping into ${target}..."
-  (cd dist && zip -r ../${target} .) > /dev/null 2>&1
+  zip_files "${target}"
 
   echo "✅ Firefox build complete: ${target}"
 }
 
 
 
-case "$1" in
-  chrome)
-    build_chrome
-    ;;
-  firefox)
-    build_firefox
-    ;;
-  clean)
-    clean
-    echo "✅ Cleanup complete."
-    ;;
-  *)
-    echo "Usage: $0 {chrome|firefox|clean}"
-    exit 1
-    ;;
-esac
+while [ $# -gt 0 ]; do
+  case "$1" in
+    [cC]|[cC]hrome)
+      build_chrome
+      ;;
+    [fF]|[fF]irefox)
+      build_firefox
+      ;;
+    clean)
+      clean
+      echo "✅ Cleanup complete."
+      ;;
+    -[mM])
+      FLAG_MINIMAL=true
+      echo "🤏 Building with minimal files"
+      ;;
+    *)
+      echo "Usage: $0 {chrome|firefox|clean}"
+      exit 1
+      ;;
+  esac
+  shift
+done
