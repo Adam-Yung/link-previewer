@@ -324,30 +324,59 @@ function createPreview(url) {
     }
   }
 
-  function navigateTo(newUrl) {
-    // If we are navigating from a point in history, truncate the future history
+  function truncateHistory(newUrl) {
     if (historyIndex < history.length - 1) {
       history = history.slice(0, historyIndex + 1);
     }
     history.push(newUrl);
     historyIndex = history.length - 1;
     updateNavButtons();
+  }
+
+  function navigateTo(newUrl, oldUrl = "", historyNeedTruncate=true) {
+    const currentUrl = oldUrl || history[historyIndex];
+    const currentUrlObj = new URL(currentUrl);
+    const newUrlObj = new URL(newUrl);
+
+    // Check if it's an in-page navigation (same origin and pathname, different hash)
+    if (currentUrlObj.origin === newUrlObj.origin && currentUrlObj.pathname === newUrlObj.pathname) {
+      const iframe = shadowRoot.getElementById('link-preview-iframe');
+      if (iframe) {
+        // Just updating the src with a new hash is efficient.
+        // The browser will scroll to the new anchor without a full reload.
+        iframe.src = newUrl;
+      }
+
+      if (historyNeedTruncate) truncateHistory(newUrl);
+
+      const urlSpan = shadowRoot.querySelector('.link-preview-url');
+      if (urlSpan) {
+        urlSpan.textContent = newUrl;
+      }
+      return; // Exit here to prevent calling renderUrl
+    }
+
+    // If we are navigating from a point in history, truncate the future history
+    if (historyNeedTruncate) truncateHistory(newUrl);
+
     renderUrl(newUrl);
   }
 
   backButton.addEventListener('click', () => {
     if (historyIndex > 0) {
+      const old_url = history[historyIndex];
       historyIndex--;
+      navigateTo(history[historyIndex], old_url, false);
       updateNavButtons();
-      renderUrl(history[historyIndex]);
     }
   });
 
   forwardButton.addEventListener('click', () => {
     if (historyIndex < history.length - 1) {
+      const old_url = history[historyIndex];
       historyIndex++;
+      navigateTo(history[historyIndex], old_url, false);
       updateNavButtons();
-      renderUrl(history[historyIndex]);
     }
   });
 
