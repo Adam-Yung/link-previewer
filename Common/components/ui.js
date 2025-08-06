@@ -1,4 +1,4 @@
-// dist/utils/ui.js
+// components/ui.js
 
 /**
  * Recursively checks if an iframe's content has finished loading.

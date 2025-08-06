@@ -35,11 +35,11 @@
         "<all_urls>"
       ],
       "js": [
-        "utils/global.js",
-        "utils/settings.js",
-        "utils/svg.js",
-        "utils/dom.js",
-        "utils/ui.js",
+        "components/global.js",
+        "components/settings.js",
+        "components/svg.js",
+        "components/dom.js",
+        "components/ui.js",
         "content.js"
       ],
       "css": [
@@ -52,7 +52,7 @@
         "<all_urls>"
       ],
       "js": [
-        "utils/debug.js",
+        "components/debug.js",
         "content_iframe.js"
       ],
       "all_frames": true

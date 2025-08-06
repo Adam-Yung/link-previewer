@@ -1,4 +1,4 @@
-// dist/utils/dom.js
+// components/dom.js
 
 /**
  * Converts percentage-based or centered positioning to absolute pixel values.
