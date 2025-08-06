@@ -35,7 +35,11 @@
         "<all_urls>"
       ],
       "js": [
+        "utils/global.js",
+        "utils/settings.js",
         "utils/svg.js",
+        "utils/dom.js",
+        "utils/ui.js",
         "content.js"
       ],
       "css": [
