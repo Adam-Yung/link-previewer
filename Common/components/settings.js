@@ -1,4 +1,4 @@
-// utils/settings.js
+// components/settings.js
 
 // --- Initialization ---
 
