@@ -82,8 +82,10 @@ show_tree() {
   elif check_cmd tree; then
     tree -s -h --du -C "$dir"
   elif check_cmd perl; then
+    # Thanks Stack Overflow
     find "$dir" | perl -pe 's/:$//;s/[^-][^\/]*\//    /g;s/^    (\S)/└── \1/;s/(^    |    (?= ))/│   /g;s/    (\S)/└── \1/'
   else
+    # Thanks again Stack Overflow
     find "$dir" | sed -e "s/[^-][^\/]*\//  |/g" -e "s/|\([^ ]\)/|-\1/" 
   fi
 }
@@ -180,7 +182,7 @@ main() {
 
   # Parse command-line arguments
   if [[ $# -eq 0 ]]; then
-    usage
+    action="chrome"
   fi
 
   while [[ $# -gt 0 ]]; do
