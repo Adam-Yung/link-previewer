@@ -12,13 +12,6 @@ function checkForIframeReady(frame, shadowRoot) {
   // Check if the iframe document is fully loaded or interactive.
   if (iframeDoc && (iframeDoc.readyState === 'interactive' || iframeDoc.readyState === 'complete')) {
     frame.classList.add('loaded'); // Add class for fade-in animation.
-    // Hide the loader with a small delay to allow the fade-in to be smooth.
-    setTimeout(() => {
-      const loader = shadowRoot.getElementById('loader-container');
-      if (loader) {
-        loader.style.display = 'none';
-      }
-    }, 400);
   } else {
     // If not ready, check again on the next animation frame.
     requestAnimationFrame(() => { checkForIframeReady(frame, shadowRoot) });
@@ -186,12 +179,6 @@ function createPreview(url) {
     forwardButton.disabled = historyIndex >= history.length - 1;
   }
 
-  // Create the loading spinner.
-  const loader = document.createElement('div');
-  loader.id = 'loader-container';
-  loader.innerHTML = `<div class="loader"></div>`;
-  container.appendChild(loader);
-
   function renderUrl(urlToRender) {
     const urlSpan = shadowRoot.querySelector('.link-preview-url');
     const addressBar = shadowRoot.getElementById('link-preview-address-bar');
@@ -212,9 +199,6 @@ function createPreview(url) {
       addressBar.classList.add('is-loading', `ocean-${settings.loadingAnimation}`);
     }
 
-    const loader = shadowRoot.getElementById('loader-container');
-    if (loader) loader.style.display = 'flex';
-
 
     if (isImage) {
       log("Previewing an image!");
@@ -222,9 +206,6 @@ function createPreview(url) {
       img.id = 'link-preview-image';
       img.src = urlToRender;
       img.onload = () => {
-        if (loader) {
-          loader.style.display = 'none';
-        }
         const remainingTime = Date.now() - startTime;
         setTimeout(() => {
           if (addressBar) {
