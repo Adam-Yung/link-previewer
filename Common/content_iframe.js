@@ -8,6 +8,14 @@ if (window.self !== window.top) {
     closeKey = result.closeKey || "Escape";
   });
 
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local') {
+      if (changes.hasOwnProperty("closeKey")) {
+        closeKey = changes["closeKey"].newValue;
+      }
+    }
+  });
+
   document.addEventListener('keydown', (e) => {
       if (e.key === closeKey) {
         chrome.runtime.sendMessage({ action: 'closePreviewFromIframe'})
