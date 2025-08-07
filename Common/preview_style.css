@@ -219,6 +219,7 @@
   visibility: visible;
   background: #fff;
   opacity: 1;
+  animation: fadeIn 0.3s;
 }
 
 #link-preview-container.dark #link-preview-iframe {

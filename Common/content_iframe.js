@@ -2,6 +2,9 @@
 
 // Check if this script is running inside an iframe
 if (window.self !== window.top) {
+  /**
+   * Handling CloseKey Logic
+   */
   let closeKey = "Escape";
 
   chrome.storage.local.get('closeKey').then(result => {
@@ -22,15 +25,28 @@ if (window.self !== window.top) {
     }
   });
 
-  // Listen for 'mousedown' to initiate either a long-press or a modifier-key preview.
-  // Using the capture phase (true) to catch the event early.
+  
+  /**
+   * Handling User Clicking other links within the IFrame
+   */
   document.addEventListener('mousedown', e => {
     const link = e.target.closest('a');
     // Check if the target is a valid link to preview.
     if (link && link.href && !link.href.startsWith('javascript:')) {
       const url = link.href;
       log(`[IFRAME] User clicked a link inside of the iFrame: ${url}`);
+      e.preventDefault();
+      e.stopPropagation();
       chrome.runtime.sendMessage({ action: 'updatePreviewUrl', url: url })
     }
   }, true);
+
+
+  /**
+   * Handling IFrame receiving Focus
+   */
+  window.addEventListener('focus', () => {
+    chrome.runtime.sendMessage({ action: 'iFrameHasFocus'})
+  })
+
 }

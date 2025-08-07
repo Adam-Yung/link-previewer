@@ -2,18 +2,20 @@
 
 // --- Global Event Listeners for Triggering Previews ---
 
-// Listen for 'mousedown' to initiate either a long-press or a modifier-key preview.
-// Using the capture phase (true) to catch the event early.
 document.addEventListener('mousedown', e => {
   // Check if the current site is disabled
   if (state.isCurrentSiteDisabled) {
     return;
   }
-  // Don't do anything if a preview is already active.
-  if (state.isPreviewing) return;
   const link = e.target.closest('a');
   // Check if the target is a valid link to preview.
   if (link && link.href && !link.href.startsWith('javascript:')) {
+    if (state.isPreviewing) {
+      chrome.runtime.sendMessage({ action: 'updatePreviewUrl', url: url });
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     // If the modifier key is pressed, create the preview immediately.
     if (e[settings.modifier]) {
       e.preventDefault();

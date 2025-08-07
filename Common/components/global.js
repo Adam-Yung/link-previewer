@@ -8,6 +8,8 @@ const state = {
   isCurrentSiteDisabled: false,
   scrollX: 0,
   scrollY: 0,
+  isCenterStageMode: false,
+  isPreviewFocused: false
 };
 
 // Default settings for the preview window.
