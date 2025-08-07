@@ -29,7 +29,7 @@
         "components/global.js",
         "components/settings.js",
         "components/svg.js",
-        "components/dom.js",
+        "components/sizing.js",
         "components/ui.js",
         "content.js"
       ],
