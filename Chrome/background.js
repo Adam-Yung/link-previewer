@@ -18,9 +18,9 @@ const headerRule = {
     type: 'modifyHeaders',
     responseHeaders: [
       { header: 'x-frame-options', operation: 'remove' },
-      { 
-        header: 'content-security-policy', 
-        operation: 'set', 
+      {
+        header: 'content-security-policy',
+        operation: 'set',
         value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation;"
       },
       { header: 'x-content-type-options', operation: 'remove' },
@@ -80,37 +80,43 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Listens for messages from content scripts.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'prepareToPreview') {
-    const tabId = sender.tab.id;
-    debug(`[BACKGROUND] Activating preview for tab: ${tabId}`);
-    previewingTabIds.add(tabId);
-    // Enable the rule immediately since this tab is now actively previewing.
-    enableRule();
-    sendResponse({ ready: true });
-    return;
-
-  } else if (request.action === 'updatePreviewUrl') {
-      chrome.tabs.sendMessage(sender.tab.id, {action: 'updatePreviewUrl', url: request.url});
-  } else if (request.action === 'closePreviewFromIframe') {
-      chrome.tabs.sendMessage(sender.tab.id, {action: 'closePreviewFromIframe'});
-  } else if (request.action === 'clearPreview') {
-    const tabId = sender.tab.id;
-    if (previewingTabIds.has(tabId)) {
-      debug(`[BACKGROUND] Deactivating preview for tab: ${tabId}`);
-      previewingTabIds.delete(tabId);
-      // After clearing a preview, check if the currently active tab is still
-      // a preview tab. If not, disable the rule.
-      chrome.tabs.query({ active: true, currentWindow: true }, (activeTabs) => {
-        if (!activeTabs[0] || !previewingTabIds.has(activeTabs[0].id)) {
-          disableRule();
-        }
+  const tabId = sender.tab.id;
+  switch (request.action) {
+    case 'prepareToPreview':
+      debug(`[BACKGROUND] Activating preview for tab: ${tabId}`);
+      previewingTabIds.add(tabId);
+      // Enable the rule immediately since this tab is now actively previewing.
+      enableRule();
+      sendResponse({ ready: true });
+      break;
+    case 'updatePreviewUrl':
+      chrome.tabs.sendMessage(sender.tab.id, { action: 'updatePreviewUrl', url: request.url });
+      break;
+    case 'closePreviewFromIframe':
+      chrome.tabs.sendMessage(sender.tab.id, { action: 'closePreviewFromIframe' });
+      break;
+    case 'clearPreview':
+      if (previewingTabIds.has(tabId)) {
+        debug(`[BACKGROUND] Deactivating preview for tab: ${tabId}`);
+        previewingTabIds.delete(tabId);
+        // After clearing a preview, check if the currently active tab is still
+        // a preview tab. If not, disable the rule.
+        chrome.tabs.query({ active: true, currentWindow: true }, (activeTabs) => {
+          if (!activeTabs[0] || !previewingTabIds.has(activeTabs[0].id)) {
+            disableRule();
+          }
+        });
+      }
+      break;
+    case 'preconnect':
+      // Preconnect to warm up the connection (no changes needed here).
+      fetch(request.url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {
+        // This is an optimization; ignore errors.
       });
-    }
-  } else if (request.action === 'preconnect') {
-    // Preconnect to warm up the connection (no changes needed here).
-    fetch(request.url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {
-      // This is an optimization; ignore errors.
-    });
+      break;
+    case 'iFrameHasFocus':
+      chrome.tabs.sendMessage(sender.tab.id, { action: 'iFrameHasFocus' });
+      break;
   }
 });
 

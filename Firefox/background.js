@@ -119,5 +119,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case 'closePreviewFromIframe':
       browser.tabs.sendMessage(sender.tab.id, { action: 'closePreviewFromIframe' });
       break;
+    case 'iFrameHasFocus':
+      browser.tabs.sendMessage(sender.tab.id, { action: 'iFrameHasFocus' });
   }
 });

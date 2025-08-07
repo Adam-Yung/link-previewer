@@ -249,6 +249,23 @@ function createPreview(url) {
     }
   }
 
+  function isInCenterStage() {
+    return container.classList.contains("is-centered");
+  }
+
+  function previewFocusHandler() {
+    if (state.isPreviewFocused) {
+      log(`Preview is being focused!`);
+    }
+    else {
+      log(`Parent is being focused!`);
+    }
+  }
+  window.addEventListener('focus', () => {
+    state.isPreviewFocused = false;
+    previewFocusHandler();
+  });
+
   function truncateHistory(newUrl) {
     if (historyIndex < history.length - 1) {
       history = history.slice(0, historyIndex + 1);
@@ -258,10 +275,15 @@ function createPreview(url) {
     updateNavButtons();
   }
 
-  function navigateTo(newUrl, oldUrl = "", historyNeedTruncate=true) {
+  function navigateTo(newUrl, oldUrl = "", historyNeedTruncate = true) {
     const currentUrl = oldUrl || history[historyIndex];
     const currentUrlObj = new URL(currentUrl);
     const newUrlObj = new URL(newUrl);
+
+    if (url.startsWith('http://')) {
+      createHttpWarningPopup(url, true);
+      return;
+    }
 
     // Check if it's an in-page navigation (same origin and pathname, different hash)
     if (currentUrlObj.origin === newUrlObj.origin && currentUrlObj.pathname === newUrlObj.pathname) {
@@ -315,13 +337,17 @@ function createPreview(url) {
   });
 
   const messageListener = (request) => {
-    if (request.action === 'updatePreviewUrl') {
-      navigateTo(request.url);
-    }
-    else if (request.action === 'closePreviewFromIframe') {
-      closePreview();
-    }
-
+    switch (request.action) {
+      case 'updatePreviewUrl':
+        navigateTo(request.url);
+        break;
+      case 'closePreviewFromIframe':
+        closePreview();
+        break;
+      case 'iFrameHasFocus':
+        state.isPreviewFocused = true;
+        previewFocusHandler();
+    };
   };
   chrome.runtime.onMessage.addListener(messageListener);
 
@@ -366,109 +392,6 @@ function createPreview(url) {
 
   clickInterceptor.addEventListener('click', closePreview);
   document.addEventListener('keydown', handleEsc);
-}
-
-/**
-* Creates a generic, styled pop-up for warnings or information.
-* @param {object} options - Configuration for the popup.
-* @param {string} options.id - The ID for the popup element.
-* @param {string} options.icon - SVG string for the icon.
-* @param {string} options.title - The title of the popup.
-* @param {string} options.message - The main message body.
-* @param {Array<object>} options.buttons - Array of button configurations.
-* - {string} id - The ID for the button.
-* - {string} text - The text content of the button.
-* - {function} onClick - The click handler for the button.
-*/
-function createWarningPopup({ id, icon, title, message, buttons }) {
-  // Create a full-page overlay to dim the background.
-  const overlay = document.createElement('div');
-  overlay.id = `${id}-overlay`;
-  overlay.className = 'link-preview-warning-overlay';
-  document.body.appendChild(overlay);
-
-  // Create the pop-up container
-  const popup = document.createElement('div');
-  popup.id = id;
-  popup.className = 'link-preview-warning-popup';
-  popup.classList.add(settings.theme); // Add theme class for styling
-
-  // Generate button HTML
-  const buttonsHTML = buttons.map(btn => `<button id="${btn.id}">${btn.text}</button>`).join('');
-
-  // Set the complete inner HTML for the popup.
-  popup.innerHTML = `
-        <div class="popup-header">
-            ${icon}
-            <h3>${title}</h3>
-        </div>
-        <p>${message}</p>
-        <div class="link-preview-popup-buttons">
-            ${buttonsHTML}
-        </div>
-    `;
-  document.body.appendChild(popup);
-
-  // --- Event Handlers & Cleanup ---
-  const closePopup = () => {
-    popup.remove();
-    overlay.remove();
-    document.removeEventListener('keydown', handleWarningEsc);
-    state.isPreviewing = false; // Reset the flag to allow new previews.
-  };
-
-  const handleWarningEsc = (e) => {
-    if (e.key === settings.closeKey) {
-      closePopup();
-    }
-  };
-
-  // Attach event listeners
-  buttons.forEach(btnConfig => {
-    popup.querySelector(`#${btnConfig.id}`).addEventListener('click', () => {
-      btnConfig.onClick();
-      closePopup(); // Close popup after any button click
-    });
-  });
-
-  overlay.addEventListener('click', closePopup);
-  document.addEventListener('keydown', handleWarningEsc);
-}
-
-/**
- * Shows a specific warning popup for insecure HTTP links.
- * @param {string} url - The insecure URL.
- */
-function createHttpWarningPopup(url) {
-  createWarningPopup({
-    id: 'link-preview-http-warning',
-    icon: warningIcon,
-    title: 'Insecure Link',
-    message: 'Previews are disabled for non-encrypted (HTTP) pages for your security.',
-    buttons: [
-      { id: 'warning-cancel', text: 'Cancel', onClick: () => { } },
-      { id: 'warning-open', text: 'Open in New Tab', onClick: () => window.open(url, '_blank') }
-    ]
-  });
-}
-
-/**
- * Shows a popup informing the user that the extension context is lost and the page needs to be reloaded.
- */
-function showContextExpiredPopup() {
-  // First, ensure any existing preview elements are cleaned up.
-  closePreview();
-
-  createWarningPopup({
-    id: 'link-preview-context-warning',
-    icon: expiredIcon,
-    title: 'Context Expired',
-    message: 'Link Previewer needs to be re-initialized. Please reload the page to continue using previews.',
-    buttons: [
-      { id: 'context-cancel', text: 'Dismiss', onClick: () => { } },
-      { id: 'context-reload', text: 'Reload Page', onClick: () => window.location.reload() }
-    ]
-  });
 }
 
 
