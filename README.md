@@ -78,16 +78,16 @@ Want to contribute or build your own version? Follow these simple steps.
     * **For Google Chrome:**
 
         ```bash
-        npm run build:chrome # Or equivalently ./build/build.sh chrome
+        npm run build chrome # Or equivalently ./build/build.sh chrome
         ```
 
     * **For Mozilla Firefox:**
 
         ```bash
-        npm run build:firefox # Or equivalently ./build/build.sh firefox
+        npm run build firefox # Or equivalently ./build/build.sh firefox
         ```
 
-    After running a build command, the complete, unpacked extension will be available in the `dist/` directory.
+    After running a build command, the complete, unpacked extension will be available in the `out/` directory.
 
 3. **Load the Extension in Your Browser**
 
@@ -95,13 +95,13 @@ Want to contribute or build your own version? Follow these simple steps.
         1. Navigate to `chrome://extensions`.
         2. Enable "Developer mode" (toggle in the top right).
         3. Click "Load unpacked".
-        4. Select the `dist` folder from this project.
+        4. Select the `out/dist` folder from this project.
 
     * **Firefox:**
         1. Navigate to `about:debugging`.
         2. Click "This Firefox" in the sidebar.
         3. Click "Load Temporary Add-on...".
-        4. Open the `dist` folder and select the `manifest.json` file.
+        4. Open the `out` folder and select the `link-previewer-firefox-[Version].zip` file.
 
 ---
 

@@ -4,9 +4,7 @@
   "description": "Preview links in a popup without leaving your current page",
   "private": true,
   "scripts": {
-    "build": "cd build && ./build.sh chrome",
-    "build:chrome": "cd build && ./build.sh chrome",
-    "build:firefox": "cd build && ./build.sh firefox",
+    "build": "cd build && ./build.sh",
     "clean": "cd build && ./build.sh clean"
   }
 }
