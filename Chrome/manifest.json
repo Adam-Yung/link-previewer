@@ -38,6 +38,8 @@
         "components/global.js",
         "components/settings.js",
         "components/svg.js",
+        "components/history.js",
+        "components/parentPage.js",
         "components/popups.js",
         "components/sizing.js",
         "components/ui.js",

@@ -4,10 +4,15 @@ const state = {
   isPreviewing: false,
   isCurrentSiteDisabled: false,
   isCenterStageMode: false,
-  originalBodyOverflow: '',
-  originalDocumentOverflow: '',
   isPreviewFocused: false,
-  historyManager: null
+  historyManager: null,
+  container: null,
+  isDragging: null,
+  overflow: {
+    enabled: false,
+    originalBodyOverflow: '',
+    originalDocumentOverflow: '',
+  }
 };
 
 // Default settings for the preview window.

@@ -35,6 +35,12 @@
   from {opacity: 1; }
   to {opacity: 0; }
 }
+
+@keyframes loadedFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 #link-preview-container.light {
   background: rgba(255, 255, 255, 0.45);
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -114,6 +120,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 14.5px;
+    user-select: none;
 }
 .link-preview-nav-controls {
     flex-shrink: 0;
@@ -219,7 +226,7 @@
   visibility: visible;
   background: #fff;
   opacity: 1;
-  animation: fadeIn 0.3s;
+  animation: loadedFade 1s;
 }
 
 #link-preview-container.dark #link-preview-iframe {
