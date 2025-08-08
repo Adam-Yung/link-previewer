@@ -38,7 +38,7 @@ function createPreview(url) {
   // Create the host element for the shadow DOM.
   const previewHost = document.createElement('div');
   previewHost.id = 'link-preview-host';
-  previewHost.style.pointerEvents = 'auto'; // Re-enable pointer events for the preview itself.
+
   // Add the host to the body BEFORE hiding other elements
   document.body.appendChild(previewHost);
 
@@ -60,6 +60,8 @@ function createPreview(url) {
   const container = document.createElement('div');
   container.id = 'link-preview-container';
   container.classList.add(settings.theme);
+  container.style.pointerEvents = 'auto';
+  state.container = container;
 
   // Apply size and position from settings.
   container.style.width = settings.width;
@@ -171,12 +173,12 @@ function createPreview(url) {
 
   function previewFocusHandler() {
     if (state.isPreviewFocused) {
-      log(`Preview is being focused!`);
-      document.body.style.pointerEvents = 'none';
+      log(`Preview is being focused, disabling parent webpage overflow!`);
+      toggleParentPageOverflow(true);
     }
     else {
-      log(`Parent is being focused!`);
-      document.body.style.pointerEvents = 'auto';
+      log(`Parent is being focused, enabling parent webpage overflow!`);
+      toggleParentPageOverflow(false);
     }
   }
   window.addEventListener('focus', () => {

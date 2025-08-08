@@ -10,10 +10,12 @@ document.addEventListener('mousedown', e => {
   const link = e.target.closest('a');
   // Check if the target is a valid link to preview.
   if (link && link.href && !link.href.startsWith('javascript:')) {
-    if (state.isPreviewing) {
-      chrome.runtime.sendMessage({ action: 'updatePreviewUrl', url: url });
+    if (state.isPreviewing && (!state.isDragging)) {
+      const url = link.href;
+      log(`User clicked a link on Parent Page while Preview is Open: ${url}`);
       e.preventDefault();
       e.stopPropagation();
+      chrome.runtime.sendMessage({ action: 'updatePreviewUrl', url: url })
       return;
     }
     // If the modifier key is pressed, create the preview immediately.
@@ -31,16 +33,23 @@ document.addEventListener('mousedown', e => {
 }, true);
 
 // Listen for 'mouseup' to cancel the long-press timer if the mouse is released early.
-document.addEventListener('mouseup', () => {
+document.addEventListener('mouseup', (e) => {
   clearTimeout(state.longClickTimer);
+  if (state.isPreviewing && (!state.isDragging)) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
 }, true);
 
 // Listen for 'click' with the modifier key to prevent the default navigation action.
 document.addEventListener('click', e => {
   const link = e.target.closest('a');
-  if (link && e[settings.modifier]) {
-    e.preventDefault();
-    e.stopPropagation();
+  if (link) {
+    if ((e[settings.modifier]) ||
+      (state.isPreviewing)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   }
 }, true);
 

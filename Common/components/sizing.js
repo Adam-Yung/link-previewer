@@ -1,17 +1,16 @@
 // components/sizing.js
 
-let container = null;
-
 function isInCenterStage() {
-  log(`Container: ${container}, dimensions: \nw: ${container.style.width}, h: ${container.style.height}, top: ${container.style.top}, left: ${container.style.left}`)
-  if (!container)
+  const c = state.container;
+  log(`Container: ${c}, dimensions: \nw: ${c.style.width}, h: ${c.style.height}, top: ${c.style.top}, left: ${c.style.left}`)
+  if (!c)
     return false;
 
-  return (
-    container.style.width === '90vw' &&
-    container.style.height === '90vh'&&
-    container.style.top === '50%'&&
-    container.style.left === '50%'
+  return c.classList.contains('is-centered') || (
+    c.style.width === '90vw' &&
+    c.style.height === '90vh'&&
+    c.style.top === '50%' &&
+    c.style.left === '50%'
   )
 }
 
@@ -41,12 +40,13 @@ function convertToPixels(element) {
  * @param {HTMLElement} contentElement The iframe or image inside the container.
  */
 function initDrag(e, element, contentElement) {
-  if (!container) container = element;
 
   // Only allow dragging with the primary mouse button and not on control buttons.
   if (e.button !== 0 || e.target.closest('button')) {
     return;
   }
+  state.isDragging = true;
+
   e.preventDefault();
   convertToPixels(element); // Ensure positioning is in pixels.
 
@@ -107,6 +107,8 @@ function initDrag(e, element, contentElement) {
       toggleDisableParentPage(true);
     else
       toggleDisableParentPage(false);
+
+    state.isDragging = false;
   }
 
   // Add the listeners to the entire document to handle mouse movement anywhere on the page.
@@ -123,12 +125,14 @@ function initDrag(e, element, contentElement) {
  * @param {string} dir The direction of the resize (e.g., 'n', 'se', 'w').
  */
 function initResize(e, element, contentElement, dir) {
+  state.isDragging = true;
+
   e.preventDefault();
   convertToPixels(element); // Ensure dimensions and position are in pixels.
+
   if (contentElement) {
     contentElement.style.pointerEvents = 'none'; // Disable content interaction during resize.
   }
-
 
   // Store initial dimensions and mouse position.
   const startX = e.clientX;
@@ -188,6 +192,8 @@ function initResize(e, element, contentElement, dir) {
       toggleDisableParentPage(true);
     else
       toggleDisableParentPage(false);
+
+    state.isDragging = false;
   }
   // Add listeners to the document to handle resizing from anywhere on the page.
   document.documentElement.addEventListener('mousemove', doDrag, false);
