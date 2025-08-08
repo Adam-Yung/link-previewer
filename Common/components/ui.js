@@ -1,24 +1,6 @@
 // components/ui.js
 
 /**
- * Recursively checks if an iframe's content has finished loading.
- * Once loaded, it adds a 'loaded' class to the iframe and hides the loading spinner.
- * @param {HTMLIFrameElement} frame The iframe element to check.
- * @param {ShadowRoot} shadowRoot The shadow root containing the loader element.
- */
-function checkForIframeReady(frame, shadowRoot) {
-  const iframeDoc = frame && (frame.contentDocument || (frame.contentWindow && frame.contentWindow.document));
-
-  // Check if the iframe document is fully loaded or interactive.
-  if (iframeDoc && (iframeDoc.readyState === 'interactive' || iframeDoc.readyState === 'complete')) {
-    frame.classList.add('loaded'); // Add class for fade-in animation.
-  } else {
-    // If not ready, check again on the next animation frame.
-    requestAnimationFrame(() => { checkForIframeReady(frame, shadowRoot) });
-  }
-}
-
-/**
  * Creates and displays the link preview modal.
  * This includes the overlay, shadow DOM container, iframe, and all UI controls.
  * @param {string} url The URL to be loaded in the preview iframe.
@@ -36,19 +18,6 @@ function createPreview(url) {
   }
 
   log(`Starting preview for: ${url}`);
-  // NEW: Save scroll position before applying any styles
-  state.scrollX = window.scrollX;
-  state.scrollY = window.scrollY;
-
-
-  // Store original page overflow styles and then disable scrolling on the main page.
-  state.originalBodyOverflow = document.body.style.overflow;
-  state.originalDocumentOverflow = document.documentElement.style.overflow;
-  document.body.style.overflow = 'hidden';
-  document.documentElement.style.overflow = 'hidden';
-
-  // Clear any previous states
-  state.originalVisibilityStates = [];
 
   // Create a full-page overlay to dim the background.
   const pageOverlay = document.createElement('div');
@@ -66,50 +35,12 @@ function createPreview(url) {
   });
   document.body.appendChild(pageOverlay);
 
-  // Inject a style tag to pause all animations and transitions on the host page.
-  // This improves performance and prevents distracting movements in the background.
-  const pauseStyle = document.createElement('style');
-  pauseStyle.id = 'link-preview-animation-pauzer';
-  pauseStyle.innerHTML = `
-    /* Hide GIFs to prevent them from constantly redrawing */
-    img[src$=".gif"] {
-      visibility: hidden !important;
-    }
-    /* Pause all CSS animations and transitions */
-    * {
-      animation-play-state: paused !important;
-      transition: none !important;
-      transition-property: none !important;
-      transform: none !important;
-      scroll-behavior: auto !important;
-    }`;
-  document.head.appendChild(pauseStyle);
-  document.body.style.pointerEvents = 'none'; // Disable pointer events on the main page.
-
   // Create the host element for the shadow DOM.
   const previewHost = document.createElement('div');
   previewHost.id = 'link-preview-host';
   previewHost.style.pointerEvents = 'auto'; // Re-enable pointer events for the preview itself.
   // Add the host to the body BEFORE hiding other elements
   document.body.appendChild(previewHost);
-
-  // Save original states and then hide elements
-  for (const child of document.body.children) {
-    if (child.id !== 'link-preview-host' && child.tagName !== 'SCRIPT') {
-      // Save the original value (even if it's empty)
-      state.originalVisibilityStates.push({
-        element: child,
-        originalValue: child.style.getPropertyValue('content-visibility')
-      });
-      // Now, set the new value
-      child.style.setProperty('content-visibility', 'auto', 'important');
-    }
-  }
-
-  // Animate the overlay's opacity for a smooth fade-in effect.
-  requestAnimationFrame(() => {
-    pageOverlay.style.opacity = '1';
-  });
 
   // Attach a shadow root to encapsulate the preview's styles and DOM.
   const shadowRoot = previewHost.attachShadow({ mode: 'open' });
@@ -143,10 +74,6 @@ function createPreview(url) {
 
   shadowRoot.appendChild(container);
 
-  // History for back/forward functionality
-  let history = [url];
-  let historyIndex = 0;
-
   // Create the address bar with URL display and control buttons.
   const addressBar = document.createElement('div');
   addressBar.id = 'link-preview-address-bar';
@@ -170,14 +97,6 @@ function createPreview(url) {
     `;
   container.appendChild(addressBar);
 
-  const backButton = shadowRoot.getElementById('link-preview-back');
-  const forwardButton = shadowRoot.getElementById('link-preview-forward');
-  const copyButton = shadowRoot.getElementById('link-preview-copy');
-
-  function updateNavButtons() {
-    backButton.disabled = historyIndex === 0;
-    forwardButton.disabled = historyIndex >= history.length - 1;
-  }
 
   function renderUrl(urlToRender) {
     const urlSpan = shadowRoot.querySelector('.link-preview-url');
@@ -249,16 +168,15 @@ function createPreview(url) {
     }
   }
 
-  function isInCenterStage() {
-    return container.classList.contains("is-centered");
-  }
 
   function previewFocusHandler() {
     if (state.isPreviewFocused) {
       log(`Preview is being focused!`);
+      document.body.style.pointerEvents = 'none';
     }
     else {
       log(`Parent is being focused!`);
+      document.body.style.pointerEvents = 'auto';
     }
   }
   window.addEventListener('focus', () => {
@@ -266,17 +184,9 @@ function createPreview(url) {
     previewFocusHandler();
   });
 
-  function truncateHistory(newUrl) {
-    if (historyIndex < history.length - 1) {
-      history = history.slice(0, historyIndex + 1);
-    }
-    history.push(newUrl);
-    historyIndex = history.length - 1;
-    updateNavButtons();
-  }
 
   function navigateTo(newUrl, oldUrl = "", historyNeedTruncate = true) {
-    const currentUrl = oldUrl || history[historyIndex];
+    const currentUrl = oldUrl || state.historyManager.getCurrentUrl();
     const currentUrlObj = new URL(currentUrl);
     const newUrlObj = new URL(newUrl);
 
@@ -294,7 +204,7 @@ function createPreview(url) {
         iframe.src = newUrl;
       }
 
-      if (historyNeedTruncate) truncateHistory(newUrl);
+      if (historyNeedTruncate) state.historyManager.addNewEntry(newUrl);
 
       const urlSpan = shadowRoot.querySelector('.link-preview-url');
       if (urlSpan) {
@@ -304,37 +214,10 @@ function createPreview(url) {
     }
 
     // If we are navigating from a point in history, truncate the future history
-    if (historyNeedTruncate) truncateHistory(newUrl);
+    if (historyNeedTruncate) state.historyManager.addNewEntry(newUrl);
 
     renderUrl(newUrl);
   }
-
-  backButton.addEventListener('click', () => {
-    if (historyIndex > 0) {
-      const old_url = history[historyIndex];
-      historyIndex--;
-      navigateTo(history[historyIndex], old_url, false);
-      updateNavButtons();
-    }
-  });
-
-  forwardButton.addEventListener('click', () => {
-    if (historyIndex < history.length - 1) {
-      const old_url = history[historyIndex];
-      historyIndex++;
-      navigateTo(history[historyIndex], old_url, false);
-      updateNavButtons();
-    }
-  });
-
-  copyButton.addEventListener('click', () => {
-    navigator.clipboard.writeText(history[historyIndex]).then(() => {
-      if (!copyButton.classList.contains('copied')) {
-        copyButton.classList.add('copied');
-        setTimeout(() => copyButton.classList.remove('copied'), 1500);
-      }
-    });
-  });
 
   const messageListener = (request) => {
     switch (request.action) {
@@ -388,12 +271,15 @@ function createPreview(url) {
       top: container.style.top,
       left: container.style.left
     });
+    toggleDisableParentPage(true);
   });
 
-  clickInterceptor.addEventListener('click', closePreview);
-  document.addEventListener('keydown', handleEsc);
-}
+  state.historyManager = new HistoryManager(shadowRoot, url, navigateTo)
 
+  document.addEventListener('keydown', handleEsc);
+
+  if (isInCenterStage()) toggleDisableParentPage(true);
+}
 
 /**
  * Closes the preview window and cleans up all related elements and event listeners.
@@ -401,9 +287,10 @@ function createPreview(url) {
 function closePreview() {
   if (!state.isPreviewing) return;
 
+  toggleDisableParentPage(false);
+
   const previewHost = document.getElementById('link-preview-host');
   const pageOverlay = document.getElementById('link-preview-page-overlay');
-  const pauseStyle = document.getElementById('link-preview-animation-pauzer');
 
   // Trigger fade-out animations.
   if (previewHost) {
@@ -412,28 +299,11 @@ function closePreview() {
       container.style.animation = 'fadeOut 0.3s forwards ease-out';
     }
   }
-  if (pageOverlay) { pageOverlay.style.opacity = '0'; }
 
   // After the animations, remove elements and restore the page state.
   setTimeout(() => {
     if (previewHost) previewHost.remove();
     if (pageOverlay) pageOverlay.remove();
-    if (pauseStyle) pauseStyle.remove();
-
-    // Restore the original content-visibility states
-    for (const s of state.originalVisibilityStates) {
-      s.element.style.setProperty('content-visibility', s.originalValue);
-    }
-    // Clean up the array
-    state.originalVisibilityStates = [];
-
-    // Restore page functionality.
-    document.body.style.pointerEvents = 'auto';
-    document.body.style.overflow = state.originalBodyOverflow;
-    document.documentElement.style.overflow = state.originalDocumentOverflow;
-
-    // NEW: Restore scroll position
-    window.scrollTo(state.scrollX, state.scrollY);
 
     // Clean up global listeners and state.
     document.removeEventListener('keydown', handleEsc);
@@ -450,5 +320,23 @@ function closePreview() {
 function handleEsc(e) {
   if (e.key === settings.closeKey) {
     closePreview();
+  }
+}
+
+/**
+ * Recursively checks if an iframe's content has finished loading.
+ * Once loaded, it adds a 'loaded' class to the iframe and hides the loading spinner.
+ * @param {HTMLIFrameElement} frame The iframe element to check.
+ * @param {ShadowRoot} shadowRoot The shadow root containing the loader element.
+ */
+function checkForIframeReady(frame, shadowRoot) {
+  const iframeDoc = frame && (frame.contentDocument || (frame.contentWindow && frame.contentWindow.document));
+
+  // Check if the iframe document is fully loaded or interactive.
+  if (iframeDoc && (iframeDoc.readyState === 'interactive' || iframeDoc.readyState === 'complete')) {
+    frame.classList.add('loaded'); // Add class for fade-in animation.
+  } else {
+    // If not ready, check again on the next animation frame.
+    requestAnimationFrame(() => { checkForIframeReady(frame, shadowRoot) });
   }
 }
