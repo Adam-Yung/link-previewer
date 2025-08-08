@@ -10,8 +10,7 @@ const state = {
   isDragging: null,
   overflow: {
     enabled: false,
-    originalBodyOverflow: '',
-    originalDocumentOverflow: '',
+    scrollPosition: 0
   }
 };
 

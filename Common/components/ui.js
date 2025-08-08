@@ -92,7 +92,7 @@ function createPreview(url) {
         </button>
       </div>
       <div class="link-preview-controls">
-        <button id="link-preview-restore" title="Restore default size and position">${restoreIcon}</button>
+        <button id="link-preview-restore" title="Center Stage Mode">${restoreIcon}</button>
         <button id="link-preview-enlarge" title="Open in new tab">${enlargeIcon}</button>
         <button id="link-preview-close" title="Close preview">${closeIcon}</button>
       </div>
@@ -280,7 +280,7 @@ function createPreview(url) {
 
   document.addEventListener('keydown', handleEsc);
 
-  if (isInCenterStage()) toggleDisableParentPage(true);
+  toggleDisableParentPage(isInCenterStage());
 }
 
 /**
