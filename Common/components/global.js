@@ -2,14 +2,12 @@
 const state = {
   longClickTimer: null,
   isPreviewing: false,
+  isCurrentSiteDisabled: false,
+  isCenterStageMode: false,
   originalBodyOverflow: '',
   originalDocumentOverflow: '',
-  originalVisibilityStates: [],
-  isCurrentSiteDisabled: false,
-  scrollX: 0,
-  scrollY: 0,
-  isCenterStageMode: false,
-  isPreviewFocused: false
+  isPreviewFocused: false,
+  historyManager: null
 };
 
 // Default settings for the preview window.

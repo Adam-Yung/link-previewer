@@ -1,5 +1,21 @@
 // components/sizing.js
 
+let container = null;
+
+function isInCenterStage() {
+  log(`Container: ${container}, dimensions: \nw: ${container.style.width}, h: ${container.style.height}, top: ${container.style.top}, left: ${container.style.left}`)
+  if (!container)
+    return false;
+
+  return (
+    container.style.width === '90vw' &&
+    container.style.height === '90vh'&&
+    container.style.top === '50%'&&
+    container.style.left === '50%'
+  )
+}
+
+
 /**
  * Converts percentage-based or centered positioning to absolute pixel values.
  * This is necessary before starting a drag or resize operation to ensure smooth interaction.
@@ -25,6 +41,8 @@ function convertToPixels(element) {
  * @param {HTMLElement} contentElement The iframe or image inside the container.
  */
 function initDrag(e, element, contentElement) {
+  if (!container) container = element;
+
   // Only allow dragging with the primary mouse button and not on control buttons.
   if (e.button !== 0 || e.target.closest('button')) {
     return;
@@ -84,6 +102,11 @@ function initDrag(e, element, contentElement) {
       top: element.style.top,
       left: element.style.left
     });
+
+    if (isInCenterStage())
+      toggleDisableParentPage(true);
+    else
+      toggleDisableParentPage(false);
   }
 
   // Add the listeners to the entire document to handle mouse movement anywhere on the page.
@@ -160,6 +183,11 @@ function initResize(e, element, contentElement, dir) {
       top: element.style.top,
       left: element.style.left
     });
+
+    if (isInCenterStage())
+      toggleDisableParentPage(true);
+    else
+      toggleDisableParentPage(false);
   }
   // Add listeners to the document to handle resizing from anywhere on the page.
   document.documentElement.addEventListener('mousemove', doDrag, false);
