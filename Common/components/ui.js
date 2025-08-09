@@ -74,7 +74,7 @@ function createPreview(url) {
     container.classList.add('is-centered');
   }
   container.addEventListener('click', (e) => {
-    chrome.runtime.sendMessage({ action: 'focusPreview' });
+    chrome.runtime.sendMessage({ action: message.focusPreview });
   })
 
   shadowRoot.appendChild(container);
@@ -145,7 +145,7 @@ function createPreview(url) {
       container.appendChild(iframe);
       addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
       try {
-        chrome.runtime.sendMessage({ action: 'prepareToPreview', url: urlToRender })
+        chrome.runtime.sendMessage({ action: message.prepareToPreview, url: urlToRender })
           .then(response => {
             if (response && response.ready) {
               iframe.src = urlToRender;
@@ -226,13 +226,13 @@ function createPreview(url) {
 
   const messageListener = (request) => {
     switch (request.action) {
-      case 'updatePreviewUrl':
+      case message.updatePreviewUrl:
         navigateTo(request.url);
         break;
-      case 'closePreviewFromIframe':
+      case message.closePreviewFromIframe:
         closePreview();
         break;
-      case 'iFrameHasFocus':
+      case message.iFrameHasFocus:
         state.isPreviewFocused = true;
         previewFocusHandler();
     };
@@ -312,7 +312,7 @@ function closePreview() {
 
     // Clean up global listeners and state.
     document.removeEventListener('keydown', handleEsc);
-    chrome.runtime.sendMessage({ action: 'clearPreview' }); // Tell background to clean up.
+    chrome.runtime.sendMessage({ action: message.clearPreview }); // Tell background to clean up.
     state.isPreviewing = false;
     window.focus();
   }, 200); // Delay should be slightly less than animation duration.

@@ -55,7 +55,7 @@
         "<all_urls>"
       ],
       "js": [
-        "components/debug.js",
+        "components/shared.js",
         "content_iframe.js"
       ],
       "all_frames": true

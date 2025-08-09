@@ -1,11 +1,5 @@
 // background.js
 
-const DEBUG = false;
-function debug(msg) {
-  if (DEBUG)
-    console.log(msg);
-}
-
 const RULE_ID = 1;
 // Use a Set to store the IDs of all tabs with an active preview.
 const previewingTabIds = new Set();
@@ -48,7 +42,7 @@ async function enableRule() {
 
   // 2. Check if a rule with our ID is already in the list.
   if (existingRules.some(rule => rule.id === RULE_ID)) {
-    // debug('[BACKGROUND] Rule is already active. No action needed.');
+    // log('[BACKGROUND] Rule is already active. No action needed.');
     return; // Exit if the rule already exists.
   }
 
@@ -56,7 +50,7 @@ async function enableRule() {
   await chrome.declarativeNetRequest.updateSessionRules({
     addRules: [headerRule]
   });
-  debug('[BACKGROUND] Header modification rule ENABLED.');
+  log('[BACKGROUND] Header modification rule ENABLED.');
 }
 
 
@@ -67,7 +61,7 @@ async function disableRule() {
   await chrome.declarativeNetRequest.updateSessionRules({
     removeRuleIds: [RULE_ID]
   });
-  debug('[BACKGROUND] Header modification rule DISABLED.');
+  log('[BACKGROUND] Header modification rule DISABLED.');
 }
 
 
@@ -82,22 +76,16 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const tabId = sender.tab.id;
   switch (request.action) {
-    case 'prepareToPreview':
-      debug(`[BACKGROUND] Activating preview for tab: ${tabId}`);
+    case message.prepareToPreview:
+      log(`[BACKGROUND] Activating preview for tab: ${tabId}`);
       previewingTabIds.add(tabId);
       // Enable the rule immediately since this tab is now actively previewing.
       enableRule();
       sendResponse({ ready: true });
       break;
-    case 'updatePreviewUrl':
-      chrome.tabs.sendMessage(sender.tab.id, { action: 'updatePreviewUrl', url: request.url });
-      break;
-    case 'closePreviewFromIframe':
-      chrome.tabs.sendMessage(sender.tab.id, { action: 'closePreviewFromIframe' });
-      break;
-    case 'clearPreview':
+    case message.clearPreview:
       if (previewingTabIds.has(tabId)) {
-        debug(`[BACKGROUND] Deactivating preview for tab: ${tabId}`);
+        log(`[BACKGROUND] Deactivating preview for tab: ${tabId}`);
         previewingTabIds.delete(tabId);
         // After clearing a preview, check if the currently active tab is still
         // a preview tab. If not, disable the rule.
@@ -108,17 +96,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
       }
       break;
-    case 'preconnect':
+    case message.preconnect:
       // Preconnect to warm up the connection (no changes needed here).
       fetch(request.url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {
         // This is an optimization; ignore errors.
       });
       break;
-    case 'iFrameHasFocus':
-      chrome.tabs.sendMessage(sender.tab.id, { action: 'iFrameHasFocus' });
+    case message.iFrameHasFocus:
+      chrome.tabs.sendMessage(sender.tab.id, { action: message.iFrameHasFocus });
       break;
-    case 'focusPreview':
-      chrome.tabs.sendMessage(sender.tab.id, { action: 'focusPreview' });
+    case message.focusPreview:
+      chrome.tabs.sendMessage(sender.tab.id, { action: message.focusPreview });
+      break;
+    case message.updatePreviewUrl:
+      chrome.tabs.sendMessage(sender.tab.id, { action: message.updatePreviewUrl, url: request.url });
+      break;
+    case message.closePreviewFromIframe:
+      chrome.tabs.sendMessage(sender.tab.id, { action: message.closePreviewFromIframe });
       break;
   }
 });
@@ -129,10 +123,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
  */
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   if (previewingTabIds.has(activeInfo.tabId)) {
-    debug(`[BACKGROUND] Switched TO a preview tab (${activeInfo.tabId}).`);
+    log(`[BACKGROUND] Switched TO a preview tab (${activeInfo.tabId}).`);
     await enableRule();
   } else {
-    debug(`[BACKGROUND] Switched AWAY from a preview tab.`);
+    log(`[BACKGROUND] Switched AWAY from a preview tab.`);
     await disableRule();
   }
 });
@@ -142,10 +136,10 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   // Check if the closed tab was in our preview set.
   if (previewingTabIds.has(tabId)) {
     previewingTabIds.delete(tabId);
-    debug(`[BACKGROUND] Preview tab ${tabId} closed, removed from set.`);
+    log(`[BACKGROUND] Preview tab ${tabId} closed, removed from set.`);
     // If this was the very last previewing tab, ensure the rule is disabled.
     if (previewingTabIds.size === 0) {
-      debug('[BACKGROUND] Last preview tab closed. Disabling rule.');
+      log('[BACKGROUND] Last preview tab closed. Disabling rule.');
       disableRule();
     }
   }

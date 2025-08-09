@@ -1,4 +1,18 @@
 /**
+ * Message Names shared between background.js and frontend code
+ */
+const message = {
+  prepareToPreview: 'prepareToPreview',
+  clearPreview: 'clearPreview',
+  preconnect: 'preconnect',
+  iFrameHasFocus: 'iFrameHasFocus',
+  focusPreview: 'focusPreview',
+  updatePreviewUrl: 'updatePreviewUrl',
+  closePreviewFromIframe: 'closePreviewFromIframe'
+}
+
+
+/**
  * Debugging Code
  */
 
