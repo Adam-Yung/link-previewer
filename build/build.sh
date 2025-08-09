@@ -70,6 +70,9 @@ get_version() {
 clean() {
   log "${C_YELLOW}" "🧹" "Cleaning up previous build artifacts..."
   rm -rf "${PROJECT_ROOT}/${OUT_DIR}"
+  # Remove the files people coming from older versions might have
+  [ -d dist ] && rm -rf dist
+  find . -type f -name "*.zip" | xargs rm -f 
 }
 
 show_tree() {
