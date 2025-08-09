@@ -13,32 +13,53 @@ function findRequiredElement(id, parent = document) {
   return element;
 }
 
+const scrollLockState = {
+  isLocked: false,
+  scrollPosition: 0,
+};
 
 function toggleParentPageOverflow(disable) {
-  // Ensure body and documentElement exist before trying to access their style.
-  if (!document.body || !document.documentElement) {
-    throw new Error("Cannot toggle page overflow: document.body or document.documentElement is not available.");
-  }
+  const htmlElement = document.documentElement;
+  const bodyElement = document.body;
 
-  if (disable === state.overflow.enabled) return;
+  if (disable === scrollLockState.isLocked) {
+    return;
+  }
 
   if (disable) {
-    state.overflow.scrollPosition = window.scrollY || document.documentElement.scrollTop;
-    document.body.style.position = 'fixed';
-    document.body.style.overflow = 'hidden';
-    // document.documentElement.style.overflow = 'hidden';
-    document.body.style.top = `-${state.overflow.scrollPosition}px`;
-    document.body.style.width = '100%';
+    // --- Disable Scroll ---
+
+    // 1. Save current scroll position
+    scrollLockState.scrollPosition = window.scrollY;
+
+    // 2. Add the locking class to the <html> element
+    htmlElement.classList.add('html-scroll-locked');
+
+    // 3. Freeze the body's position
+    bodyElement.style.position = 'fixed';
+    bodyElement.style.top = `-${scrollLockState.scrollPosition}px`;
+    bodyElement.style.width = '100%'; // Ensure body takes full width
+    
+    scrollLockState.isLocked = true;
+
   } else {
-    document.body.style.removeProperty('overflow');
-    // document.documentElement.style.removeProperty('overflow');
-    document.body.style.removeProperty('position');
-    document.body.style.removeProperty('top');
-    document.body.style.removeProperty('width');
-    window.scrollTo(0, state.overflow.scrollPosition);
+    // --- Enable Scroll ---
+
+    // 1. Remove the locking class from <html>
+    htmlElement.classList.remove('html-scroll-locked');
+
+    // 2. Remove the inline styles we added
+    bodyElement.style.removeProperty('position');
+    bodyElement.style.removeProperty('top');
+    bodyElement.style.removeProperty('width');
+
+    // 3. Jump back to the original scroll position
+    window.scrollTo(0, scrollLockState.scrollPosition);
+
+    scrollLockState.isLocked = false;
   }
-  state.overflow.enabled = disable;
 }
+
 
 function toggleDisableParentPage(disable) {
   // Find all required elements upfront. If any are missing, the function will stop and throw an error.
