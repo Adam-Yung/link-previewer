@@ -73,6 +73,9 @@ function createPreview(url) {
   if (settings.top.includes('%') || settings.left.includes('%')) {
     container.classList.add('is-centered');
   }
+  container.addEventListener('click', (e) => {
+    chrome.runtime.sendMessage({ action: 'focusPreview' });
+  })
 
   shadowRoot.appendChild(container);
 
@@ -174,11 +177,11 @@ function createPreview(url) {
   function previewFocusHandler() {
     if (state.isPreviewFocused) {
       log(`Preview is being focused, disabling parent webpage overflow!`);
-      toggleParentPageOverflow(true);
+      scrollLockParentPage(true);
     }
     else {
       log(`Parent is being focused, enabling parent webpage overflow!`);
-      toggleParentPageOverflow(false);
+      scrollLockParentPage(false);
     }
   }
   window.addEventListener('focus', () => {
@@ -311,6 +314,7 @@ function closePreview() {
     document.removeEventListener('keydown', handleEsc);
     chrome.runtime.sendMessage({ action: 'clearPreview' }); // Tell background to clean up.
     state.isPreviewing = false;
+    window.focus();
   }, 200); // Delay should be slightly less than animation duration.
 }
 

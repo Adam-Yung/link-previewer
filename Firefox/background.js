@@ -121,5 +121,9 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
     case 'iFrameHasFocus':
       browser.tabs.sendMessage(sender.tab.id, { action: 'iFrameHasFocus' });
+      break;
+    case 'focusPreview':
+      chrome.tabs.sendMessage(sender.tab.id, { action: 'focusPreview' });
+      break;
   }
 });
