@@ -8,10 +8,6 @@ const state = {
   historyManager: null,
   container: null,
   isDragging: null,
-  overflow: {
-    enabled: false,
-    scrollPosition: 0
-  }
 };
 
 // Default settings for the preview window.
