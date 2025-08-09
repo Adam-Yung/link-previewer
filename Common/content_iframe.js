@@ -49,4 +49,11 @@ if (window.self !== window.top) {
     chrome.runtime.sendMessage({ action: 'iFrameHasFocus'})
   })
 
+  chrome.runtime.onMessage.addListener((request) => {
+    switch (request.action) {
+      case 'focusPreview':
+        window.focus();
+        break;
+    }
+  });
 }

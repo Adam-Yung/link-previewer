@@ -25,7 +25,7 @@ function formatDate(date) {
 function log(msg, level = LOGGING.LOG) {
   if (!ALLOW_DEBUGGING) return;
   const time = new Date();
-  const message = `${formatDate(time)}:\n[CONTENT] ${msg}`;
+  const message = `${formatDate(time)}: [${getCallerName()}]\n${msg}`;
   switch (level) {
     case LOGGING.INFO:
       console.info(message);
@@ -36,5 +36,9 @@ function log(msg, level = LOGGING.LOG) {
     case LOGGING.ERROR:
       console.error(message);
       break;
+  }
+  function getCallerName() {
+    const stack = new Error().stack.split("\n");
+    return stack[3]?.split()[0-2]; // 0: Error, 1: getCallerName, 2: log, 3: TARGET!
   }
 }

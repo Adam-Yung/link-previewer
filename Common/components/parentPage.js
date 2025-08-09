@@ -18,7 +18,7 @@ const scrollLockState = {
   scrollPosition: 0,
 };
 
-function toggleParentPageOverflow(disable) {
+function scrollLockParentPage(disable) {
   const htmlElement = document.documentElement;
   const bodyElement = document.body;
 
@@ -26,6 +26,7 @@ function toggleParentPageOverflow(disable) {
     return;
   }
 
+  log(`scrollLockParentPage Called! locking: ${disable}`);
   if (disable) {
     // --- Disable Scroll ---
 
@@ -39,9 +40,6 @@ function toggleParentPageOverflow(disable) {
     bodyElement.style.position = 'fixed';
     bodyElement.style.top = `-${scrollLockState.scrollPosition}px`;
     bodyElement.style.width = '100%'; // Ensure body takes full width
-    
-    scrollLockState.isLocked = true;
-
   } else {
     // --- Enable Scroll ---
 
@@ -55,9 +53,8 @@ function toggleParentPageOverflow(disable) {
 
     // 3. Jump back to the original scroll position
     window.scrollTo(0, scrollLockState.scrollPosition);
-
-    scrollLockState.isLocked = false;
   }
+  scrollLockState.isLocked = disable;
 }
 
 
@@ -109,7 +106,7 @@ function toggleDisableParentPage(disable) {
     clickInterceptor.removeEventListener('click', closePreview);
   }
 
-  toggleParentPageOverflow(disable);
+  scrollLockParentPage(disable);
 
   function addPauseStyle() {
     if (!pauseStyle) {

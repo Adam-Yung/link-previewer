@@ -2,7 +2,6 @@
 
 function isInCenterStage() {
   const c = state.container;
-  log(`Container: ${c}, dimensions: \nw: ${c.style.width}, h: ${c.style.height}, top: ${c.style.top}, left: ${c.style.left}`)
   if (!c)
     return false;
 
@@ -103,11 +102,7 @@ function initDrag(e, element, contentElement) {
       left: element.style.left
     });
 
-    if (isInCenterStage())
-      toggleDisableParentPage(true);
-    else
-      toggleDisableParentPage(false);
-
+    toggleDisableParentPage(isInCenterStage());
     state.isDragging = false;
   }
 
@@ -188,11 +183,7 @@ function initResize(e, element, contentElement, dir) {
       left: element.style.left
     });
 
-    if (isInCenterStage())
-      toggleDisableParentPage(true);
-    else
-      toggleDisableParentPage(false);
-
+    toggleDisableParentPage(isInCenterStage());
     state.isDragging = false;
   }
   // Add listeners to the document to handle resizing from anywhere on the page.
