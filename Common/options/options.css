@@ -203,13 +203,12 @@ body.dark-theme .key-capture:not(:focus):empty::before { color: var(--subtle-tex
     flex-shrink: 0;
 }
 
-button[type="submit"] {
+button[type="submit"], .reset-button {
   width: 100%;
   height: 42px;
   padding: 10px 20px;
   border: none;
   border-radius: 6px;
-  background-color: var(--primary-color);
   color: white;
   font-size: 14px;
   font-weight: bold;
@@ -222,11 +221,24 @@ button[type="submit"] {
   overflow: hidden;
 }
 
+button[type="submit"] {
+    background-color: var(--primary-color);
+}
+
+.reset-button {
+    background-color: var(--error-color);
+    margin-top: 10px;
+}
+
+.reset-button:hover {
+    background-color: #b02a37;
+}
+
 .button-text { transition: opacity 0.2s; }
 .button-icon { position: absolute; opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.2s; }
+button[type="submit"].is-saved .button-text, .reset-button.is-reset .button-text { opacity: 0; }
+button[type="submit"].is-saved .button-icon, .reset-button.is-reset .button-icon { opacity: 1; transform: scale(1); }
 button[type="submit"].is-saved { background-color: var(--success-color); }
-button[type="submit"].is-saved .button-text { opacity: 0; }
-button[type="submit"].is-saved .button-icon { opacity: 1; transform: scale(1); }
 
 /* --- Theme Switcher --- */
 .theme-switcher { position: relative; display: inline-block; width: 24px; height: 24px; cursor: pointer; }
