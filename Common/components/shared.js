@@ -16,7 +16,7 @@ const message = {
  * Debugging Code
  */
 
-const ALLOW_DEBUGGING = true;
+const ALLOW_DEBUGGING = false;
 
 const LOGGING = {
   INFO: 0,
@@ -53,6 +53,6 @@ function log(msg, level = LOGGING.LOG) {
   }
   function getCallerName() {
     const stack = new Error().stack.split("\n");
-    return stack[3]?.split()[0-2]; // 0: Error, 1: getCallerName, 2: log, 3: TARGET!
+    return stack[3]?.trim().slice(0, 20); // 0: Error, 1: getCallerName, 2: log, 3: TARGET!
   }
 }
