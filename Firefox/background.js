@@ -1,11 +1,5 @@
 // background.js for Firefox (Manifest V2)
 
-const DEBUG = false;
-function debug(msg) {
-  if (DEBUG)
-    console.log(msg);
-}
-
 let previewingUrl = null;
 
 function requestHeadersListener(details) {
@@ -25,7 +19,7 @@ function requestHeadersListener(details) {
     // Also spoof the Referer for good measure
     details.requestHeaders.push({ name: 'Referer', value: details.url });
 
-    debug(`[BACKGROUND] Spoofed the header request to use appear as same origin: ${details.url}`);
+    log(`[BACKGROUND] Spoofed the header request to use appear as same origin: ${details.url}`);
     return { requestHeaders: details.requestHeaders };
   }
   return { requestHeaders: details.requestHeaders };
@@ -64,7 +58,7 @@ function responseHeadersListener(details) {
       value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation;"
     });
 
-    debug(`[BACKGROUND] Modified response headers for iframe display: ${previewingUrl}`);
+    log(`[BACKGROUND] Modified response headers for iframe display: ${previewingUrl}`);
     return { responseHeaders: newHeaders };
   }
   return { responseHeaders: details.responseHeaders };
@@ -89,20 +83,20 @@ browser.webRequest.onHeadersReceived.addListener(
 // --- Message handling from content scripts ---
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
-    case 'prepareToPreview':
-      debug(`[BACKGROUND] Preparing for preview: ${request.url}`);
+    case message.prepareToPreview:
+      log(`[BACKGROUND] Preparing for preview: ${request.url}`);
       previewingUrl = request.url;
       sendResponse({ ready: true });
       return true;
 
-    case 'clearPreview':
+    case message.clearPreview:
       previewingUrl = null;
       break;
 
-    case 'preconnect':
+    case message.preconnect:
       const controller = new AbortController();
       const signal = controller.signal;
-      debug(`[BACKGROUND] Preconnecting to: ${request.url}`);
+      log(`[BACKGROUND] Preconnecting to: ${request.url}`);
       // Use GET as it's more widely supported than HEAD
       fetch(request.url, { method: 'GET', mode: 'cors', signal }).catch(() => {
         // Errors are expected as we abort the request. This is fine.
@@ -112,18 +106,17 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // just the act of making the request is enough to warm up the connection.
       controller.abort();
       break;
-
-    case 'updatePreviewUrl':
-      browser.tabs.sendMessage(sender.tab.id, { action: 'updatePreviewUrl', url: request.url });
+    case message.iFrameHasFocus:
+      browser.tabs.sendMessage(sender.tab.id, { action: message.iFrameHasFocus });
       break;
-    case 'closePreviewFromIframe':
-      browser.tabs.sendMessage(sender.tab.id, { action: 'closePreviewFromIframe' });
+    case message.focusPreview:
+      browser.tabs.sendMessage(sender.tab.id, { action: message.focusPreview });
       break;
-    case 'iFrameHasFocus':
-      browser.tabs.sendMessage(sender.tab.id, { action: 'iFrameHasFocus' });
+    case message.updatePreviewUrl:
+      browser.tabs.sendMessage(sender.tab.id, { action: message.updatePreviewUrl, url: request.url });
       break;
-    case 'focusPreview':
-      chrome.tabs.sendMessage(sender.tab.id, { action: 'focusPreview' });
+    case message.closePreviewFromIframe:
+      browser.tabs.sendMessage(sender.tab.id, { action: message.closePreviewFromIframe });
       break;
   }
 });

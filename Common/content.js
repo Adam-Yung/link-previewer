@@ -15,7 +15,7 @@ document.addEventListener('mousedown', e => {
       log(`User clicked a link on Parent Page while Preview is Open: ${url}`);
       e.preventDefault();
       e.stopPropagation();
-      chrome.runtime.sendMessage({ action: 'updatePreviewUrl', url: url })
+      chrome.runtime.sendMessage({ action: message.updatePreviewUrl, url: url })
       return;
     }
     // If the modifier key is pressed, create the preview immediately.
@@ -72,7 +72,7 @@ document.addEventListener('mouseover', e => {
     clearTimeout(hoverTimer); // Debounce the event.
     // Wait a moment before preconnecting to avoid doing it for every link the mouse passes over.
     hoverTimer = setTimeout(() => {
-      chrome.runtime.sendMessage({ action: 'preconnect', url: link.href });
+      chrome.runtime.sendMessage({ action: message.preconnect, url: link.href });
     }, 100);
   }
 });

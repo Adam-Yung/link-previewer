@@ -120,11 +120,11 @@ build_extension() {
 
   log "${C_BLUE}" "🚀" "Building ${browser_capitalized} extension (v${version})..."
 
-  # 1. Prepare directories
+  # Prepare directories
   clean
   mkdir -p "${PROJECT_ROOT}/${DIST_DIR}"
 
-  # 2. Copy common files
+  # Copy common files
   log "${C_BLUE}" "📦" "Copying common files..."
   local rsync_opts=('-a' --exclude='*.gif')
   if [[ "$is_minimal" == "true" ]]; then
@@ -134,11 +134,20 @@ build_extension() {
   fi
   rsync "${rsync_opts[@]}" "${PROJECT_ROOT}/Common/" "${PROJECT_ROOT}/${DIST_DIR}/"
 
-  # 3. Copy browser-specific files
+  # Copy browser-specific files
   log "${C_BLUE}" "📦" "Copying ${browser_capitalized}-specific files..."
   cp -r "${PROJECT_ROOT}/${browser_capitalized}/"* "${PROJECT_ROOT}/${DIST_DIR}/"
 
-  # 4. Update manifest version
+  # Prepend Components/shared.js to background.js
+  log "${C_BLUE}" "🩹" "Prepending shared.js to background.js"
+  local _target="${PROJECT_ROOT}/${DIST_DIR}/components/shared.js"
+  local _dest="${PROJECT_ROOT}/${DIST_DIR}/background.js"
+  local _tmp_backgroundjs=$(mktemp)
+  cp "$_target" "$_tmp_backgroundjs"
+  cat "$_dest" >> "$_tmp_backgroundjs"
+  mv "$_tmp_backgroundjs" "$_dest"
+
+  # Update manifest version
   log "${C_BLUE}" "🔧" "Updating manifest version to ${version}..."
   local manifest_path="${PROJECT_ROOT}/${DIST_DIR}/manifest.json"
   local temp_manifest
@@ -147,7 +156,7 @@ build_extension() {
   mv "$temp_manifest" "$manifest_path"
   [[ "$is_minimal" == "true" ]] && use_minimal_icons "$manifest_path" "$browser"
 
-  # 5. Apply browser-specific modifications
+  # Apply browser-specific modifications
   if [[ "$browser" == "firefox" ]]; then
     log "${C_BLUE}" "🔧" "Applying Firefox compatibility changes..."
     # Use sed compatible with both Linux and macOS
@@ -155,11 +164,11 @@ build_extension() {
     find "${PROJECT_ROOT}/${DIST_DIR}" -type f -name '*.js.bak' -delete
   fi
   
-  # 6. Zip the final package
+  # Zip the final package
   log "${C_BLUE}" "📎" "Zipping files into '${target_zip}'..."
   (cd "${PROJECT_ROOT}/${DIST_DIR}" && zip -r "${PROJECT_ROOT}/${OUT_DIR}/${target_zip}" .) > /dev/null
 
-  # 7. Final Output
+  # Final Output
   show_tree "${PROJECT_ROOT}/${DIST_DIR}"
   log "${C_GREEN}" "✅" "Build complete! Find the package at:"
   printf '%b%s%b\n' \

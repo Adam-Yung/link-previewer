@@ -21,7 +21,7 @@ if (window.self !== window.top) {
 
   document.addEventListener('keydown', (e) => {
       if (e.key === closeKey) {
-        chrome.runtime.sendMessage({ action: 'closePreviewFromIframe'})
+        chrome.runtime.sendMessage({ action: message.closePreviewFromIframe})
     }
   });
 
@@ -37,7 +37,7 @@ if (window.self !== window.top) {
       log(`[IFRAME] User clicked a link inside of the iFrame: ${url}`);
       e.preventDefault();
       e.stopPropagation();
-      chrome.runtime.sendMessage({ action: 'updatePreviewUrl', url: url })
+      chrome.runtime.sendMessage({ action: message.updatePreviewUrl, url: url })
     }
   }, true);
 
@@ -46,12 +46,12 @@ if (window.self !== window.top) {
    * Handling IFrame receiving Focus
    */
   window.addEventListener('focus', () => {
-    chrome.runtime.sendMessage({ action: 'iFrameHasFocus'})
+    chrome.runtime.sendMessage({ action: message.iFrameHasFocus})
   })
 
   chrome.runtime.onMessage.addListener((request) => {
     switch (request.action) {
-      case 'focusPreview':
+      case message.focusPreview:
         window.focus();
         break;
     }
