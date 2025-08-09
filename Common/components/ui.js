@@ -92,7 +92,7 @@ function createPreview(url) {
         </button>
       </div>
       <div class="link-preview-controls">
-        <button id="link-preview-restore" title="Center Stage Mode">${restoreIcon}</button>
+        <button id="link-preview-restore" title="Center Stage Mode">${maximizedIcon}</button>
         <button id="link-preview-enlarge" title="Open in new tab">${enlargeIcon}</button>
         <button id="link-preview-close" title="Close preview">${closeIcon}</button>
       </div>

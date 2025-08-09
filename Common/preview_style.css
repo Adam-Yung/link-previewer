@@ -185,8 +185,16 @@
 }
 .link-preview-controls button svg,
 #link-preview-copy svg {
-    width: 18px;
-    height: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+#link-preview-restore {
+  margin-right: 10px;
+}
+
+#link-preview-enlarge {
+  margin-right: 5.5px;
 }
 
 .link-preview-controls button:hover {
