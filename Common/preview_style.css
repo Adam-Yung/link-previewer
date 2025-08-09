@@ -25,7 +25,7 @@ html.html-scroll-locked {
   display: flex; flex-direction: column;
   pointer-events: auto;
   animation: fadeIn 0.3s forwards cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform, opacity, contents;
+  content-visibility: auto;
 }
 
 #link-preview-container.is-centered {

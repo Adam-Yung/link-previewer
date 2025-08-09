@@ -61,6 +61,7 @@ function createPreview(url) {
   container.id = 'link-preview-container';
   container.classList.add(settings.theme);
   container.style.pointerEvents = 'auto';
+  container.style.willChange = "transform, opacity, contents";
   state.container = container;
 
   // Apply size and position from settings.
@@ -136,6 +137,7 @@ function createPreview(url) {
             addressBar.classList.remove('is-loading', 'ocean-blue', 'ocean-orange', 'ocean-magenta');
           }
         }, Math.max(0, 1000 - remainingTime));
+        container.style.willChange = '';
       };
       container.appendChild(img);
       addressBar.addEventListener('mousedown', (e) => initDrag(e, container, img));
@@ -156,6 +158,7 @@ function createPreview(url) {
                     addressBar.classList.remove('is-loading', 'ocean-blue', 'ocean-orange', 'ocean-magenta');
                   }
                 }, Math.max(0, 1000 - remainingTime));
+                container.style.willChange = '';
               }
               checkForIframeReady(iframe, shadowRoot);
             } else {
@@ -283,6 +286,7 @@ function createPreview(url) {
 
   document.addEventListener('keydown', handleEsc);
 
+  disableParentVisibility(true);
   toggleDisableParentPage(isInCenterStage());
 }
 
@@ -293,7 +297,7 @@ function closePreview() {
   if (!state.isPreviewing) return;
 
   toggleDisableParentPage(false);
-
+  disableParentVisibility(false);
   const previewHost = document.getElementById('link-preview-host');
   const pageOverlay = document.getElementById('link-preview-page-overlay');
 
