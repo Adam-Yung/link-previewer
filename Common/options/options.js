@@ -57,13 +57,13 @@ function saveOptions(e) {
     loadingAnimation: document.getElementById('loadingAnimation').value
   };
 
-  browser.storage.local.get('disabledSites').then(data => {
+  chrome.storage.local.get('disabledSites').then(data => {
       const fullSettings = {
           ...generalSettings,
           disabledSites: data.disabledSites || []
       };
 
-      browser.storage.local.set(fullSettings).then(() => {
+      chrome.storage.local.set(fullSettings).then(() => {
         saveButton.classList.add('is-saved');
         setTimeout(() => {
             saveButton.classList.remove('is-saved');
@@ -111,7 +111,7 @@ function resetSettings(e) {
 function handleSiteToggle() {
     if (!currentHostname) return;
 
-    browser.storage.local.get({ disabledSites: [] }).then(data => {
+    chrome.storage.local.get({ disabledSites: [] }).then(data => {
         let disabledSites = data.disabledSites;
         const isCurrentlyDisabled = disabledSites.includes(currentHostname);
 
@@ -125,7 +125,7 @@ function handleSiteToggle() {
             }
         }
         
-        browser.storage.local.set({ disabledSites });
+        chrome.storage.local.set({ disabledSites });
     });
 }
 
@@ -134,7 +134,7 @@ function handleSiteToggle() {
  * Restores all saved settings from storage and populates the form and toggle.
  */
 function restoreOptions() {
-  browser.tabs.query({ active: true, currentWindow: true }).then(tabs => {
+  chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => {
     if (tabs[0] && tabs[0].url) {
         try {
             const url = new URL(tabs[0].url);
@@ -152,7 +152,7 @@ function restoreOptions() {
         }
     }
 
-    browser.storage.local.get(defaults).then(items => {
+    chrome.storage.local.get(defaults).then(items => {
         document.getElementById('duration').value = items.duration;
         document.getElementById('modifier').value = items.modifier;
         
