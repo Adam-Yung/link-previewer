@@ -133,29 +133,3 @@ function toggleDisableParentPage(disable) {
     }
   }
 }
-
-let originalVisibilityStates = [];
-function disableParentVisibility(disable) {
-  return;
-  if (disable) {
-    for (const child of document.body.children) {
-      if (child.id !== 'link-preview-host' && child.tagName !== 'SCRIPT') {
-        // Save the original value (even if it's empty)
-        originalVisibilityStates.push({
-          element: child,
-          originalValue: child.style.getPropertyValue('content-visibility')
-        });
-        // Now, set the new value
-        child.style.setProperty('content-visibility', 'auto', 'important');
-      }
-    }
-  }
-  else {
-    // Restore the original content-visibility states
-    for (const state of originalVisibilityStates) {
-      state.element.style.setProperty('content-visibility', state.originalValue);
-    }
-    // Clean up the array
-    originalVisibilityStates = [];
-  }
-}
