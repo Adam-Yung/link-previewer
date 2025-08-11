@@ -201,15 +201,7 @@ function initResize(e, element, contentElement, dir) {
 }
 
 function attachResizeHandler(container) {
-  let timeoutID = null;
-
-  function resizeWrapper() {
-    if (timeoutID) clearTimeout(timeoutID);
-
-    timeoutID = setTimeout(() => {
-      if (container) checkIframeInBounds(container);
-    }, 250);    
-  }
+  const resizeWrapper = timeoutWrapper(() => {if (container) checkIframeInBounds(container);});
 
   if (container) {
     window.addEventListener('resize', resizeWrapper);
