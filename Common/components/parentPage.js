@@ -18,7 +18,7 @@ const scrollLockState = {
   scrollPosition: 0,
 };
 
-function scrollLockParentPage(disable) {
+function scrollLock(disable) {
   const htmlElement = document.documentElement;
   const bodyElement = document.body;
 
@@ -26,7 +26,7 @@ function scrollLockParentPage(disable) {
     return;
   }
 
-  log(`scrollLockParentPage Called! locking: ${disable}`);
+  log(`scrollLock Called! locking: ${disable}`);
   if (disable) {
     // --- Disable Scroll ---
 
@@ -106,7 +106,7 @@ function toggleDisableParentPage(disable) {
     clickInterceptor.removeEventListener('click', closePreview);
   }
 
-  scrollLockParentPage(disable);
+  scrollLock(disable);
 
   function addPauseStyle() {
     if (!pauseStyle) {

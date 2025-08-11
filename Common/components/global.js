@@ -4,10 +4,10 @@ const state = {
   isPreviewing: false,
   isCurrentSiteDisabled: false,
   isCenterStageMode: false,
-  isPreviewFocused: false,
   historyManager: null,
   container: null,
   isDragging: null,
+  timeoutIDs: new Map()
 };
 
 // Default settings for the preview window.

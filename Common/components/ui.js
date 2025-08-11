@@ -73,11 +73,6 @@ function createPreview(url) {
   if (settings.top.includes('%') || settings.left.includes('%')) {
     container.classList.add('is-centered');
   }
-  container.addEventListener('click', (e) => {
-    const button = e.target.closest('button');
-    if ((button) && (button.id === "link-preview-close" )) return;
-    chrome.runtime.sendMessage({ action: message.focusPreview });
-  })
 
   shadowRoot.appendChild(container);
 
@@ -174,7 +169,6 @@ function createPreview(url) {
       }
     }
   }
-  attachFocusListener(true);
 
   function navigateTo(newUrl, oldUrl = "", historyNeedTruncate = true) {
     const currentUrl = oldUrl || state.historyManager.getCurrentUrl();
@@ -219,8 +213,7 @@ function createPreview(url) {
         closePreview();
         break;
       case message.iFrameHasFocus:
-        state.isPreviewFocused = true;
-        previewFocusHandler();
+        previewTakeFocus(true);
     };
   };
   chrome.runtime.onMessage.addListener(messageListener);
@@ -271,8 +264,7 @@ function createPreview(url) {
 
   toggleDisableParentPage(isInCenterStage());
   attachResizeHandler(container);
-
-  attachFocusParent(container);
+  attachContainerFocus(container);
 }
 
 /**
@@ -283,8 +275,6 @@ function closePreview() {
 
   toggleDisableParentPage(false);
   attachResizeHandler();
-  detachFocusParent();
-  attachFocusListener(true);
 
   const previewHost = document.getElementById('link-preview-host');
   const pageOverlay = document.getElementById('link-preview-page-overlay');

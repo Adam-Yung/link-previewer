@@ -201,8 +201,14 @@ function initResize(e, element, contentElement, dir) {
 }
 
 function attachResizeHandler(container) {
+  let timeoutID = null;
+
   function resizeWrapper() {
-    if (container) checkIframeInBounds(container);
+    if (timeoutID) clearTimeout(timeoutID);
+
+    timeoutID = setTimeout(() => {
+      if (container) checkIframeInBounds(container);
+    }, 250);    
   }
 
   if (container) {

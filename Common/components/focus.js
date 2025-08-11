@@ -1,52 +1,35 @@
-function parentMouseLeave(e) {
-  log(`Mouse left parent, mouseX: ${e.clientX}, mouseY: ${e.clientY}`);
-}
-function parentMouseEnter(e) {
-  log(`Mouse entered parent, mouseX: ${e.clientX}, mouseY: ${e.clientY}`);
-}
-function previewMouseLeave(e) {
-  log(`Mouse left preview, mouseX: ${e.clientX}, mouseY: ${e.clientY}`);
-}
-function previewMouseEnter(e) {
-  log(`Mouse entered preview, mouseX: ${e.clientX}, mouseY: ${e.clientY}`);
-}
-
-function attachFocusParent(ele) {
-  let target = ele || document.documentElement;
-  target.addEventListener('mouseleave', parentMouseLeave);
-  target.addEventListener('mouseenter', parentMouseEnter);
-}
-function detachFocusParent() {
-  let target = ele || document.documentElement;
-  target.removeEventListener('mouseleave', parentMouseLeave);
-  target.removeEventListener('mouseenter', parentMouseEnter);
-}
-function attachFocusPreview() {
-  let target = ele || document.documentElement;
-  target.addEventListener('mouseleave', previewMouseLeave);
-  target.addEventListener('mouseenter', previewMouseEnter);
-}
-function detachFocusPreview() {
-  let target = ele || document.documentElement;
-  target.removeEventListener('mouseleave', previewMouseLeave);
-  target.removeEventListener('mouseenter', previewMouseEnter);
-}
-
-function previewFocusHandler() {
-  if (state.isPreviewFocused) {
+function previewTakeFocus(isTrue) {
+  if (isTrue) {
     log(`Preview is being focused, disabling parent webpage overflow!`);
-    scrollLockParentPage(true);
+    scrollLock(true);
   }
   else {
     log(`Parent is being focused, enabling parent webpage overflow!`);
-    scrollLockParentPage(false);
+    if (!isInCenterStage()) scrollLock(false);
   }
 }
-function previewFocused() {
-  state.isPreviewFocused = false;
-  previewFocusHandler();
+
+
+function timeoutWrapper(func, ms = 100) {
+  // Return a new function that will be used as the event handler
+  return function(...args) {
+    // 'func' is the key to ensure the same timer is cleared and reset
+    let timeoutID = state.timeoutIDs.get(func);
+    if (timeoutID) {
+      clearTimeout(timeoutID);
+    }
+
+    // Use the captured 'args' from when the returned function was called
+    state.timeoutIDs.set(func, setTimeout(() => {
+      func.apply(this, args);
+    }, ms));
+  };
 }
 
-function attachFocusListener(init) {
-  (init) && window.addEventListener('focus', previewFocused) || window.removeEventListener('focus', previewFocused);
+function attachContainerFocus(container) {
+  let previewTakeFocusTO = timeoutWrapper(previewTakeFocus);
+  if (container) {
+    container.addEventListener('mouseleave', () => {previewTakeFocusTO(false)});
+    container.addEventListener('mouseenter', () => {previewTakeFocusTO(true)});
+  }
 }
