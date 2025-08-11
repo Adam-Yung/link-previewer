@@ -10,22 +10,6 @@ function previewTakeFocus(isTrue) {
 }
 
 
-function timeoutWrapper(func, ms = 100) {
-  // Return a new function that will be used as the event handler
-  return function(...args) {
-    // 'func' is the key to ensure the same timer is cleared and reset
-    let timeoutID = state.timeoutIDs.get(func);
-    if (timeoutID) {
-      clearTimeout(timeoutID);
-    }
-
-    // Use the captured 'args' from when the returned function was called
-    state.timeoutIDs.set(func, setTimeout(() => {
-      func.apply(this, args);
-    }, ms));
-  };
-}
-
 function attachContainerFocus(container) {
   let previewTakeFocusTO = timeoutWrapper(previewTakeFocus);
   if (container) {
