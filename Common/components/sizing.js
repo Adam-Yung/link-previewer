@@ -95,6 +95,7 @@ function initDrag(e, element, contentElement) {
     }
     document.documentElement.removeEventListener('mousemove', doDrag, false);
     document.documentElement.removeEventListener('mouseup', stopDrag, false);
+    document.documentElement.removeEventListener('mouseleave', mouseLeaveHandler);
 
     // Save the new position to user settings.
     chrome.storage.local.set({
@@ -106,9 +107,15 @@ function initDrag(e, element, contentElement) {
     state.isDragging = false;
   }
 
-  // Add the listeners to the entire document to handle mouse movement anywhere on the page.
+  function mouseLeaveHandler(e) {
+      log("left window!");
+      stopDrag();
+  }
+
+  // Add listeners to the document to handle resizing from anywhere on the page.
   document.documentElement.addEventListener('mousemove', doDrag, false);
   document.documentElement.addEventListener('mouseup', stopDrag, false);
+  document.documentElement.addEventListener("mouseleave", mouseLeaveHandler);
 }
 
 
@@ -174,7 +181,7 @@ function initResize(e, element, contentElement, dir) {
     }
     document.documentElement.removeEventListener('mousemove', doDrag, false);
     document.documentElement.removeEventListener('mouseup', stopDrag, false);
-
+    document.documentElement.removeEventListener('mouseleave', mouseLeaveHandler);
     // Save the new dimensions and position to user settings.
     chrome.storage.local.set({
       width: element.style.width,
@@ -186,7 +193,14 @@ function initResize(e, element, contentElement, dir) {
     toggleDisableParentPage(isInCenterStage());
     state.isDragging = false;
   }
+
+  function mouseLeaveHandler(e) {
+      log("left window!");
+      stopDrag();
+  }
+
   // Add listeners to the document to handle resizing from anywhere on the page.
   document.documentElement.addEventListener('mousemove', doDrag, false);
   document.documentElement.addEventListener('mouseup', stopDrag, false);
+  document.documentElement.addEventListener("mouseleave", mouseLeaveHandler);
 }
