@@ -56,4 +56,5 @@ if (window.self !== window.top) {
         break;
     }
   });
+  attachFocusPreview();
 }
