@@ -106,8 +106,6 @@ function toggleDisableParentPage(disable) {
     clickInterceptor.removeEventListener('click', closePreview);
   }
 
-  scrollLock(disable);
-
   function addPauseStyle() {
     if (!pauseStyle) {
       pauseStyle = document.createElement('style');
