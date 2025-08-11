@@ -286,6 +286,7 @@ function createPreview(url) {
   document.addEventListener('keydown', handleEsc);
 
   toggleDisableParentPage(isInCenterStage());
+  attachResizeHandler(container);
 }
 
 /**
@@ -295,6 +296,7 @@ function closePreview() {
   if (!state.isPreviewing) return;
 
   toggleDisableParentPage(false);
+  attachResizeHandler();
 
   const previewHost = document.getElementById('link-preview-host');
   const pageOverlay = document.getElementById('link-preview-page-overlay');
