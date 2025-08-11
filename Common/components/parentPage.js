@@ -16,43 +16,21 @@ function findRequiredElement(id, parent = document) {
 const scrollLockState = {
   isLocked: false,
   scrollPosition: 0,
+  parentOverflow: ''
 };
 
 function scrollLock(disable) {
-  const htmlElement = document.documentElement;
-  const bodyElement = document.body;
-
   if (disable === scrollLockState.isLocked) {
     return;
   }
-
+  const htmlElement = document.documentElement;
   log(`scrollLock Called! locking: ${disable}`);
+  
   if (disable) {
-    // --- Disable Scroll ---
-
-    // 1. Save current scroll position
-    scrollLockState.scrollPosition = window.scrollY;
-
-    // 2. Add the locking class to the <html> element
-    htmlElement.classList.add('html-scroll-locked');
-
-    // 3. Freeze the body's position
-    bodyElement.style.position = 'fixed';
-    bodyElement.style.top = `-${scrollLockState.scrollPosition}px`;
-    bodyElement.style.width = '100%'; // Ensure body takes full width
+    scrollLockState.parentOverflow = htmlElement.style.overflow;
+    htmlElement.style.overflow = 'hidden';
   } else {
-    // --- Enable Scroll ---
-
-    // 1. Remove the locking class from <html>
-    htmlElement.classList.remove('html-scroll-locked');
-
-    // 2. Remove the inline styles we added
-    bodyElement.style.removeProperty('position');
-    bodyElement.style.removeProperty('top');
-    bodyElement.style.removeProperty('width');
-
-    // 3. Jump back to the original scroll position
-    window.scrollTo(0, scrollLockState.scrollPosition);
+    htmlElement.style.overflow = scrollLockState.parentOverflow;
   }
   scrollLockState.isLocked = disable;
 }
