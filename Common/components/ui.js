@@ -174,23 +174,7 @@ function createPreview(url) {
       }
     }
   }
-
-
-  function previewFocusHandler() {
-    if (state.isPreviewFocused) {
-      log(`Preview is being focused, disabling parent webpage overflow!`);
-      scrollLockParentPage(true);
-    }
-    else {
-      log(`Parent is being focused, enabling parent webpage overflow!`);
-      scrollLockParentPage(false);
-    }
-  }
-  window.addEventListener('focus', () => {
-    state.isPreviewFocused = false;
-    previewFocusHandler();
-  });
-
+  attachFocusListener(true);
 
   function navigateTo(newUrl, oldUrl = "", historyNeedTruncate = true) {
     const currentUrl = oldUrl || state.historyManager.getCurrentUrl();
@@ -287,6 +271,8 @@ function createPreview(url) {
 
   toggleDisableParentPage(isInCenterStage());
   attachResizeHandler(container);
+
+  attachFocusParent(container);
 }
 
 /**
@@ -297,6 +283,8 @@ function closePreview() {
 
   toggleDisableParentPage(false);
   attachResizeHandler();
+  detachFocusParent();
+  attachFocusListener(true);
 
   const previewHost = document.getElementById('link-preview-host');
   const pageOverlay = document.getElementById('link-preview-page-overlay');
@@ -318,7 +306,6 @@ function closePreview() {
     document.removeEventListener('keydown', handleEsc);
     chrome.runtime.sendMessage({ action: message.clearPreview }); // Tell background to clean up.
     state.isPreviewing = false;
-    window.focus();
   }, 200); // Delay should be slightly less than animation duration.
 }
 

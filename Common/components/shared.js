@@ -16,7 +16,7 @@ const message = {
  * Debugging Code
  */
 
-const ALLOW_DEBUGGING = false;
+const ALLOW_DEBUGGING = true;
 
 const LOGGING = {
   INFO: 0,

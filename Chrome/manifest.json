@@ -42,6 +42,7 @@
         "components/parentPage.js",
         "components/popups.js",
         "components/sizing.js",
+        "components/focus.js",
         "components/ui.js",
         "content.js"
       ],
@@ -56,6 +57,7 @@
       ],
       "js": [
         "components/shared.js",
+        "components/focus.js",
         "content_iframe.js"
       ],
       "all_frames": true
