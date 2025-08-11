@@ -74,6 +74,8 @@ function createPreview(url) {
     container.classList.add('is-centered');
   }
   container.addEventListener('click', (e) => {
+    const button = e.target.closest('button');
+    if ((button) && (button.id === "link-preview-close" )) return;
     chrome.runtime.sendMessage({ action: message.focusPreview });
   })
 
