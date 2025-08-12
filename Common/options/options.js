@@ -22,6 +22,11 @@ const defaults = {
     closeKey: 'Escape',
     width: '90vw',
     height: '90vh',
+    userWidth: '600px',
+    userHeight: '400px',
+    userTop: '20%',
+    userLeft: '20%',
+    isExpanded: true,
     disabledSites: [], // Now an array of hostnames
     loadingAnimation: 'blue' // Default loading animation
 };

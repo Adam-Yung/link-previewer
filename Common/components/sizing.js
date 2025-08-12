@@ -140,9 +140,11 @@ function initDrag(e, element, contentElement) {
 
   const onDragEnd = () => {
     chrome.storage.local.set({
-      top: element.style.top,
-      left: element.style.left,
+      userTop: element.style.top,
+      userLeft: element.style.left,
+      isExpanded: false
     });
+    state.isExpanded = false;
   };
 
   initInteraction(e, element, contentElement, doDrag, onDragEnd);
@@ -190,11 +192,13 @@ function initResize(e, element, contentElement, dir) {
 
   const onResizeEnd = () => {
     chrome.storage.local.set({
-      width: element.style.width,
-      height: element.style.height,
-      top: element.style.top,
-      left: element.style.left,
+      userWidth: element.style.width,
+      userHeight: element.style.height,
+      userTop: element.style.top,
+      userLeft: element.style.left,
+      isExpanded: false
     });
+    state.isExpanded = false;
   };
 
   initInteraction(e, element, contentElement, doResize, onResizeEnd);
