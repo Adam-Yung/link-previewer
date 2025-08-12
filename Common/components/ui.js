@@ -64,14 +64,18 @@ function createPreview(url) {
   state.container = container;
 
   // Apply size and position from settings.
-  container.style.width = settings.width;
-  container.style.height = settings.height;
-  container.style.top = settings.top;
-  container.style.left = settings.left;
-
-  // If using percentage-based positioning, add a class for CSS transform-based centering.
-  if (settings.top.includes('%') || settings.left.includes('%')) {
+  state.isExpanded = settings.isExpanded;
+  if (state.isExpanded) {
+    container.style.width = settings.width;
+    container.style.height = settings.height;
+    container.style.top = settings.top;
+    container.style.left = settings.left;
     container.classList.add('is-centered');
+  } else {
+    container.style.width = settings.userWidth;
+    container.style.height = settings.userHeight;
+    container.style.top = settings.userTop;
+    container.style.left = settings.userLeft;
   }
 
   shadowRoot.appendChild(container);
@@ -92,7 +96,7 @@ function createPreview(url) {
         </button>
       </div>
       <div class="link-preview-controls">
-        <button id="link-preview-restore" title="Center Stage Mode">${maximizedIcon}</button>
+        <button id="link-preview-restore" title="Center Stage Mode">${state.isExpanded ? minimizedIcon : maximizedIcon}</button>
         <button id="link-preview-enlarge" title="Open in new tab">${enlargeIcon}</button>
         <button id="link-preview-close" title="Close preview">${closeIcon}</button>
       </div>
@@ -153,7 +157,7 @@ function createPreview(url) {
                     addressBar.classList.remove('is-loading', 'ocean-blue', 'ocean-orange', 'ocean-magenta');
                   }
                 }, Math.max(0, 1000 - remainingTime));
-              }
+              };
               checkForIframeReady(iframe, shadowRoot);
             } else {
               log('Background script not ready.', LOGGING.ERROR);
@@ -175,8 +179,8 @@ function createPreview(url) {
     const currentUrlObj = new URL(currentUrl);
     const newUrlObj = new URL(newUrl);
 
-    if (url.startsWith('http://')) {
-      createHttpWarningPopup(url, true);
+    if (newUrl.startsWith('http://')) {
+      createHttpWarningPopup(newUrl, true);
       return;
     }
 
@@ -243,19 +247,27 @@ function createPreview(url) {
   });
   // Restore the preview window to its default size and position and save it.
   shadowRoot.getElementById('link-preview-restore').addEventListener('click', () => {
-    container.style.width = '90vw';
-    container.style.height = '90vh';
-    container.style.top = '50%';
-    container.style.left = '50%';
-    container.classList.add('is-centered');
+    state.isExpanded = !state.isExpanded;
+    if(state.isExpanded) {
+        container.classList.add('is-centered');
+        container.style.width = '90vw';
+        container.style.height = '90vh';
+        container.style.top = '50%';
+        container.style.left = '50%';
+    } else {
+        container.classList.remove('is-centered');
+        container.style.width = settings.userWidth;
+        container.style.height = settings.userHeight;
+        container.style.top = settings.userTop;
+        container.style.left = settings.userLeft;
+    }
+    
+    shadowRoot.getElementById('link-preview-restore').innerHTML = state.isExpanded ? minimizedIcon : maximizedIcon;
     // Save the restored state to storage.
     chrome.storage.local.set({
-      width: container.style.width,
-      height: container.style.height,
-      top: container.style.top,
-      left: container.style.left
+      isExpanded: state.isExpanded
     });
-    toggleDisableParentPage(true);
+    toggleDisableParentPage(state.isExpanded);
   });
 
   state.historyManager = new HistoryManager(shadowRoot, url, navigateTo)
