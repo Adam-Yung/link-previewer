@@ -196,6 +196,64 @@ body.dark-theme .key-capture:not(:focus):empty::before { color: var(--subtle-tex
 .key-capture:focus::before { content: 'Press any key...'; color: var(--primary-color); font-style: italic; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 500; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
+/* --- Collapsible Group --- */
+.collapsible-group {
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    transition: border-color 0.3s;
+}
+body.dark-theme .collapsible-group {
+    border-color: var(--border-dark);
+}
+.collapsible-title {
+    font-weight: 500;
+    font-size: 15px;
+    padding: 12px 16px;
+    cursor: pointer;
+    position: relative;
+    list-style: none; /* Remove default marker */
+}
+.collapsible-title::-webkit-details-marker {
+    display: none; /* Hide for Webkit browsers */
+}
+.collapsible-title::before {
+    content: '';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    width: 1em;
+    height: 1em;
+    background-color: currentColor;
+    -webkit-mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='9 18 15 12 9 6'%3e%3c/polyline%3e%3c/svg%3e");
+    mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='9 18 15 12 9 6'%3e%3c/polyline%3e%3c/svg%3e");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.3s ease;
+}
+
+.collapsible-group[open] > .collapsible-title::before {
+    transform: translateY(-50%) rotate(90deg);
+}
+.collapsible-content {
+    padding: 0 16px;
+    overflow: hidden;
+}
+.collapsible-group:not([open]) > .collapsible-content {
+    display: none;
+}
+.collapsible-group[open] > .collapsible-content {
+    animation: fadeIn 0.5s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
 /* --- Footer for Save Button --- */
 .footer-container {
     padding-top: 15px;

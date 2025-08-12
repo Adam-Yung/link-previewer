@@ -7,7 +7,7 @@ const state = {
   historyManager: null,
   container: null,
   isDragging: null,
-  isExpanded: true, // To track the expanded state of the preview
+  isExpanded: false, // To track the expanded state of the preview
   timeoutIDs: new Map()
 };
 
@@ -23,9 +23,9 @@ let settings = {
   left: '50%',          // Default left position.
   userWidth: '640px', // User-defined width
   userHeight: '800px',// User-defined height
-  userTop: '20%',     // User-defined top
-  userLeft: '20%',    // User-defined left
-  isExpanded: true,
+  userTop: '10%',
+  userLeft: '50%',
+  isExpanded: false,
   disabledSites: [],   // Array of disabled hostnames.
   loadingAnimation: 'blue'
 };
