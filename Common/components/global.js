@@ -21,8 +21,8 @@ let settings = {
   height: '90vh',      // Default height of the preview window.
   top: '50%',          // Default top position.
   left: '50%',          // Default left position.
-  userWidth: '600px', // User-defined width
-  userHeight: '400px',// User-defined height
+  userWidth: '640px', // User-defined width
+  userHeight: '800px',// User-defined height
   userTop: '20%',     // User-defined top
   userLeft: '20%',    // User-defined left
   isExpanded: true,

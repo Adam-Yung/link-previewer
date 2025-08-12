@@ -20,10 +20,8 @@ const defaults = {
     modifier: 'shiftKey',
     theme: 'light',
     closeKey: 'Escape',
-    width: '90vw',
-    height: '90vh',
-    userWidth: '600px',
-    userHeight: '400px',
+    userWidth: '640px',
+    userHeight: '800px',
     userTop: '20%',
     userLeft: '20%',
     isExpanded: true,
@@ -57,8 +55,8 @@ function saveOptions(e) {
     modifier: document.getElementById('modifier').value,
     theme: themeToggle.checked ? 'dark' : 'light',
     closeKey: keyToSave,
-    width: document.getElementById('width').value,
-    height: document.getElementById('height').value,
+    userWidth: document.getElementById('width').value,
+    userHeight: document.getElementById('height').value,
     loadingAnimation: document.getElementById('loadingAnimation').value
   };
 
@@ -91,8 +89,8 @@ function resetSettings(e) {
     document.getElementById('duration').value = defaults.duration;
     document.getElementById('modifier').value = defaults.modifier;
     closeKeyInput.textContent = defaults.closeKey;
-    document.getElementById('width').value = defaults.width;
-    document.getElementById('height').value = defaults.height;
+    document.getElementById('width').value = defaults.userWidth;
+    document.getElementById('height').value = defaults.userHeight;
     document.getElementById('loadingAnimation').value = defaults.loadingAnimation;
 
     // Set theme to light
@@ -164,8 +162,8 @@ function restoreOptions() {
         closeKeyInput.textContent = items.closeKey;
         closeKeyInput.dataset.placeholder = items.closeKey;
 
-        document.getElementById('width').value = items.width;
-        document.getElementById('height').value = items.height;
+        document.getElementById('width').value = items.userWidth;
+        document.getElementById('height').value = items.userHeight;
         document.getElementById('loadingAnimation').value = items.loadingAnimation;
         applyTheme(items.theme);
 
