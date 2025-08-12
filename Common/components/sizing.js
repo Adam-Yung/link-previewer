@@ -15,12 +15,10 @@ function isInCenterStage() {
   );
 }
 
-/**
- * Checks if the preview container is within the viewport boundaries and resizes/repositions it if not.
- * This is useful on window resize events to ensure the container remains fully visible.
- * @param {HTMLElement} element The element to check (the preview container).
- */
+
 function checkIframeInBounds(element) {
+  const VIEWPORT_PADDING = 2;
+
   if (!element || element.classList.contains('is-centered')) {
     return;
   }
@@ -28,28 +26,34 @@ function checkIframeInBounds(element) {
   const rect = element.getBoundingClientRect();
   const winWidth = window.innerWidth;
   const winHeight = window.innerHeight;
+  let left = rect.left;
+  let top = rect.top;
 
-  let { top, left, width, height } = rect;
+  // Create an object to hold only the styles that need to change.
+  const styleChanges = {};
 
-  // Reposition if it's outside the viewport
-  if (left < 0) left = 0;
-  if (top < 0) top = 0;
-
-  // Shrink if it's wider or taller than the viewport
-  if (left + width > winWidth) {
-    width = winWidth - left;
-  }
-  if (top + height > winHeight) {
-    height = winHeight - top;
+  if (rect.left < 0) {
+    styleChanges.left = '0px';
+    left = 0;
   }
 
-  // Apply changes
-  element.style.left = `${left}px`;
-  element.style.top = `${top}px`;
-  element.style.width = `${width}px`;
-  element.style.height = `${height}px`;
+  if (rect.top < 0) {
+    styleChanges.top = '0px';
+    top = 0;
+  }
+
+  if (rect.right > winWidth) {
+    styleChanges.width = `${winWidth - left - VIEWPORT_PADDING}px`;
+  }
+
+  if (rect.bottom > winHeight) {
+    styleChanges.height = `${winHeight - top - VIEWPORT_PADDING}px`;
+  }
+  
+  if (Object.keys(styleChanges).length > 0) {
+    Object.assign(element.style, styleChanges);
+  }
 }
-
 
 /**
  * Converts percentage-based or centered positioning to absolute pixel values.
@@ -67,6 +71,14 @@ function convertToPixels(element) {
     element.classList.remove('is-centered'); // Remove the class that applies the transform.
     element.style.animation = 'none'; // Disable animations that might interfere.
   }
+}
+
+function forceReflow(element) {
+  const rect = element.getBoundingClientRect();
+  element.style.width = `${rect.width-1}px`;
+  setTimeout(() => {
+    element.style.width = `${rect.width}px`;
+  }, 0);
 }
 
 /**
@@ -96,7 +108,7 @@ function initInteraction(e, element, contentElement, onMove, onEnd) {
     onEnd(); // Execute finalization logic (e.g., saving state)
     state.isDragging = false;
     toggleDisableParentPage(isInCenterStage());
-    chrome.runtime.sendMessage({ action: message.focusPreview});
+    requestAnimationFrame(() => {checkIframeInBounds(element); forceReflow(element)});
   };
 
   document.documentElement.addEventListener('mousemove', onMove, false);
