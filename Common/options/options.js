@@ -22,9 +22,9 @@ const defaults = {
     closeKey: 'Escape',
     userWidth: '640px',
     userHeight: '800px',
-    userTop: '20%',
-    userLeft: '20%',
-    isExpanded: true,
+    userTop: '10%',
+    userLeft: '50%',
+    isExpanded: false,
     disabledSites: [], // Now an array of hostnames
     loadingAnimation: 'blue' // Default loading animation
 };
@@ -57,6 +57,8 @@ function saveOptions(e) {
     closeKey: keyToSave,
     userWidth: document.getElementById('width').value,
     userHeight: document.getElementById('height').value,
+    userTop: document.getElementById('userTop').value,
+    userLeft: document.getElementById('userLeft').value,
     loadingAnimation: document.getElementById('loadingAnimation').value
   };
 
@@ -91,6 +93,8 @@ function resetSettings(e) {
     closeKeyInput.textContent = defaults.closeKey;
     document.getElementById('width').value = defaults.userWidth;
     document.getElementById('height').value = defaults.userHeight;
+    document.getElementById('userTop').value = defaults.userTop;
+    document.getElementById('userLeft').value = defaults.userLeft;
     document.getElementById('loadingAnimation').value = defaults.loadingAnimation;
 
     // Set theme to light
@@ -164,6 +168,8 @@ function restoreOptions() {
 
         document.getElementById('width').value = items.userWidth;
         document.getElementById('height').value = items.userHeight;
+        document.getElementById('userTop').value = items.userTop;
+        document.getElementById('userLeft').value = items.userLeft;
         document.getElementById('loadingAnimation').value = items.loadingAnimation;
         applyTheme(items.theme);
 

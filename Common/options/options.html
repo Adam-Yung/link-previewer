@@ -48,17 +48,7 @@
             <div id="closeKey" class="key-capture" tabindex="0" title="Click and press a key to set"></div>
             <p class="description">Key to close the preview window.</p>
           </div>
-    
-          <div class="form-group">
-            <label for="width">Default Width</label>
-            <input type="text" id="width" name="width">
-            <p class="description">Default width of the preview (e.g., 800px, 90vw).</p>
-          </div>
-          <div class="form-group">
-            <label for="height">Default Height</label>
-            <input type="text" id="height" name="height">
-            <p class="description">Default height of the preview (e.g., 600px, 90vh).</p>
-          </div>
+
           <div class="form-group">
             <label for="loadingAnimation">Loading Animation</label>
             <select id="loadingAnimation" name="loadingAnimation">
@@ -69,6 +59,33 @@
             </select>
             <p class="description">Style of the address bar animation during loading.</p>
           </div>
+
+          <details class="collapsible-group" false>
+            <summary class="collapsible-title">Dimensions</summary>
+            <div class="collapsible-content">
+              <div class="form-group">
+                <label for="width">Preview Width</label>
+                <input type="text" id="width" name="width">
+                <p class="description">The width of the preview window (e.g., 800px, 90vw).</p>
+              </div>
+              <div class="form-group">
+                <label for="height">Preview Height</label>
+                <input type="text" id="height" name="height">
+                <p class="description">The height of the preview window (e.g., 600px, 90vh).</p>
+              </div>
+              <div class="form-group">
+                <label for="userTop">Vertical Offset</label>
+                <input type="text" id="userTop" name="userTop">
+                <p class="description">The preview's distance from the top of the screen (e.g., 100px, 10%).</p>
+              </div>
+              <div class="form-group">
+                <label for="userLeft">Horizontal Offset</label>
+                <input type="text" id="userLeft" name="userLeft">
+                <p class="description">The preview's distance from the left of the screen (e.g., 100px, 10%).</p>
+              </div>
+            </div>
+          </details>
+    
           <div class="form-group">
             <button type="button" id="reset-button" class="reset-button">
                 <span class="button-text">Reset Settings</span>
