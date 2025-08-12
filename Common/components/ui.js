@@ -287,6 +287,7 @@ function closePreview() {
 
   toggleDisableParentPage(false);
   attachResizeHandler();
+  scrollLock(false);
 
   const previewHost = document.getElementById('link-preview-host');
   const pageOverlay = document.getElementById('link-preview-page-overlay');

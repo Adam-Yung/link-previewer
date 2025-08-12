@@ -96,6 +96,7 @@ function initInteraction(e, element, contentElement, onMove, onEnd) {
     onEnd(); // Execute finalization logic (e.g., saving state)
     state.isDragging = false;
     toggleDisableParentPage(isInCenterStage());
+    chrome.runtime.sendMessage({ action: message.focusPreview});
   };
 
   document.documentElement.addEventListener('mousemove', onMove, false);
