@@ -15,7 +15,6 @@ function findRequiredElement(id, parent = document) {
 
 const scrollLockState = {
   isLocked: false,
-  scrollPosition: 0,
   parentOverflow: ''
 };
 
@@ -25,7 +24,7 @@ function scrollLock(disable) {
   }
   const htmlElement = document.documentElement;
   log(`scrollLock Called! locking: ${disable}`);
-  
+
   if (disable) {
     scrollLockState.parentOverflow = htmlElement.style.overflow;
     htmlElement.style.overflow = 'hidden';
