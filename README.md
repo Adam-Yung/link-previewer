@@ -115,7 +115,7 @@ If you find that previews are not appearing, or for sites that frequently need p
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Adam-Yung/link-previewer.git/issues).
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Adam-Yung/link-previewer/issues).
 
 ## 📜 License
 
