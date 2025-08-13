@@ -10,7 +10,7 @@
 
 ## ✨ Get the Extension
 <a href="https://chrome.google.com/webstore/detail/hghkdmkjjfooodjaefodopbnhejdaonh" target="_blank"><img src="https://developer.chrome.com/static/docs/webstore/branding/image/HRs9MPufa1J1h5glNhut.png" alt="Get it on the Chrome Web Store" height="58"></a>
-<a href="https://addons.mozilla.org/addon/link-glance" target="_blank"><img src="https://blog.mozilla.org/addons/files/2020/04/get-the-addon-fx-apr-2020.svg" alt="Get the Add-on for Firefox" height="58"></a>
+<a href="https://addons.mozilla.org/en-US/firefox/addon/link-previewer-firefox/" target="_blank"><img src="https://blog.mozilla.org/addons/files/2020/04/get-the-addon-fx-apr-2020.svg" alt="Get the Add-on for Firefox" height="58"></a>
 
 </br>
 
