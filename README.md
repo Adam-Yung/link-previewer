@@ -1,14 +1,21 @@
 # Link Previewer ✨
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/your-username/link-previewer)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/your-username/link-previewer)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/Adam-Yung/link-previewer.git)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue)](https://github.com/Adam-Yung/link-previewer.git)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL3.0-yellow.svg)](https://opensource.org/licenses/GPL)
 
 📢 Stop opening new tabs for search results‼️ </br></br>
 **Link Previewer** lets you peek into web pages without ever leaving your current tab. Enjoy an uncluttered browsing experience and say goodbye to page-jumping!
+</br>
+
+## ✨ Get the Extension
+<a href="https://chrome.google.com/webstore/detail/hghkdmkjjfooodjaefodopbnhejdaonh" target="_blank"><img src="https://developer.chrome.com/static/docs/webstore/branding/image/HRs9MPufa1J1h5glNhut.png" alt="Get it on the Chrome Web Store" height="58"></a>
+<a href="https://addons.mozilla.org/addon/link-glance" target="_blank"><img src="https://blog.mozilla.org/addons/files/2020/04/get-the-addon-fx-apr-2020.svg" alt="Get the Add-on for Firefox" height="58"></a>
 
 </br>
-</img src="Common/icons/firefox-demo.gif" alt="Link Previewer in Action" width="700" height="400">
+
+## 😁 Demo
+<img src="Common/icons/firefox-demo.gif" alt="Link Previewer in Action" width="700" height="400">
 </br>
 
 ## 🚀 Key Features
@@ -36,14 +43,14 @@ The preview window can be moved by dragging its header and resized by dragging i
 
 Toggle light/dark mode, set click duration and more! Click the Link Previewer icon in your browser's toolbar to open the settings panel.
 </br>
-</img src="Common/icons/settings.gif" alt="Link Previewer Settings" height="400">
+<img src="Common/icons/settings.gif" alt="Link Previewer Settings" height="400">
 </br>
 
 ## ✅ Compatibility
 
 Works with Manifest V3 and Chrome!
 </br>
-</img src="Common/icons/chrome-demo.gif" alt="Link Previewer in Chrome" width="700" height="400">
+<img src="Common/icons/chrome-demo.gif" alt="Link Previewer in Chrome" width="700" height="400">
 </br>
 
 ### ⚠️ A Note for Firefox Users
@@ -55,7 +62,8 @@ If you find that previews are not appearing, or for sites that frequently need p
 
 ## 🛠️ Building From Source
 
-Want to contribute or build your own version? Follow these simple steps.
+> [!NOTE]
+> Contributions are very welcomed!!!
 
 ### Prerequisites
 
@@ -68,7 +76,7 @@ Want to contribute or build your own version? Follow these simple steps.
 1. **Clone the Repository**
 
     ```bash
-    git clone https://github.com/Adam-Yung/link-previewer.git
+    git clone "https://github.com/Adam-Yung/link-previewer.git"
     cd link-previewer
     ```
 
@@ -107,8 +115,8 @@ Want to contribute or build your own version? Follow these simple steps.
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/your-username/link-previewer/issues).
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Adam-Yung/link-previewer.git/issues).
 
 ## 📜 License
 
-This project is licensed under the GPL-3.0 License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
