@@ -279,6 +279,7 @@ function createPreview(url) {
   toggleDisableParentPage(isInCenterStage());
   attachResizeHandler(container);
   attachContainerFocus(container);
+  checkIframeInBounds(container);
 }
 
 /**
