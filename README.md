@@ -4,37 +4,49 @@
 [![Version](https://img.shields.io/badge/version-2.1.0-blue)](https://github.com/Adam-Yung/link-previewer.git)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL3.0-yellow.svg)](https://opensource.org/licenses/GPL)
 
-📢 Stop opening new tabs for search results‼️ </br></br>
-**Link Previewer** lets you peek into web pages without ever leaving your current tab.
-
+📢 Stop opening new tabs for search results‼️
+</br>
 > [!IMPORTANT]
 > Say Goodbye To Hopping *Back* and *Forward* on search pages!
 
-> [!NOTE]
-> Two Guarantees:
-> 1. Always Open Source
-> 2. No Useless **"AI Summary"** will ever be added to a simple Browser Utility
+**Link Previewer** lets you peek into web pages without ever leaving your current tab.
+</br>
+
+## 😁 Demo
+
+<img src="Common/icons/firefox-demo.gif" alt="Link Previewer in Action" width="700" height="400">
 </br>
 
 ## ✨ Get the Extension
+
 <a href="https://chrome.google.com/webstore/detail/hghkdmkjjfooodjaefodopbnhejdaonh" target="_blank"><img src="https://developer.chrome.com/static/docs/webstore/branding/image/HRs9MPufa1J1h5glNhut.png" alt="Get it on the Chrome Web Store" height="58"></a>
 <a href="https://addons.mozilla.org/en-US/firefox/addon/link-previewer-firefox/" target="_blank"><img src="https://blog.mozilla.org/addons/files/2020/04/get-the-addon-fx-apr-2020.svg" alt="Get the Add-on for Firefox" height="58"></a>
 
 </br>
 
-## 😁 Demo
-<img src="Common/icons/firefox-demo.gif" alt="Link Previewer in Action" width="700" height="400">
+> [!NOTE]
+> Two Guarantees:
+>
+> 1. Always Open Source
+> 2. No Useless **"AI Summary"** will ever be added to a simple Browser Utility
 </br>
+
 
 ## 🚀 Key Features
 
-* **Seamless Previews with Sleek UI**: Open links in a sleek, floating pop-up window that looks like it is built into the browser.
-* **Cross-Browser Support**: Supports both **Google Chrome** and **Mozilla Firefox** with `Manifest V2` and `Manifest V3` support.
-* **Open Source and Never Integrated With AI**: This project is Open Source, and I personally promise I'll never add any useless AI crap to the preview window.  If I do, you can fork my repo any time 😜
-* **Pocket Mode and Center Stage**: *Drag* and *Resize* preview window to fit your needs.  Toggle the **Restore button** to switch between Pocket and Center Stage modes.
-* **Extensively Customizable**: Configure the long-press duration, modifier keys, default window size, and **site-specific toggling**
-* **Light & Dark Modes**: A beautiful interface that adapts to your system's theme or your personal preference.
-
+* **Seamless Previews with Sleek UI**:
+  * Open links in a sleek, floating pop-up window that looks like it is built into the browser.
+* **Cross-Browser Support**:
+  * Supports both **Google Chrome** and **Mozilla Firefox** with `Manifest V2` and `Manifest V3` support.
+* **Open Source and Never Integrated With AI**:
+  * This project is Open Source, and I personally promise I'll never add any useless AI crap to the preview window.  If I do, you can fork my repo any time 😜
+* **Pocket Mode and Center Stage**:
+  * *Drag* and *Resize* preview window to fit your needs.  Toggle the **Restore button** to switch between Pocket and Center Stage modes.
+* **Extensively Customizable**:
+  * Configure the long-press duration, modifier keys, default window size, and **site-specific toggling**
+* **Light & Dark Modes**:
+  * A beautiful interface that adapts to your system's theme or your personal preference.
+</br>
 
 ## 💡 How to Use
 
