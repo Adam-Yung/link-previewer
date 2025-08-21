@@ -5,7 +5,15 @@
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL3.0-yellow.svg)](https://opensource.org/licenses/GPL)
 
 📢 Stop opening new tabs for search results‼️ </br></br>
-**Link Previewer** lets you peek into web pages without ever leaving your current tab. Enjoy an uncluttered browsing experience and say goodbye to page-jumping!
+**Link Previewer** lets you peek into web pages without ever leaving your current tab.
+
+> [!IMPORTANT]
+> Say Goodbye To Hopping *Back* and *Forward* on search pages!
+
+> [!NOTE]
+> Two Guarantees:
+> 1. Always Open Source
+> 2. No Useless **"AI Summary"** will ever be added to a simple Browser Utility
 </br>
 
 ## ✨ Get the Extension
@@ -20,12 +28,11 @@
 
 ## 🚀 Key Features
 
-* **Seamless Previews**: Open links in a sleek, floating pop-up window.
+* **Seamless Previews with Sleek UI**: Open links in a sleek, floating pop-up window that looks like it is built into the browser.
 * **Cross-Browser Support**: Supports both **Google Chrome** and **Mozilla Firefox** with `Manifest V2` and `Manifest V3` support.
 * **Open Source and Never Integrated With AI**: This project is Open Source, and I personally promise I'll never add any useless AI crap to the preview window.  If I do, you can fork my repo any time 😜
-* **Fully Customizable Window**: Drag to move and resize the preview window to fit your workflow perfectly. Your size and position are saved automatically!
-* **Personalized Experience**: Use the settings panel to change the long-press duration, modifier keys, default window size, and more.
-* **Site-Specific Toggling**: Easily enable or disable the previewer for any website, giving you full control over your Browse environment.
+* **Pocket Mode and Center Stage**: *Drag* and *Resize* preview window to fit your needs.  Toggle the **Restore button** to switch between Pocket and Center Stage modes.
+* **Extensively Customizable**: Configure the long-press duration, modifier keys, default window size, and **site-specific toggling**
 * **Light & Dark Modes**: A beautiful interface that adapts to your system's theme or your personal preference.
 
 
