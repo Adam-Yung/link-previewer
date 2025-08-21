@@ -21,11 +21,13 @@
 ## 🚀 Key Features
 
 * **Seamless Previews**: Open links in a sleek, floating pop-up window.
+* **Cross-Browser Support**: Supports both **Google Chrome** and **Mozilla Firefox** with `Manifest V2` and `Manifest V3` support.
+* **Open Source and Never Integrated With AI**: This project is Open Source, and I personally promise I'll never add any useless AI crap to the preview window.  If I do, you can fork my repo any time 😜
 * **Fully Customizable Window**: Drag to move and resize the preview window to fit your workflow perfectly. Your size and position are saved automatically!
 * **Personalized Experience**: Use the settings panel to change the long-press duration, modifier keys, default window size, and more.
 * **Site-Specific Toggling**: Easily enable or disable the previewer for any website, giving you full control over your Browse environment.
 * **Light & Dark Modes**: A beautiful interface that adapts to your system's theme or your personal preference.
-* **Cross-Browser Support**: Supports both **Google Chrome** and **Mozilla Firefox** with `Manifest V2` and `Manifest V3` support.
+
 
 ## 💡 How to Use
 
@@ -65,9 +67,12 @@ Firefox's **Enhanced Tracking Protection** is cool, but it might break Link Prev
 
 ### Prerequisites
 
+* POSIX-compliant system
+  * The [build script](build/build.sh) is written in BASH, though it is not hard to adapt the script for Windows
+* [Git LFS](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)
+  * Git LFS is used to store the large .gif files more efficiently
 * [Node.js](https://nodejs.org/) (which includes npm)
   * *only if you want to run npm build wrapper around `build/build.sh`*
-* POSIX-compliant system for bulding, though it is not hard to adapt the script for Windows
 
 ### Steps
 
