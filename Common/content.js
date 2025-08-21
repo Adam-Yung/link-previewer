@@ -7,6 +7,8 @@ document.addEventListener('mousedown', e => {
   if (state.isCurrentSiteDisabled) {
     return;
   }
+  if (e.button && e.button > 1) return; // Only allow preview with long press of left click
+
   const link = e.target.closest('a');
   // Check if the target is a valid link to preview.
   if (link && link.href && !link.href.startsWith('javascript:')) {
