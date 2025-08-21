@@ -1,6 +1,6 @@
 {
   "name": "link-previewer",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Preview links in a popup without leaving your current page",
   "private": true,
   "scripts": {

@@ -21,23 +21,19 @@
 ## 🚀 Key Features
 
 * **Seamless Previews**: Open links in a sleek, floating pop-up window.
-* **Intuitive Controls**:
-  * **Long-press** a link to open a preview.
-  * **Modifier Key + Click** (e.g., `Shift + Click`) for an instant preview.
 * **Fully Customizable Window**: Drag to move and resize the preview window to fit your workflow perfectly. Your size and position are saved automatically!
 * **Personalized Experience**: Use the settings panel to change the long-press duration, modifier keys, default window size, and more.
 * **Site-Specific Toggling**: Easily enable or disable the previewer for any website, giving you full control over your Browse environment.
 * **Light & Dark Modes**: A beautiful interface that adapts to your system's theme or your personal preference.
-* **Cross-Browser Support**: Works flawlessly on both **Google Chrome** and **Mozilla Firefox**.
+* **Cross-Browser Support**: Supports both **Google Chrome** and **Mozilla Firefox** with `Manifest V2` and `Manifest V3` support.
 
 ## 💡 How to Use
 
-Using Link Previewer is incredibly simple:
+* **Start Previewing**:
+  * **Long-press** a link to open a preview.
+  * **Modifier Key + Click** (e.g., `Shift + Click`) for an instant preview.
 
-1. **Long Press**: Just hold your mouse down on any link for a moment. A preview window will gracefully appear.
-2. **Modifier + Click**: For even faster access, hold down your chosen modifier key (Shift by default) and click any link.
-
-The preview window can be moved by dragging its header and resized by dragging its edges. To close it, simply click the 'x' button, press your configured close key (`Escape` by default), or click anywhere outside the window.
+The preview window can be moved by dragging its header and resized by dragging its edges. To close it, either click the 'x' button, press your configured close key (`Escape` by default), or click anywhere outside the window.
 
 ### ⚙️ Customization
 
@@ -55,9 +51,11 @@ Works with Manifest V3 and Chrome!
 
 ### ⚠️ A Note for Firefox Users
 
-Firefox's **Enhanced Tracking Protection** is a great privacy feature! However, it could prevent Link Previewer from loading previews on certain websites (like previewing Reddit from Google as shown above).
+Firefox's **Enhanced Tracking Protection** is cool, but it might break Link Previewer due to CORS-related limitations.
 
-If you find that previews are not appearing, or for sites that frequently need previewing (like `www.google.com`) try turning off this protection **for that specific site only**. You can do this by clicking the **shield icon** to the left of the address bar and toggling the switch.
+> [!TIP]
+> If you find that previews are not appearing, or for sites that frequently need previewing (like `www.google.com`) try turning off this protection **for that specific site only**. You can do this by clicking the **shield icon** to the left of the address bar and toggling the switch.
+
 </br>
 
 ## 🛠️ Building From Source

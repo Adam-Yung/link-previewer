@@ -1,4 +1,17 @@
-## [2.0.0] - 2025-08-09
+## [2.1.1] - 2025-08-09
+
+### Fixed
+
+* Fix preview prevents mouseup event from firing properly on some platforms
+* Only allow preview to be opened with left mouse button
+
+### Changed
+
+* Ensure IFrame is within bounds on startup
+
+---
+
+## [2.1.0] - 2025-08-09
 
 ### Fixed
 
