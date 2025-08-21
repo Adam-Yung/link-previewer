@@ -11,7 +11,7 @@ const message = {
   closePreviewFromIframe: 'closePreviewFromIframe'
 }
 
-const ALLOW_DEBUGGING = true;
+const ALLOW_DEBUGGING = false;
 const LOGGING = {
   INFO: 'info',
   LOG: 'log',

@@ -38,6 +38,15 @@ document.addEventListener('mousedown', e => {
 document.addEventListener('mouseup', (e) => {
   clearTimeout(state.longClickTimer);
   if (state.isPreviewing && (!state.isDragging)) {
+    const previewHost = document.getElementById('link-preview-host');
+    if (previewHost) {
+      const existingIframe = previewHost.shadowRoot.getElementById('link-preview-iframe');
+      const existingImage = previewHost.shadowRoot.getElementById('link-preview-image');
+      const container = previewHost.shadowRoot.getElementById('link-preview-container');
+      if (container) container.style.pointerEvents = 'auto';
+      if (existingIframe) existingIframe.style.pointerEvents = 'auto';
+      if (existingImage) existingImage.style.pointerEvents = 'auto';
+    }
     e.preventDefault();
     e.stopPropagation();
   }

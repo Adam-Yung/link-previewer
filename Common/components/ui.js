@@ -60,7 +60,7 @@ function createPreview(url) {
   const container = document.createElement('div');
   container.id = 'link-preview-container';
   container.classList.add(settings.theme);
-  container.style.pointerEvents = 'auto';
+  container.style.pointerEvents = 'none';
   state.container = container;
 
   // Apply size and position from settings.
@@ -129,6 +129,7 @@ function createPreview(url) {
       log("Previewing an image!");
       const img = document.createElement('img');
       img.id = 'link-preview-image';
+      img.style.pointerEvents = 'none';
       img.src = urlToRender;
       img.onload = () => {
         const remainingTime = Date.now() - startTime;
@@ -143,6 +144,7 @@ function createPreview(url) {
     } else {
       const iframe = document.createElement('iframe');
       iframe.id = 'link-preview-iframe';
+      iframe.style.pointerEvents = 'none';
       container.appendChild(iframe);
       addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
       try {
@@ -248,20 +250,20 @@ function createPreview(url) {
   // Restore the preview window to its default size and position and save it.
   shadowRoot.getElementById('link-preview-restore').addEventListener('click', () => {
     state.isExpanded = !state.isExpanded;
-    if(state.isExpanded) {
-        container.classList.add('is-centered');
-        container.style.width = '90vw';
-        container.style.height = '90vh';
-        container.style.top = '50%';
-        container.style.left = '50%';
+    if (state.isExpanded) {
+      container.classList.add('is-centered');
+      container.style.width = '90vw';
+      container.style.height = '90vh';
+      container.style.top = '50%';
+      container.style.left = '50%';
     } else {
-        container.classList.remove('is-centered');
-        container.style.width = settings.userWidth;
-        container.style.height = settings.userHeight;
-        container.style.top = settings.userTop;
-        container.style.left = settings.userLeft;
+      container.classList.remove('is-centered');
+      container.style.width = settings.userWidth;
+      container.style.height = settings.userHeight;
+      container.style.top = settings.userTop;
+      container.style.left = settings.userLeft;
     }
-    
+
     shadowRoot.getElementById('link-preview-restore').innerHTML = state.isExpanded ? minimizedIcon : maximizedIcon;
     // Save the restored state to storage.
     chrome.storage.local.set({
