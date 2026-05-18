@@ -54,27 +54,28 @@ const requestHeaderRule = {
 // --- Helper Functions to Manage the DNR Rule ---
 
 /**
- * Enables the header modification rules.
- * Checks if the rules are already active to avoid redundant API calls.
+ * Enables the header modification rules scoped to currently previewing tabs.
+ * Rebuilds rules with the current set of tab IDs to ensure only preview tabs
+ * have their security headers stripped.
  */
 async function enableRule() {
-  const existingRules = await chrome.declarativeNetRequest.getSessionRules();
+  const tabIds = [...previewingTabIds];
+  if (tabIds.length === 0) return;
 
-  const hasResponseRule = existingRules.some(rule => rule.id === RULE_ID);
-  const hasRequestRule = existingRules.some(rule => rule.id === RULE_ID_REQUEST);
-
-  if (hasResponseRule && hasRequestRule) {
-    return;
-  }
-
-  const rulesToAdd = [];
-  if (!hasResponseRule) rulesToAdd.push(responseHeaderRule);
-  if (!hasRequestRule) rulesToAdd.push(requestHeaderRule);
+  const scopedResponseRule = {
+    ...responseHeaderRule,
+    condition: { ...responseHeaderRule.condition, tabIds }
+  };
+  const scopedRequestRule = {
+    ...requestHeaderRule,
+    condition: { ...requestHeaderRule.condition, tabIds }
+  };
 
   await chrome.declarativeNetRequest.updateSessionRules({
-    addRules: rulesToAdd
+    removeRuleIds: [RULE_ID, RULE_ID_REQUEST],
+    addRules: [scopedResponseRule, scopedRequestRule]
   });
-  log('[BACKGROUND] Header modification rules ENABLED.');
+  log('[BACKGROUND] Header modification rules ENABLED for tabs: ' + tabIds.join(', '));
 }
 
 
@@ -111,13 +112,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (previewingTabIds.has(tabId)) {
         log(`[BACKGROUND] Deactivating preview for tab: ${tabId}`);
         previewingTabIds.delete(tabId);
-        // After clearing a preview, check if the currently active tab is still
-        // a preview tab. If not, disable the rule.
-        chrome.tabs.query({ active: true, currentWindow: true }, (activeTabs) => {
-          if (!activeTabs[0] || !previewingTabIds.has(activeTabs[0].id)) {
-            disableRule();
-          }
-        });
+        if (previewingTabIds.size === 0) {
+          disableRule();
+        } else {
+          enableRule();
+        }
       }
       break;
     case message.preconnect:
@@ -141,30 +140,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-/**
- * Fired when the active tab in a window changes. This is the core logic
- * for enabling/disabling the rule on tab switches.
- */
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
-  if (previewingTabIds.has(activeInfo.tabId)) {
-    log(`[BACKGROUND] Switched TO a preview tab (${activeInfo.tabId}).`);
-    await enableRule();
-  } else {
-    log(`[BACKGROUND] Switched AWAY from a preview tab.`);
-    await disableRule();
-  }
-});
-
 // Clean up when a tab is closed.
 chrome.tabs.onRemoved.addListener((tabId) => {
-  // Check if the closed tab was in our preview set.
   if (previewingTabIds.has(tabId)) {
     previewingTabIds.delete(tabId);
     log(`[BACKGROUND] Preview tab ${tabId} closed, removed from set.`);
-    // If this was the very last previewing tab, ensure the rule is disabled.
     if (previewingTabIds.size === 0) {
-      log('[BACKGROUND] Last preview tab closed. Disabling rule.');
       disableRule();
+    } else {
+      enableRule();
     }
   }
 });
