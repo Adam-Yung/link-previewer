@@ -38,50 +38,57 @@ function scrollLock(disable) {
 let pauseStyle = null;
 
 function toggleDisableParentPage(disable) {
-  // Find all required elements upfront. If any are missing, the function will stop and throw an error.
+  if (!disable) {
+    // Teardown path: use non-throwing lookups since elements may already be removed
+    document.body.style.pointerEvents = 'auto';
+    disablePauseStyle();
+
+    const pageOverlay = document.getElementById('link-preview-page-overlay');
+    const previewHost = document.getElementById('link-preview-host');
+
+    if (pageOverlay) {
+      requestAnimationFrame(() => { pageOverlay.style.opacity = '0'; });
+      pageOverlay.style.backgroundColor = "transparent";
+      pageOverlay.style.pointerEvents = 'none';
+    }
+
+    if (previewHost) {
+      previewHost.style.pointerEvents = 'none';
+      const clickInterceptor = previewHost.shadowRoot?.getElementById('link-preview-click-interceptor');
+      if (clickInterceptor) {
+        clickInterceptor.style.pointerEvents = 'none';
+        clickInterceptor.removeEventListener('click', closePreview);
+      }
+    }
+    return;
+  }
+
+  // Enable path: elements must exist
   const pageOverlay = findRequiredElement('link-preview-page-overlay');
   const previewHost = findRequiredElement('link-preview-host');
 
-  // Ensure the host has a shadowRoot before searching within it.
   if (!previewHost.shadowRoot) {
     throw new Error("The '#link-preview-host' element does not have a shadowRoot.");
   }
   const clickInterceptor = findRequiredElement('link-preview-click-interceptor', previewHost.shadowRoot);
 
-  // Check for document.body and document.head, which are critical for this function's operation.
   if (!document.body) throw new Error("document.body is not available.");
   if (!document.head) throw new Error("document.head is not available for adding styles.");
 
-  log(disable ? "Disabling Parent Page" : "Enabling Parent Page");
+  log("Disabling Parent Page");
 
-  if (disable) {
-    document.body.style.pointerEvents = 'none';
-    addPauseStyle();
+  document.body.style.pointerEvents = 'none';
+  addPauseStyle();
 
-    // Animate the overlay's opacity for a smooth fade-in effect.
-    requestAnimationFrame(() => {
-      pageOverlay.style.opacity = '1';
-    });
-    pageOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    pageOverlay.style.pointerEvents = 'auto';
+  requestAnimationFrame(() => {
+    pageOverlay.style.opacity = '1';
+  });
+  pageOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+  pageOverlay.style.pointerEvents = 'auto';
 
-    previewHost.style.pointerEvents = 'auto';
-    clickInterceptor.style.pointerEvents = 'auto';
-    clickInterceptor.addEventListener('click', closePreview);
-  } else {
-    document.body.style.pointerEvents = 'auto';
-    disablePauseStyle();
-
-    requestAnimationFrame(() => {
-      pageOverlay.style.opacity = '0';
-    });
-    pageOverlay.style.backgroundColor = "transparent";
-    pageOverlay.style.pointerEvents = 'none';
-
-    previewHost.style.pointerEvents = 'none';
-    clickInterceptor.style.pointerEvents = 'none';
-    clickInterceptor.removeEventListener('click', closePreview);
-  }
+  previewHost.style.pointerEvents = 'auto';
+  clickInterceptor.style.pointerEvents = 'auto';
+  clickInterceptor.addEventListener('click', closePreview);
 
   function addPauseStyle() {
     if (!pauseStyle) {
