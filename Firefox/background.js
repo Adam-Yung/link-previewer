@@ -1,6 +1,6 @@
 // background.js for Firefox (Manifest V2)
 
-let previewingUrl = null;
+const previewingTabs = new Map();
 
 function requestHeadersListener(details) {
   if (details.initiator === browser.runtime.id || details.originUrl?.startsWith(browser.runtime.getURL(""))) {
@@ -44,7 +44,7 @@ function requestHeadersListener(details) {
 
 // --- Listener to modify response headers ---
 function responseHeadersListener(details) {
-  const isPreviewFrame = details.type === 'sub_frame' && previewingUrl;
+  const isPreviewFrame = details.type === 'sub_frame' && previewingTabs.size > 0;
   const isPreconnectRequest = details.type === 'xhr' || details.type === 'xmlhttprequest';
 
   if (isPreviewFrame || isPreconnectRequest) {
@@ -74,7 +74,7 @@ function responseHeadersListener(details) {
       value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation allow-popups;"
     });
 
-    log(`[BACKGROUND] Modified response headers for iframe display: ${previewingUrl}`);
+    log(`[BACKGROUND] Modified response headers for iframe display`);
     return { responseHeaders: newHeaders };
   }
   return { responseHeaders: details.responseHeaders };
@@ -108,17 +108,22 @@ function unregisterListeners() {
 
 // --- Message handling from content scripts ---
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  const tabId = sender.tab?.id;
+  if (!tabId) return;
+
   switch (request.action) {
     case message.prepareToPreview:
       log(`[BACKGROUND] Preparing for preview: ${request.url}`);
-      previewingUrl = request.url;
+      previewingTabs.set(tabId, request.url);
       registerListeners();
       sendResponse({ ready: true });
       return true;
 
     case message.clearPreview:
-      previewingUrl = null;
-      unregisterListeners();
+      previewingTabs.delete(tabId);
+      if (previewingTabs.size === 0) {
+        unregisterListeners();
+      }
       break;
 
     case message.preconnect:
