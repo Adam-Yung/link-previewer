@@ -35,6 +35,8 @@ function scrollLock(disable) {
 }
 
 
+let pauseStyle = null;
+
 function toggleDisableParentPage(disable) {
   // Find all required elements upfront. If any are missing, the function will stop and throw an error.
   const pageOverlay = findRequiredElement('link-preview-page-overlay');
@@ -49,8 +51,6 @@ function toggleDisableParentPage(disable) {
   // Check for document.body and document.head, which are critical for this function's operation.
   if (!document.body) throw new Error("document.body is not available.");
   if (!document.head) throw new Error("document.head is not available for adding styles.");
-
-  let pauseStyle = null; // This remains managed within the closure.
 
   log(disable ? "Disabling Parent Page" : "Enabling Parent Page");
 
@@ -98,10 +98,8 @@ function toggleDisableParentPage(disable) {
   }
 
   function disablePauseStyle() {
-    // No need to check for pauseStyle here because findRequiredElement on document.head would have already caught it.
-    const styleElement = document.getElementById('link-preview-animation-pauzer');
-    if (styleElement) {
-      styleElement.remove();
+    if (pauseStyle) {
+      pauseStyle.remove();
       pauseStyle = null;
     }
   }
