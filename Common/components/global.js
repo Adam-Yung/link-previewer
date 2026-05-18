@@ -41,6 +41,7 @@ function timeoutWrapper(func, ms = 100) {
 
     // Use the captured 'args' from when the returned function was called
     state.timeoutIDs.set(func, setTimeout(() => {
+      state.timeoutIDs.delete(func);
       func.apply(this, args);
     }, ms));
   };
