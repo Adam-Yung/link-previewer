@@ -12,7 +12,7 @@ function createPreview(url) {
   clearTimeout(state.longClickTimer); // Cancel any pending long-click timer.
 
   // If the link is insecure HTTP, show a warning pop-up instead of a preview
-  if (url.startsWith('http://')) {
+  if (url.startsWith("http://")) {
     createHttpWarningPopup(url);
     return;
   }
@@ -20,47 +20,47 @@ function createPreview(url) {
   log(`Starting preview for: ${url}`);
 
   // Create a full-page overlay to dim the background.
-  const pageOverlay = document.createElement('div');
-  pageOverlay.id = 'link-preview-page-overlay';
+  const pageOverlay = document.createElement("div");
+  pageOverlay.id = "link-preview-page-overlay";
   Object.assign(pageOverlay.style, {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    width: '100vw',
-    height: '100vh',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: '2147483646', // High z-index to be on top of most elements.
-    opacity: '0',
-    transition: 'opacity 0.3s ease'
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "100vw",
+    height: "100vh",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: "2147483646", // High z-index to be on top of most elements.
+    opacity: "0",
+    transition: "opacity 0.3s ease",
   });
   document.body.appendChild(pageOverlay);
 
   // Create the host element for the shadow DOM.
-  const previewHost = document.createElement('div');
-  previewHost.id = 'link-preview-host';
+  const previewHost = document.createElement("div");
+  previewHost.id = "link-preview-host";
 
   // Add the host to the body BEFORE hiding other elements
   document.body.appendChild(previewHost);
 
   // Attach a shadow root to encapsulate the preview's styles and DOM.
-  const shadowRoot = previewHost.attachShadow({ mode: 'open' });
+  const shadowRoot = previewHost.attachShadow({ mode: "open" });
 
   // Link the external stylesheet for the preview UI inside the shadow DOM.
-  const styleLink = document.createElement('link');
-  styleLink.rel = 'stylesheet';
-  styleLink.href = chrome.runtime.getURL('preview_style.css');
+  const styleLink = document.createElement("link");
+  styleLink.rel = "stylesheet";
+  styleLink.href = chrome.runtime.getURL("preview_style.css");
   shadowRoot.appendChild(styleLink);
 
   // Create a click interceptor inside the shadow DOM to close the preview when clicking outside the container.
-  const clickInterceptor = document.createElement('div');
-  clickInterceptor.id = 'link-preview-click-interceptor';
+  const clickInterceptor = document.createElement("div");
+  clickInterceptor.id = "link-preview-click-interceptor";
   shadowRoot.appendChild(clickInterceptor);
 
   // Create the main container for the preview window.
-  const container = document.createElement('div');
-  container.id = 'link-preview-container';
+  const container = document.createElement("div");
+  container.id = "link-preview-container";
   container.classList.add(settings.theme);
-  container.style.pointerEvents = 'none';
+  container.style.pointerEvents = "none";
   state.container = container;
 
   // Apply size and position from settings.
@@ -70,14 +70,21 @@ function createPreview(url) {
     container.style.height = settings.height;
     container.style.top = settings.top;
     container.style.left = settings.left;
-    container.classList.add('is-centered');
+    container.classList.add("is-centered");
     // After the fade-in animation ends, switch to margin-based centering
     // to avoid sub-pixel blurriness from transform: translate(-50%, -50%)
-    container.addEventListener('animationend', () => {
-      if (container.classList.contains('is-centered')) {
-        container.classList.add('rendered');
-      }
-    }, { once: true });
+    container.addEventListener(
+      "animationend",
+      () => {
+        if (container.classList.contains("is-centered")) {
+          // Clear inline positioning so CSS margins can take over
+          container.style.top = "";
+          container.style.left = "";
+          container.classList.add("rendered");
+        }
+      },
+      { once: true },
+    );
   } else {
     container.style.width = settings.userWidth;
     container.style.height = settings.userHeight;
@@ -88,8 +95,8 @@ function createPreview(url) {
   shadowRoot.appendChild(container);
 
   // Create the address bar with URL display and control buttons.
-  const addressBar = document.createElement('div');
-  addressBar.id = 'link-preview-address-bar';
+  const addressBar = document.createElement("div");
+  addressBar.id = "link-preview-address-bar";
   addressBar.innerHTML = `
       <div class="link-preview-nav-controls">
         <button id="link-preview-back" title="Go back" disabled>${backIcon}</button>
@@ -111,15 +118,14 @@ function createPreview(url) {
   container.appendChild(addressBar);
 
   // Attach drag listener once on the address bar. Content element is looked up dynamically.
-  addressBar.addEventListener('mousedown', (e) => {
-    const contentElement = container.querySelector('iframe, img');
+  addressBar.addEventListener("mousedown", (e) => {
+    const contentElement = container.querySelector("iframe, img");
     initDrag(e, container, contentElement);
   });
 
-
   function renderUrl(urlToRender) {
-    const urlSpan = shadowRoot.querySelector('.link-preview-url');
-    const addressBar = shadowRoot.getElementById('link-preview-address-bar');
+    const urlSpan = shadowRoot.querySelector(".link-preview-url");
+    const addressBar = shadowRoot.getElementById("link-preview-address-bar");
     const startTime = Date.now();
 
     if (urlSpan) {
@@ -127,57 +133,80 @@ function createPreview(url) {
     }
 
     const isImage = /.*\.(jpeg|jpg|gif|png)$/i.test(urlToRender);
-    const existingIframe = shadowRoot.getElementById('link-preview-iframe');
-    const existingImage = shadowRoot.getElementById('link-preview-image');
+    const existingIframe = shadowRoot.getElementById("link-preview-iframe");
+    const existingImage = shadowRoot.getElementById("link-preview-image");
 
     if (existingIframe) existingIframe.remove();
     if (existingImage) existingImage.remove();
 
-    if (addressBar && settings.loadingAnimation !== 'off') {
-      addressBar.classList.add('is-loading', `ocean-${settings.loadingAnimation}`);
+    if (addressBar && settings.loadingAnimation !== "off") {
+      addressBar.classList.add(
+        "is-loading",
+        `ocean-${settings.loadingAnimation}`,
+      );
     }
-
 
     if (isImage) {
       log("Previewing an image!");
-      const img = document.createElement('img');
-      img.id = 'link-preview-image';
-      img.style.pointerEvents = 'none';
+      const img = document.createElement("img");
+      img.id = "link-preview-image";
+      img.style.pointerEvents = "none";
       img.src = urlToRender;
       img.onload = () => {
         const remainingTime = Date.now() - startTime;
-        setTimeout(() => {
-          if (addressBar) {
-            addressBar.classList.remove('is-loading', 'ocean-blue', 'ocean-orange', 'ocean-magenta');
-          }
-        }, Math.max(0, 1000 - remainingTime));
+        setTimeout(
+          () => {
+            if (addressBar) {
+              addressBar.classList.remove(
+                "is-loading",
+                "ocean-blue",
+                "ocean-orange",
+                "ocean-magenta",
+              );
+            }
+          },
+          Math.max(0, 1000 - remainingTime),
+        );
       };
       container.appendChild(img);
     } else {
-      const iframe = document.createElement('iframe');
-      iframe.id = 'link-preview-iframe';
-      iframe.style.pointerEvents = 'none';
+      const iframe = document.createElement("iframe");
+      iframe.id = "link-preview-iframe";
+      iframe.style.pointerEvents = "none";
       container.appendChild(iframe);
       try {
-        chrome.runtime.sendMessage({ action: message.prepareToPreview, url: urlToRender })
-          .then(response => {
+        chrome.runtime
+          .sendMessage({ action: message.prepareToPreview, url: urlToRender })
+          .then((response) => {
             if (response && response.ready) {
               iframe.src = urlToRender;
               iframe.onload = () => {
                 const remainingTime = Date.now() - startTime;
-                setTimeout(() => {
-                  if (addressBar) {
-                    addressBar.classList.remove('is-loading', 'ocean-blue', 'ocean-orange', 'ocean-magenta');
-                  }
-                }, Math.max(0, 1000 - remainingTime));
+                setTimeout(
+                  () => {
+                    if (addressBar) {
+                      addressBar.classList.remove(
+                        "is-loading",
+                        "ocean-blue",
+                        "ocean-orange",
+                        "ocean-magenta",
+                      );
+                    }
+                  },
+                  Math.max(0, 1000 - remainingTime),
+                );
               };
               checkForIframeReady(iframe, shadowRoot);
             } else {
-              log('Background script not ready.', LOGGING.ERROR);
+              log("Background script not ready.", LOGGING.ERROR);
               showContextExpiredPopup();
             }
-          }).catch(error => {
-            log(`Error sending prepareToPreview message: ${error}`, LOGGING.ERROR);
+          })
+          .catch((error) => {
+            log(
+              `Error sending prepareToPreview message: ${error}`,
+              LOGGING.ERROR,
+            );
             showContextExpiredPopup();
           });
       } catch (error) {
@@ -192,14 +221,17 @@ function createPreview(url) {
     const currentUrlObj = new URL(currentUrl);
     const newUrlObj = new URL(newUrl);
 
-    if (newUrl.startsWith('http://')) {
+    if (newUrl.startsWith("http://")) {
       createHttpWarningPopup(newUrl, true);
       return;
     }
 
     // Check if it's an in-page navigation (same origin and pathname, different hash)
-    if (currentUrlObj.origin === newUrlObj.origin && currentUrlObj.pathname === newUrlObj.pathname) {
-      const iframe = shadowRoot.getElementById('link-preview-iframe');
+    if (
+      currentUrlObj.origin === newUrlObj.origin &&
+      currentUrlObj.pathname === newUrlObj.pathname
+    ) {
+      const iframe = shadowRoot.getElementById("link-preview-iframe");
       if (iframe) {
         // Just updating the src with a new hash is efficient.
         // The browser will scroll to the new anchor without a full reload.
@@ -208,7 +240,7 @@ function createPreview(url) {
 
       if (historyNeedTruncate) state.historyManager.addNewEntry(newUrl);
 
-      const urlSpan = shadowRoot.querySelector('.link-preview-url');
+      const urlSpan = shadowRoot.querySelector(".link-preview-url");
       if (urlSpan) {
         urlSpan.textContent = newUrl;
       }
@@ -231,69 +263,78 @@ function createPreview(url) {
         break;
       case message.iFrameHasFocus:
         previewTakeFocus(true);
-    };
+    }
   };
   chrome.runtime.onMessage.addListener(messageListener);
   state.messageListener = messageListener;
-
 
   // Initial render
   renderUrl(url);
 
   // Create and attach resize handles for all directions.
-  const resizeHandles = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
-  resizeHandles.forEach(dir => {
-    const handle = document.createElement('div');
+  const resizeHandles = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
+  resizeHandles.forEach((dir) => {
+    const handle = document.createElement("div");
     handle.className = `resize-handle ${dir}`;
     container.appendChild(handle);
-    handle.addEventListener('mousedown', (e) => initResize(e, container, container.querySelector('iframe, img'), dir));
+    handle.addEventListener("mousedown", (e) =>
+      initResize(e, container, container.querySelector("iframe, img"), dir),
+    );
   });
-
-
 
   // --- UI Event Listeners ---
-  shadowRoot.getElementById('link-preview-close').addEventListener('click', closePreview);
-  shadowRoot.getElementById('link-preview-enlarge').addEventListener('click', () => {
-    const _url = shadowRoot.getElementById('link-preview-iframe')?.src || url;
-    log(`Opening URL in new tab: ${_url}`);
-    window.open(_url, '_blank');
-    closePreview();
-  });
-  // Restore the preview window to its default size and position and save it.
-  shadowRoot.getElementById('link-preview-restore').addEventListener('click', () => {
-    state.isExpanded = !state.isExpanded;
-    if (state.isExpanded) {
-      container.classList.add('is-centered');
-      container.classList.remove('rendered');
-      container.style.width = '90vw';
-      container.style.height = '90vh';
-      container.style.top = '50%';
-      container.style.left = '50%';
-      // Switch to non-transform centering once animation completes
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          container.classList.add('rendered');
-        });
-      });
-    } else {
-      container.classList.remove('is-centered', 'rendered');
-      container.style.width = settings.userWidth;
-      container.style.height = settings.userHeight;
-      container.style.top = settings.userTop;
-      container.style.left = settings.userLeft;
-    }
-
-    shadowRoot.getElementById('link-preview-restore').innerHTML = state.isExpanded ? minimizedIcon : maximizedIcon;
-    // Save the restored state to storage.
-    chrome.storage.local.set({
-      isExpanded: state.isExpanded
+  shadowRoot
+    .getElementById("link-preview-close")
+    .addEventListener("click", closePreview);
+  shadowRoot
+    .getElementById("link-preview-enlarge")
+    .addEventListener("click", () => {
+      const _url = shadowRoot.getElementById("link-preview-iframe")?.src || url;
+      log(`Opening URL in new tab: ${_url}`);
+      window.open(_url, "_blank");
+      closePreview();
     });
-    toggleDisableParentPage(state.isExpanded);
-  });
+  // Restore the preview window to its default size and position and save it.
+  shadowRoot
+    .getElementById("link-preview-restore")
+    .addEventListener("click", () => {
+      state.isExpanded = !state.isExpanded;
+      if (state.isExpanded) {
+        container.classList.add("is-centered");
+        container.classList.remove("rendered");
+        container.style.width = "90vw";
+        container.style.height = "90vh";
+        container.style.top = "50%";
+        container.style.left = "50%";
+        // Switch to non-transform centering once animation completes
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            // Clear inline positioning so CSS margins can take over
+            container.style.top = "";
+            container.style.left = "";
+            container.classList.add("rendered");
+          });
+        });
+      } else {
+        container.classList.remove("is-centered", "rendered");
+        container.style.width = settings.userWidth;
+        container.style.height = settings.userHeight;
+        container.style.top = settings.userTop;
+        container.style.left = settings.userLeft;
+      }
 
-  state.historyManager = new HistoryManager(shadowRoot, url, navigateTo)
+      shadowRoot.getElementById("link-preview-restore").innerHTML =
+        state.isExpanded ? minimizedIcon : maximizedIcon;
+      // Save the restored state to storage.
+      chrome.storage.local.set({
+        isExpanded: state.isExpanded,
+      });
+      toggleDisableParentPage(state.isExpanded);
+    });
 
-  document.addEventListener('keydown', handleEsc);
+  state.historyManager = new HistoryManager(shadowRoot, url, navigateTo);
+
+  document.addEventListener("keydown", handleEsc);
 
   toggleDisableParentPage(isInCenterStage());
   attachResizeHandler(container);
@@ -311,14 +352,16 @@ function closePreview() {
   attachResizeHandler();
   scrollLock(false);
 
-  const previewHost = document.getElementById('link-preview-host');
-  const pageOverlay = document.getElementById('link-preview-page-overlay');
+  const previewHost = document.getElementById("link-preview-host");
+  const pageOverlay = document.getElementById("link-preview-page-overlay");
 
   // Trigger fade-out animations.
   if (previewHost) {
-    const container = previewHost.shadowRoot.getElementById('link-preview-container');
+    const container = previewHost.shadowRoot.getElementById(
+      "link-preview-container",
+    );
     if (container) {
-      container.style.animation = 'fadeOut 0.3s forwards ease-out';
+      container.style.animation = "fadeOut 0.3s forwards ease-out";
     }
   }
 
@@ -328,7 +371,7 @@ function closePreview() {
     if (pageOverlay) pageOverlay.remove();
 
     // Clean up global listeners and state.
-    document.removeEventListener('keydown', handleEsc);
+    document.removeEventListener("keydown", handleEsc);
     if (state.messageListener) {
       chrome.runtime.onMessage.removeListener(state.messageListener);
       state.messageListener = null;
@@ -337,7 +380,6 @@ function closePreview() {
     state.isPreviewing = false;
   }, 200); // Delay should be slightly less than animation duration.
 }
-
 
 /**
  * Handles the keydown event to close the preview on 'Escape'.
@@ -362,23 +404,30 @@ function checkForIframeReady(frame, shadowRoot) {
   function check() {
     attempts++;
     try {
-      const iframeDoc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
-      if (iframeDoc && (iframeDoc.readyState === 'interactive' || iframeDoc.readyState === 'complete')) {
-        frame.classList.add('loaded');
+      const iframeDoc =
+        frame.contentDocument ||
+        (frame.contentWindow && frame.contentWindow.document);
+      if (
+        iframeDoc &&
+        (iframeDoc.readyState === "interactive" ||
+          iframeDoc.readyState === "complete")
+      ) {
+        frame.classList.add("loaded");
         return;
       }
     } catch (e) {
       // Cross-origin: can't access contentDocument, rely on onload event
-      frame.classList.add('loaded');
+      frame.classList.add("loaded");
       return;
     }
 
     if (attempts < maxAttempts) {
       requestAnimationFrame(check);
     } else {
-      frame.classList.add('loaded');
+      frame.classList.add("loaded");
     }
   }
 
   requestAnimationFrame(check);
 }
+
