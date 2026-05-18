@@ -9,7 +9,7 @@ if (window.self !== window.top && window.name === 'link-previewer-frame') {
 
   chrome.storage.local.get('closeKey').then(result => {
     closeKey = result.closeKey || "Escape";
-  });
+  }).catch(() => {});
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local') {
@@ -21,7 +21,7 @@ if (window.self !== window.top && window.name === 'link-previewer-frame') {
 
   document.addEventListener('keydown', (e) => {
       if (e.key === closeKey) {
-        chrome.runtime.sendMessage({ action: message.closePreviewFromIframe})
+        chrome.runtime.sendMessage({ action: message.closePreviewFromIframe}).catch(() => {});
     }
   });
 
@@ -37,7 +37,7 @@ if (window.self !== window.top && window.name === 'link-previewer-frame') {
       log(`[IFRAME] User clicked a link inside of the iFrame: ${url}`);
       e.preventDefault();
       e.stopPropagation();
-      chrome.runtime.sendMessage({ action: message.updatePreviewUrl, url: url })
+      chrome.runtime.sendMessage({ action: message.updatePreviewUrl, url: url }).catch(() => {});
     }
   }, true);
 
@@ -46,7 +46,7 @@ if (window.self !== window.top && window.name === 'link-previewer-frame') {
    * Handling IFrame receiving Focus
    */
   window.addEventListener('focus', () => {
-    chrome.runtime.sendMessage({ action: message.iFrameHasFocus})
+    chrome.runtime.sendMessage({ action: message.iFrameHasFocus}).catch(() => {});
   })
 
   chrome.runtime.onMessage.addListener((request) => {

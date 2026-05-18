@@ -335,7 +335,7 @@ function closePreview() {
       chrome.runtime.onMessage.removeListener(state.messageListener);
       state.messageListener = null;
     }
-    chrome.runtime.sendMessage({ action: message.clearPreview }); // Tell background to clean up.
+    chrome.runtime.sendMessage({ action: message.clearPreview }).catch(() => {});
     state.isPreviewing = false;
   }, 200); // Delay should be slightly less than animation duration.
 }

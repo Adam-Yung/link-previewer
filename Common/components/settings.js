@@ -9,7 +9,7 @@ chrome.storage.local.get(settings).then(loadedSettings => {
   if (Array.isArray(settings.disabledSites)) {
     state.isCurrentSiteDisabled = settings.disabledSites.includes(window.location.hostname);
   }
-});
+}).catch(() => {});
 
 // Listen for changes in storage and update the local settings object in real-time.
 chrome.storage.onChanged.addListener((changes, area) => {
