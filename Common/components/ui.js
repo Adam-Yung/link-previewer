@@ -112,8 +112,7 @@ function createPreview(url) {
 
   // Attach drag listener once on the address bar. Content element is looked up dynamically.
   addressBar.addEventListener('mousedown', (e) => {
-    const contentElement = container.querySelector('iframe, img');
-    initDrag(e, container, contentElement);
+    initDrag(e, container, shadowRoot.getElementById('link-preview-iframe') || shadowRoot.getElementById('link-preview-image'));
   });
 
 
@@ -247,7 +246,9 @@ function createPreview(url) {
     const handle = document.createElement('div');
     handle.className = `resize-handle ${dir}`;
     container.appendChild(handle);
-    handle.addEventListener('mousedown', (e) => initResize(e, container, container.querySelector('iframe, img'), dir));
+    handle.addEventListener('mousedown', (e) => {
+      initResize(e, container, shadowRoot.getElementById('link-preview-iframe') || shadowRoot.getElementById('link-preview-image'), dir);
+    });
   });
 
 
