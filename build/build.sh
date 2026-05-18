@@ -162,8 +162,8 @@ build_extension() {
   # Apply browser-specific modifications
   if [[ "$browser" == "firefox" ]]; then
     log "${C_BLUE}" "🔧" "Applying Firefox compatibility changes..."
-    # Use sed compatible with both Linux and macOS
-    find "${PROJECT_ROOT}/${DIST_DIR}" -type f -name '*.js' -exec sed -i.bak 's/chrome/browser/g' {} +
+    # Only replace 'chrome.' API namespace calls, not substrings or string literals
+    find "${PROJECT_ROOT}/${DIST_DIR}" -type f -name '*.js' -exec sed -i.bak 's/chrome\./browser./g' {} +
     find "${PROJECT_ROOT}/${DIST_DIR}" -type f -name '*.js.bak' -delete
   fi
   
