@@ -110,6 +110,12 @@ function createPreview(url) {
     `;
   container.appendChild(addressBar);
 
+  // Attach drag listener once on the address bar. Content element is looked up dynamically.
+  addressBar.addEventListener('mousedown', (e) => {
+    const contentElement = container.querySelector('iframe, img');
+    initDrag(e, container, contentElement);
+  });
+
 
   function renderUrl(urlToRender) {
     const urlSpan = shadowRoot.querySelector('.link-preview-url');
@@ -147,13 +153,11 @@ function createPreview(url) {
         }, Math.max(0, 1000 - remainingTime));
       };
       container.appendChild(img);
-      addressBar.addEventListener('mousedown', (e) => initDrag(e, container, img));
     } else {
       const iframe = document.createElement('iframe');
       iframe.id = 'link-preview-iframe';
       iframe.style.pointerEvents = 'none';
       container.appendChild(iframe);
-      addressBar.addEventListener('mousedown', (e) => initDrag(e, container, iframe));
       try {
         chrome.runtime.sendMessage({ action: message.prepareToPreview, url: urlToRender })
           .then(response => {
@@ -230,6 +234,7 @@ function createPreview(url) {
     };
   };
   chrome.runtime.onMessage.addListener(messageListener);
+  state.messageListener = messageListener;
 
 
   // Initial render
@@ -324,6 +329,10 @@ function closePreview() {
 
     // Clean up global listeners and state.
     document.removeEventListener('keydown', handleEsc);
+    if (state.messageListener) {
+      chrome.runtime.onMessage.removeListener(state.messageListener);
+      state.messageListener = null;
+    }
     chrome.runtime.sendMessage({ action: message.clearPreview }); // Tell background to clean up.
     state.isPreviewing = false;
   }, 200); // Delay should be slightly less than animation duration.

@@ -216,13 +216,17 @@ function initResize(e, element, contentElement, dir) {
   initInteraction(e, element, contentElement, doResize, onResizeEnd);
 }
 
+let activeResizeWrapper = null;
+
 function attachResizeHandler(container) {
-  const resizeWrapper = timeoutWrapper(() => {if (container) checkIframeInBounds(container);});
+  // Remove previous listener if one exists
+  if (activeResizeWrapper) {
+    window.removeEventListener('resize', activeResizeWrapper);
+    activeResizeWrapper = null;
+  }
 
   if (container) {
-    window.addEventListener('resize', resizeWrapper);
-  }
-  else {
-    window.removeEventListener('resize', resizeWrapper);
+    activeResizeWrapper = timeoutWrapper(() => { checkIframeInBounds(container); });
+    window.addEventListener('resize', activeResizeWrapper);
   }
 }
