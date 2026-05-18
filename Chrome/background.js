@@ -1,11 +1,12 @@
 // background.js
 
 const RULE_ID = 1;
+const RULE_ID_REQUEST = 2;
 // Use a Set to store the IDs of all tabs with an active preview.
 const previewingTabIds = new Set();
 
-// Define the rule object here to reuse it.
-const headerRule = {
+// Rule to modify response headers (remove frame restrictions)
+const responseHeaderRule = {
   id: RULE_ID,
   priority: 1,
   action: {
@@ -15,9 +16,12 @@ const headerRule = {
       {
         header: 'content-security-policy',
         operation: 'set',
-        value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation;"
+        value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation allow-popups;"
       },
       { header: 'x-content-type-options', operation: 'remove' },
+      { header: 'cross-origin-opener-policy', operation: 'remove' },
+      { header: 'cross-origin-embedder-policy', operation: 'remove' },
+      { header: 'cross-origin-resource-policy', operation: 'remove' },
       {
         "header": "Set-Cookie",
         "operation": "append",
@@ -26,42 +30,62 @@ const headerRule = {
     ]
   },
   condition: {
-    resourceTypes: ['sub_frame', 'xmlhttprequest']
+    resourceTypes: ['sub_frame', 'xmlhttprequest', 'script', 'stylesheet', 'image', 'font']
+  }
+};
+
+// Rule to modify request headers (spoof fetch metadata so sites don't detect framing)
+const requestHeaderRule = {
+  id: RULE_ID_REQUEST,
+  priority: 1,
+  action: {
+    type: 'modifyHeaders',
+    requestHeaders: [
+      { header: 'sec-fetch-dest', operation: 'set', value: 'document' },
+      { header: 'sec-fetch-mode', operation: 'set', value: 'navigate' },
+      { header: 'sec-fetch-site', operation: 'set', value: 'none' }
+    ]
+  },
+  condition: {
+    resourceTypes: ['sub_frame']
   }
 };
 
 // --- Helper Functions to Manage the DNR Rule ---
 
 /**
- * Enables the header modification rule.
- * Checks if the rule is already active to avoid redundant API calls.
+ * Enables the header modification rules.
+ * Checks if the rules are already active to avoid redundant API calls.
  */
 async function enableRule() {
-  // 1. Get all currently active session rules.
   const existingRules = await chrome.declarativeNetRequest.getSessionRules();
 
-  // 2. Check if a rule with our ID is already in the list.
-  if (existingRules.some(rule => rule.id === RULE_ID)) {
-    // log('[BACKGROUND] Rule is already active. No action needed.');
-    return; // Exit if the rule already exists.
+  const hasResponseRule = existingRules.some(rule => rule.id === RULE_ID);
+  const hasRequestRule = existingRules.some(rule => rule.id === RULE_ID_REQUEST);
+
+  if (hasResponseRule && hasRequestRule) {
+    return;
   }
 
-  // 3. If the rule is not found, add it.
+  const rulesToAdd = [];
+  if (!hasResponseRule) rulesToAdd.push(responseHeaderRule);
+  if (!hasRequestRule) rulesToAdd.push(requestHeaderRule);
+
   await chrome.declarativeNetRequest.updateSessionRules({
-    addRules: [headerRule]
+    addRules: rulesToAdd
   });
-  log('[BACKGROUND] Header modification rule ENABLED.');
+  log('[BACKGROUND] Header modification rules ENABLED.');
 }
 
 
 /**
- * Disables the header modification rule. This function is idempotent.
+ * Disables the header modification rules. This function is idempotent.
  */
 async function disableRule() {
   await chrome.declarativeNetRequest.updateSessionRules({
-    removeRuleIds: [RULE_ID]
+    removeRuleIds: [RULE_ID, RULE_ID_REQUEST]
   });
-  log('[BACKGROUND] Header modification rule DISABLED.');
+  log('[BACKGROUND] Header modification rules DISABLED.');
 }
 
 

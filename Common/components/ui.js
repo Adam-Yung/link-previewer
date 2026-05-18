@@ -71,6 +71,13 @@ function createPreview(url) {
     container.style.top = settings.top;
     container.style.left = settings.left;
     container.classList.add('is-centered');
+    // After the fade-in animation ends, switch to margin-based centering
+    // to avoid sub-pixel blurriness from transform: translate(-50%, -50%)
+    container.addEventListener('animationend', () => {
+      if (container.classList.contains('is-centered')) {
+        container.classList.add('rendered');
+      }
+    }, { once: true });
   } else {
     container.style.width = settings.userWidth;
     container.style.height = settings.userHeight;
@@ -252,12 +259,19 @@ function createPreview(url) {
     state.isExpanded = !state.isExpanded;
     if (state.isExpanded) {
       container.classList.add('is-centered');
+      container.classList.remove('rendered');
       container.style.width = '90vw';
       container.style.height = '90vh';
       container.style.top = '50%';
       container.style.left = '50%';
+      // Switch to non-transform centering once animation completes
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          container.classList.add('rendered');
+        });
+      });
     } else {
-      container.classList.remove('is-centered');
+      container.classList.remove('is-centered', 'rendered');
       container.style.width = settings.userWidth;
       container.style.height = settings.userHeight;
       container.style.top = settings.userTop;
@@ -327,19 +341,35 @@ function handleEsc(e) {
 }
 
 /**
- * Recursively checks if an iframe's content has finished loading.
- * Once loaded, it adds a 'loaded' class to the iframe and hides the loading spinner.
+ * Checks if an iframe's content has finished loading.
+ * For cross-origin iframes, falls back to a timeout since contentDocument is inaccessible.
  * @param {HTMLIFrameElement} frame The iframe element to check.
  * @param {ShadowRoot} shadowRoot The shadow root containing the loader element.
  */
 function checkForIframeReady(frame, shadowRoot) {
-  const iframeDoc = frame && (frame.contentDocument || (frame.contentWindow && frame.contentWindow.document));
+  let attempts = 0;
+  const maxAttempts = 300; // ~5 seconds at 60fps
 
-  // Check if the iframe document is fully loaded or interactive.
-  if (iframeDoc && (iframeDoc.readyState === 'interactive' || iframeDoc.readyState === 'complete')) {
-    frame.classList.add('loaded'); // Add class for fade-in animation.
-  } else {
-    // If not ready, check again on the next animation frame.
-    requestAnimationFrame(() => { checkForIframeReady(frame, shadowRoot) });
+  function check() {
+    attempts++;
+    try {
+      const iframeDoc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+      if (iframeDoc && (iframeDoc.readyState === 'interactive' || iframeDoc.readyState === 'complete')) {
+        frame.classList.add('loaded');
+        return;
+      }
+    } catch (e) {
+      // Cross-origin: can't access contentDocument, rely on onload event
+      frame.classList.add('loaded');
+      return;
+    }
+
+    if (attempts < maxAttempts) {
+      requestAnimationFrame(check);
+    } else {
+      frame.classList.add('loaded');
+    }
   }
+
+  requestAnimationFrame(check);
 }

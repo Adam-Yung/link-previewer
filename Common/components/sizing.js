@@ -61,15 +61,14 @@ function checkIframeInBounds(element) {
  * @param {HTMLElement} element The element to convert.
  */
 function convertToPixels(element) {
-  // If the element is centered using transforms, calculate its absolute pixel position.
   if (element.classList.contains('is-centered')) {
     const rect = element.getBoundingClientRect();
     element.style.left = `${rect.left}px`;
     element.style.top = `${rect.top}px`;
     element.style.width = `${rect.width}px`;
     element.style.height = `${rect.height}px`;
-    element.classList.remove('is-centered'); // Remove the class that applies the transform.
-    element.style.animation = 'none'; // Disable animations that might interfere.
+    element.classList.remove('is-centered', 'rendered');
+    element.style.animation = 'none';
   }
 }
 

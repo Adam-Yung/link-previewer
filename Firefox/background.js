@@ -3,23 +3,39 @@
 let previewingUrl = null;
 
 function requestHeadersListener(details) {
-  // We only want to modify requests initiated by our own extension
   if (details.initiator === browser.runtime.id || details.originUrl?.startsWith(browser.runtime.getURL(""))) {
     const targetOrigin = new URL(details.url).origin;
 
     let originHeader = details.requestHeaders.find(h => h.name.toLowerCase() === 'origin');
     if (originHeader) {
-      // Spoof the origin to make it look like a same-origin request
       originHeader.value = targetOrigin;
     } else {
-      // Add the origin header if it doesn't exist
       details.requestHeaders.push({ name: 'Origin', value: targetOrigin });
     }
 
-    // Also spoof the Referer for good measure
-    details.requestHeaders.push({ name: 'Referer', value: details.url });
+    // Spoof Sec-Fetch-* headers so the server doesn't detect iframe embedding
+    let secFetchDest = details.requestHeaders.find(h => h.name.toLowerCase() === 'sec-fetch-dest');
+    if (secFetchDest) {
+      secFetchDest.value = 'document';
+    }
+    let secFetchMode = details.requestHeaders.find(h => h.name.toLowerCase() === 'sec-fetch-mode');
+    if (secFetchMode) {
+      secFetchMode.value = 'navigate';
+    }
+    let secFetchSite = details.requestHeaders.find(h => h.name.toLowerCase() === 'sec-fetch-site');
+    if (secFetchSite) {
+      secFetchSite.value = 'none';
+    }
 
-    log(`[BACKGROUND] Spoofed the header request to use appear as same origin: ${details.url}`);
+    // Spoof the Referer to match the target
+    let refererHeader = details.requestHeaders.find(h => h.name.toLowerCase() === 'referer');
+    if (refererHeader) {
+      refererHeader.value = details.url;
+    } else {
+      details.requestHeaders.push({ name: 'Referer', value: details.url });
+    }
+
+    log(`[BACKGROUND] Spoofed the header request to appear as same origin: ${details.url}`);
     return { requestHeaders: details.requestHeaders };
   }
   return { requestHeaders: details.requestHeaders };
@@ -55,7 +71,7 @@ function responseHeadersListener(details) {
 
     newHeaders.push({
       name: 'Content-Security-Policy',
-      value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation;"
+      value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation allow-popups;"
     });
 
     log(`[BACKGROUND] Modified response headers for iframe display: ${previewingUrl}`);
@@ -65,10 +81,10 @@ function responseHeadersListener(details) {
 }
 
 // --- Register all listeners ---
-// NEW: Register the request header listener
+// Register the request header listener (for both sub_frame and XHR)
 browser.webRequest.onBeforeSendHeaders.addListener(
   requestHeadersListener,
-  { urls: ["<all_urls>"], types: ["xmlhttprequest"] },
+  { urls: ["<all_urls>"], types: ["sub_frame", "xmlhttprequest"] },
   ["blocking", "requestHeaders"]
 );
 
