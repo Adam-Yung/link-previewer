@@ -14,8 +14,7 @@ readonly C_BOLD='\033[1m'
 readonly C_UNDERLINE='\033[4m'
 
 # Script and Project directory paths
-readonly SCRIPT_PATH=$(readlink -f -- "${BASH_SOURCE[0]}")
-readonly SCRIPT_DIR=$(dirname -- "${SCRIPT_PATH}")
+readonly SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 readonly PROJECT_ROOT=$(dirname -- "${SCRIPT_DIR}")
 
 # Build directories
@@ -115,7 +114,7 @@ use_minimal_icons() {
 build_extension() {
   local browser="$1"
   local is_minimal="$2"
-  local browser_capitalized="${browser^}"
+  local browser_capitalized="$(printf '%s' "${browser:0:1}" | tr '[:lower:]' '[:upper:]')${browser:1}"
   
   local version
   version=$(get_version)
