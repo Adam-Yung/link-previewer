@@ -80,20 +80,30 @@ function responseHeadersListener(details) {
   return { responseHeaders: details.responseHeaders };
 }
 
-// --- Register all listeners ---
-// Register the request header listener (for both sub_frame and XHR)
-browser.webRequest.onBeforeSendHeaders.addListener(
-  requestHeadersListener,
-  { urls: ["<all_urls>"], types: ["sub_frame", "xmlhttprequest"] },
-  ["blocking", "requestHeaders"]
-);
+// --- Dynamic listener registration ---
+let listenersRegistered = false;
 
-// Register the response header listener
-browser.webRequest.onHeadersReceived.addListener(
-  responseHeadersListener,
-  { urls: ["<all_urls>"], types: ["sub_frame", "xhr", "xmlhttprequest"] },
-  ["blocking", "responseHeaders", "responseHeaders"]
-);
+function registerListeners() {
+  if (listenersRegistered) return;
+  browser.webRequest.onBeforeSendHeaders.addListener(
+    requestHeadersListener,
+    { urls: ["<all_urls>"], types: ["sub_frame", "xmlhttprequest"] },
+    ["blocking", "requestHeaders"]
+  );
+  browser.webRequest.onHeadersReceived.addListener(
+    responseHeadersListener,
+    { urls: ["<all_urls>"], types: ["sub_frame", "xmlhttprequest"] },
+    ["blocking", "responseHeaders"]
+  );
+  listenersRegistered = true;
+}
+
+function unregisterListeners() {
+  if (!listenersRegistered) return;
+  browser.webRequest.onBeforeSendHeaders.removeListener(requestHeadersListener);
+  browser.webRequest.onHeadersReceived.removeListener(responseHeadersListener);
+  listenersRegistered = false;
+}
 
 
 // --- Message handling from content scripts ---
@@ -102,11 +112,13 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case message.prepareToPreview:
       log(`[BACKGROUND] Preparing for preview: ${request.url}`);
       previewingUrl = request.url;
+      registerListeners();
       sendResponse({ ready: true });
       return true;
 
     case message.clearPreview:
       previewingUrl = null;
+      unregisterListeners();
       break;
 
     case message.preconnect:
