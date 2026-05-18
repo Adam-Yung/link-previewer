@@ -90,14 +90,7 @@ function log(msg, level = LOGGING.LOG) {
   if (!ALLOW_DEBUGGING) return;
   const time = new Date();
 
-  // Get caller function and line number.
-  // The call stack is retrieved from a new Error object.
-  const stack = new Error().stack.split('\n');
-
-  // stack[0] is "Error"
-  // stack[1] is the current function's frame (`log`)
-  // stack[2] is the caller's frame (what we want!)
-  const callerData = parseErrorString(stack[2]);
+  const callerData = parseErrorString((new Error().stack.split('\n', 4))[2]);
 
   // Construct a more informative message with file and line number.
   const location = callerData ? `${callerData.filePath}:${callerData.lineNumber}` : 'unknown file';
