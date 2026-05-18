@@ -99,6 +99,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Listens for messages from content scripts.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (!sender.tab) return;
   const tabId = sender.tab.id;
   switch (request.action) {
     case message.prepareToPreview:
