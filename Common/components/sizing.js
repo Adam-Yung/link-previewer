@@ -72,14 +72,6 @@ function convertToPixels(element) {
   }
 }
 
-function forceReflow(element) {
-  const rect = element.getBoundingClientRect();
-  element.style.width = `${rect.width-1}px`;
-  setTimeout(() => {
-    element.style.width = `${rect.width}px`;
-  }, 0);
-}
-
 /**
  * A general handler for mouse drag interactions (both moving and resizing).
  * @param {MouseEvent} e The initial mousedown event.
@@ -107,7 +99,7 @@ function initInteraction(e, element, contentElement, onMove, onEnd) {
     onEnd(); // Execute finalization logic (e.g., saving state)
     state.isDragging = false;
     toggleDisableParentPage(isInCenterStage());
-    requestAnimationFrame(() => {checkIframeInBounds(element); forceReflow(element)});
+    requestAnimationFrame(() => { checkIframeInBounds(element); });
   };
 
   document.documentElement.addEventListener('mousemove', onMove, false);

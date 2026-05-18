@@ -88,11 +88,9 @@ function toggleDisableParentPage(disable) {
       pauseStyle = document.createElement('style');
       pauseStyle.id = 'link-preview-animation-pauzer';
       pauseStyle.innerHTML = `
-              * {
+              body *:not(#link-preview-host):not(#link-preview-host *) {
                 animation-play-state: paused !important;
                 transition: none !important;
-                transition-property: none !important;
-                transform: none !important;
                 scroll-behavior: auto !important;
               }`;
       document.head.appendChild(pauseStyle);
