@@ -189,11 +189,20 @@ function createPreview(url) {
 
   function navigateTo(newUrl, oldUrl = "", historyNeedTruncate = true) {
     const currentUrl = oldUrl || state.historyManager.getCurrentUrl();
-    const currentUrlObj = new URL(currentUrl);
-    const newUrlObj = new URL(newUrl);
 
     if (newUrl.startsWith('http://')) {
       createHttpWarningPopup(newUrl, true);
+      return;
+    }
+
+    let currentUrlObj, newUrlObj;
+    try {
+      currentUrlObj = new URL(currentUrl);
+      newUrlObj = new URL(newUrl);
+    } catch (e) {
+      // Malformed URL — skip hash-change optimization, do a full navigation
+      if (historyNeedTruncate) state.historyManager.addNewEntry(newUrl);
+      renderUrl(newUrl);
       return;
     }
 
