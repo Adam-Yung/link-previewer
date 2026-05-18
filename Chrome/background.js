@@ -53,40 +53,50 @@ const requestHeaderRule = {
 
 // --- Helper Functions to Manage the DNR Rule ---
 
+let ruleUpdateQueue = Promise.resolve();
+
+function serializedRuleUpdate(fn) {
+  ruleUpdateQueue = ruleUpdateQueue.then(fn).catch(() => {});
+}
+
 /**
  * Enables the header modification rules scoped to currently previewing tabs.
  * Rebuilds rules with the current set of tab IDs to ensure only preview tabs
  * have their security headers stripped.
  */
-async function enableRule() {
-  const tabIds = [...previewingTabIds];
-  if (tabIds.length === 0) return;
+function enableRule() {
+  serializedRuleUpdate(async () => {
+    const tabIds = [...previewingTabIds];
+    if (tabIds.length === 0) return;
 
-  const scopedResponseRule = {
-    ...responseHeaderRule,
-    condition: { ...responseHeaderRule.condition, tabIds }
-  };
-  const scopedRequestRule = {
-    ...requestHeaderRule,
-    condition: { ...requestHeaderRule.condition, tabIds }
-  };
+    const scopedResponseRule = {
+      ...responseHeaderRule,
+      condition: { ...responseHeaderRule.condition, tabIds }
+    };
+    const scopedRequestRule = {
+      ...requestHeaderRule,
+      condition: { ...requestHeaderRule.condition, tabIds }
+    };
 
-  await chrome.declarativeNetRequest.updateSessionRules({
-    removeRuleIds: [RULE_ID, RULE_ID_REQUEST],
-    addRules: [scopedResponseRule, scopedRequestRule]
+    await chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: [RULE_ID, RULE_ID_REQUEST],
+      addRules: [scopedResponseRule, scopedRequestRule]
+    });
+    log('[BACKGROUND] Header modification rules ENABLED for tabs: ' + tabIds.join(', '));
   });
-  log('[BACKGROUND] Header modification rules ENABLED for tabs: ' + tabIds.join(', '));
 }
 
 
 /**
  * Disables the header modification rules. This function is idempotent.
  */
-async function disableRule() {
-  await chrome.declarativeNetRequest.updateSessionRules({
-    removeRuleIds: [RULE_ID, RULE_ID_REQUEST]
+function disableRule() {
+  serializedRuleUpdate(async () => {
+    await chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: [RULE_ID, RULE_ID_REQUEST]
+    });
+    log('[BACKGROUND] Header modification rules DISABLED.');
   });
-  log('[BACKGROUND] Header modification rules DISABLED.');
 }
 
 
