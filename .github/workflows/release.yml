@@ -21,8 +21,14 @@ jobs:
       - name: Build Chrome extension
         run: cd build && ./build.sh chrome
 
+      - name: Preserve Chrome artifact
+        run: cp out/link-previewer-chrome-v*.zip /tmp/
+
       - name: Build Firefox extension
         run: cd build && ./build.sh firefox
+
+      - name: Restore Chrome artifact
+        run: cp /tmp/link-previewer-chrome-v*.zip out/
 
       - name: Get version from tag
         id: version
