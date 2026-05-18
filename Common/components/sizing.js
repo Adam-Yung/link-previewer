@@ -6,20 +6,13 @@ function isInCenterStage() {
   const c = state.container;
   if (!c) return false;
 
-  return (
-    c.classList.contains('is-centered') ||
-    (c.style.width === '90vw' &&
-      c.style.height === '90vh' &&
-      c.style.top === '50%' &&
-      c.style.left === '50%')
-  );
+  return c.classList.contains("is-centered");
 }
-
 
 function checkIframeInBounds(element) {
   const VIEWPORT_PADDING = 2;
 
-  if (!element || element.classList.contains('is-centered')) {
+  if (!element || element.classList.contains("is-centered")) {
     return;
   }
 
@@ -33,12 +26,12 @@ function checkIframeInBounds(element) {
   const styleChanges = {};
 
   if (rect.left < 0) {
-    styleChanges.left = '0px';
+    styleChanges.left = "0px";
     left = 0;
   }
 
   if (rect.top < 0) {
-    styleChanges.top = '0px';
+    styleChanges.top = "0px";
     top = 0;
   }
 
@@ -49,7 +42,7 @@ function checkIframeInBounds(element) {
   if (rect.bottom > winHeight) {
     styleChanges.height = `${winHeight - top - VIEWPORT_PADDING}px`;
   }
-  
+
   if (Object.keys(styleChanges).length > 0) {
     Object.assign(element.style, styleChanges);
   }
@@ -61,14 +54,14 @@ function checkIframeInBounds(element) {
  * @param {HTMLElement} element The element to convert.
  */
 function convertToPixels(element) {
-  if (element.classList.contains('is-centered')) {
+  if (element.classList.contains("is-centered")) {
     const rect = element.getBoundingClientRect();
     element.style.left = `${rect.left}px`;
     element.style.top = `${rect.top}px`;
     element.style.width = `${rect.width}px`;
     element.style.height = `${rect.height}px`;
-    element.classList.remove('is-centered', 'rendered');
-    element.style.animation = 'none';
+    element.classList.remove("is-centered");
+    element.style.animation = "none";
   }
 }
 
@@ -85,26 +78,32 @@ function initInteraction(e, element, contentElement, onMove, onEnd) {
   e.preventDefault();
 
   if (contentElement) {
-    contentElement.style.pointerEvents = 'none';
+    contentElement.style.pointerEvents = "none";
   }
 
   const stopInteraction = () => {
     if (contentElement) {
-      contentElement.style.pointerEvents = 'auto';
+      contentElement.style.pointerEvents = "auto";
     }
-    document.documentElement.removeEventListener('mousemove', onMove);
-    document.documentElement.removeEventListener('mouseup', stopInteraction);
-    document.documentElement.removeEventListener('mouseleave', stopInteraction);
+    document.documentElement.removeEventListener("mousemove", onMove);
+    document.documentElement.removeEventListener("mouseup", stopInteraction);
+    document.documentElement.removeEventListener("mouseleave", stopInteraction);
 
     onEnd(); // Execute finalization logic (e.g., saving state)
     state.isDragging = false;
     toggleDisableParentPage(isInCenterStage());
-    requestAnimationFrame(() => { checkIframeInBounds(element); });
+    requestAnimationFrame(() => {
+      checkIframeInBounds(element);
+    });
   };
 
-  document.documentElement.addEventListener('mousemove', onMove, false);
-  document.documentElement.addEventListener('mouseup', stopInteraction, false);
-  document.documentElement.addEventListener('mouseleave', stopInteraction, false);
+  document.documentElement.addEventListener("mousemove", onMove, false);
+  document.documentElement.addEventListener("mouseup", stopInteraction, false);
+  document.documentElement.addEventListener(
+    "mouseleave",
+    stopInteraction,
+    false,
+  );
 }
 
 /**
@@ -114,7 +113,7 @@ function initInteraction(e, element, contentElement, onMove, onEnd) {
  * @param {HTMLElement} contentElement The iframe/image inside.
  */
 function initDrag(e, element, contentElement) {
-  if (e.button !== 0 || e.target.closest('button')) {
+  if (e.button !== 0 || e.target.closest("button")) {
     return;
   }
 
@@ -146,7 +145,7 @@ function initDrag(e, element, contentElement) {
     chrome.storage.local.set({
       userTop: element.style.top,
       userLeft: element.style.left,
-      isExpanded: false
+      isExpanded: false,
     });
     state.isExpanded = false;
   };
@@ -177,13 +176,13 @@ function initResize(e, element, contentElement, dir) {
     let newLeft = startLeft;
     let newTop = startTop;
 
-    if (dir.includes('e')) newWidth = startWidth + moveEvent.clientX - startX;
-    if (dir.includes('w')) {
+    if (dir.includes("e")) newWidth = startWidth + moveEvent.clientX - startX;
+    if (dir.includes("w")) {
       newWidth = startWidth - (moveEvent.clientX - startX);
       newLeft = startLeft + moveEvent.clientX - startX;
     }
-    if (dir.includes('s')) newHeight = startHeight + moveEvent.clientY - startY;
-    if (dir.includes('n')) {
+    if (dir.includes("s")) newHeight = startHeight + moveEvent.clientY - startY;
+    if (dir.includes("n")) {
       newHeight = startHeight - (moveEvent.clientY - startY);
       newTop = startTop + moveEvent.clientY - startY;
     }
@@ -200,7 +199,7 @@ function initResize(e, element, contentElement, dir) {
       userHeight: element.style.height,
       userTop: element.style.top,
       userLeft: element.style.left,
-      isExpanded: false
+      isExpanded: false,
     });
     state.isExpanded = false;
   };
@@ -213,12 +212,14 @@ let activeResizeWrapper = null;
 function attachResizeHandler(container) {
   // Remove previous listener if one exists
   if (activeResizeWrapper) {
-    window.removeEventListener('resize', activeResizeWrapper);
+    window.removeEventListener("resize", activeResizeWrapper);
     activeResizeWrapper = null;
   }
 
   if (container) {
-    activeResizeWrapper = timeoutWrapper(() => { checkIframeInBounds(container); });
-    window.addEventListener('resize', activeResizeWrapper);
+    activeResizeWrapper = timeoutWrapper(() => {
+      checkIframeInBounds(container);
+    });
+    window.addEventListener("resize", activeResizeWrapper);
   }
 }

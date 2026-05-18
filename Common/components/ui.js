@@ -66,25 +66,7 @@ function createPreview(url) {
   // Apply size and position from settings.
   state.isExpanded = settings.isExpanded;
   if (state.isExpanded) {
-    container.style.width = settings.width;
-    container.style.height = settings.height;
-    container.style.top = settings.top;
-    container.style.left = settings.left;
     container.classList.add("is-centered");
-    // After the fade-in animation ends, switch to margin-based centering
-    // to avoid sub-pixel blurriness from transform: translate(-50%, -50%)
-    container.addEventListener(
-      "animationend",
-      () => {
-        if (container.classList.contains("is-centered")) {
-          // Clear inline positioning so CSS margins can take over
-          container.style.top = "";
-          container.style.left = "";
-          container.classList.add("rendered");
-        }
-      },
-      { once: true },
-    );
   } else {
     container.style.width = settings.userWidth;
     container.style.height = settings.userHeight;
@@ -294,29 +276,17 @@ function createPreview(url) {
       window.open(_url, "_blank");
       closePreview();
     });
-  // Restore the preview window to its default size and position and save it.
+
+  // Toggle the preview window between its custom user sizing and the centralized expanded state.
   shadowRoot
     .getElementById("link-preview-restore")
     .addEventListener("click", () => {
       state.isExpanded = !state.isExpanded;
       if (state.isExpanded) {
         container.classList.add("is-centered");
-        container.classList.remove("rendered");
-        container.style.width = "90vw";
-        container.style.height = "90vh";
-        container.style.top = "50%";
-        container.style.left = "50%";
-        // Switch to non-transform centering once animation completes
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            // Clear inline positioning so CSS margins can take over
-            container.style.top = "";
-            container.style.left = "";
-            container.classList.add("rendered");
-          });
-        });
       } else {
-        container.classList.remove("is-centered", "rendered");
+        container.classList.remove("is-centered");
+        // Re-apply the user's custom dimensions when returning from center stage
         container.style.width = settings.userWidth;
         container.style.height = settings.userHeight;
         container.style.top = settings.userTop;
@@ -325,6 +295,7 @@ function createPreview(url) {
 
       shadowRoot.getElementById("link-preview-restore").innerHTML =
         state.isExpanded ? minimizedIcon : maximizedIcon;
+
       // Save the restored state to storage.
       chrome.storage.local.set({
         isExpanded: state.isExpanded,
@@ -430,4 +401,3 @@ function checkForIframeReady(frame, shadowRoot) {
 
   requestAnimationFrame(check);
 }
-
