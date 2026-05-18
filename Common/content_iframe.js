@@ -1,7 +1,7 @@
 // content_iframe.js
 
-// Check if this script is running inside an iframe
-if (window.self !== window.top) {
+// Only activate inside the extension's preview iframe
+if (window.self !== window.top && window.name === 'link-previewer-frame') {
   /**
    * Handling CloseKey Logic
    */
