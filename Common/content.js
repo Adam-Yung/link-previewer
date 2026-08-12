@@ -11,7 +11,7 @@ document.addEventListener('mousedown', e => {
 
   const link = e.target.closest('a');
   // Check if the target is a valid link to preview.
-  if (link && link.href && !link.href.startsWith('javascript:')) {
+  if (link && link.href && !(/^(javascript|data|blob|file|chrome-extension|moz-extension):/i.test(link.href))) {
     if (state.isPreviewing && (!state.isDragging)) {
       const url = link.href;
       log(`User clicked a link on Parent Page while Preview is Open: ${url}`);
