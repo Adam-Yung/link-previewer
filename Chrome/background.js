@@ -5,6 +5,20 @@ const RULE_ID_REQUEST = 2;
 // Use a Set to store the IDs of all tabs with an active preview.
 const previewingTabIds = new Set();
 
+// Restore previewingTabIds from session storage on service worker startup
+chrome.storage.session.get('previewingTabIds', (result) => {
+  if (result.previewingTabIds && Array.isArray(result.previewingTabIds)) {
+    result.previewingTabIds.forEach(id => previewingTabIds.add(id));
+    if (previewingTabIds.size > 0) {
+      enableRule();
+    }
+  }
+});
+
+function persistPreviewingTabIds() {
+  chrome.storage.session.set({ previewingTabIds: [...previewingTabIds] });
+}
+
 // Rule to modify response headers (remove frame restrictions)
 const responseHeaderRule = {
   id: RULE_ID,
@@ -115,6 +129,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case message.prepareToPreview:
       log(`[BACKGROUND] Activating preview for tab: ${tabId}`);
       previewingTabIds.add(tabId);
+      persistPreviewingTabIds();
       // Enable the rule immediately since this tab is now actively previewing.
       enableRule();
       sendResponse({ ready: true });
@@ -123,6 +138,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (previewingTabIds.has(tabId)) {
         log(`[BACKGROUND] Deactivating preview for tab: ${tabId}`);
         previewingTabIds.delete(tabId);
+        persistPreviewingTabIds();
         if (previewingTabIds.size === 0) {
           disableRule();
         } else {
@@ -155,6 +171,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   if (previewingTabIds.has(tabId)) {
     previewingTabIds.delete(tabId);
+    persistPreviewingTabIds();
     log(`[BACKGROUND] Preview tab ${tabId} closed, removed from set.`);
     if (previewingTabIds.size === 0) {
       disableRule();
