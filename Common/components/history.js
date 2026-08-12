@@ -116,7 +116,11 @@ class HistoryManager {
     }
 
     this.#history.push(url);
-    this.#currentIndex++;
+    if (this.#history.length > 50) {
+      this.#history.shift();
+    } else {
+      this.#currentIndex++;
+    }
     this.#updateNavButtons();
   }
 
