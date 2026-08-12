@@ -104,6 +104,20 @@ function resetSettings(e) {
     siteEnableToggle.checked = true;
     handleSiteToggle();
 
+    // Save defaults to storage
+    chrome.storage.local.set({
+        duration: defaults.duration,
+        modifier: defaults.modifier,
+        theme: defaults.theme,
+        closeKey: defaults.closeKey,
+        userWidth: defaults.userWidth,
+        userHeight: defaults.userHeight,
+        userTop: defaults.userTop,
+        userLeft: defaults.userLeft,
+        isExpanded: defaults.isExpanded,
+        loadingAnimation: defaults.loadingAnimation
+    });
+
     // Trigger visual feedback
     resetButton.classList.add('is-reset');
     setTimeout(() => {
