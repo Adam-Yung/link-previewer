@@ -188,6 +188,11 @@ function createPreview(url) {
             if (response && response.ready) {
               iframe.src = urlToRender;
               iframe.onload = () => {
+                if (iframe._rafId) {
+                  cancelAnimationFrame(iframe._rafId);
+                  iframe._rafId = null;
+                }
+                iframe.classList.add('loaded');
                 const remainingTime = Date.now() - startTime;
                 setTimeout(() => {
                   if (addressBar) {
@@ -400,20 +405,23 @@ function checkForIframeReady(frame, shadowRoot) {
       const iframeDoc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
       if (iframeDoc && (iframeDoc.readyState === 'interactive' || iframeDoc.readyState === 'complete')) {
         frame.classList.add('loaded');
+        frame._rafId = null;
         return;
       }
     } catch (e) {
       // Cross-origin: can't access contentDocument, rely on onload event
       frame.classList.add('loaded');
+      frame._rafId = null;
       return;
     }
 
     if (attempts < maxAttempts) {
-      requestAnimationFrame(check);
+      frame._rafId = requestAnimationFrame(check);
     } else {
       frame.classList.add('loaded');
+      frame._rafId = null;
     }
   }
 
-  requestAnimationFrame(check);
+  frame._rafId = requestAnimationFrame(check);
 }
