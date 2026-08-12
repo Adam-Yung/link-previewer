@@ -24,10 +24,7 @@ function createPreview(url) {
   pageOverlay.id = 'link-preview-page-overlay';
   Object.assign(pageOverlay.style, {
     position: 'fixed',
-    top: '0',
-    left: '0',
-    width: '100vw',
-    height: '100vh',
+    inset: '0',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     zIndex: '2147483646', // High z-index to be on top of most elements.
     opacity: '0',
@@ -150,6 +147,33 @@ function createPreview(url) {
             addressBar.classList.remove('is-loading', 'ocean-blue', 'ocean-orange', 'ocean-magenta');
           }
         }, Math.max(0, 1000 - remainingTime));
+      };
+      img.onerror = () => {
+        if (addressBar) {
+          addressBar.classList.remove('is-loading', 'ocean-blue', 'ocean-orange', 'ocean-magenta');
+          addressBar.classList.add('load-failed');
+        }
+        img.remove();
+        // Fallback: load in iframe since the URL might be a page, not an image
+        const iframe = document.createElement('iframe');
+        iframe.id = 'link-preview-iframe';
+        iframe.name = 'link-previewer-frame';
+        iframe.style.pointerEvents = 'none';
+        container.appendChild(iframe);
+        try {
+          chrome.runtime.sendMessage({ action: message.prepareToPreview, url: urlToRender })
+            .then(response => {
+              if (response && response.ready) {
+                iframe.src = urlToRender;
+                iframe.onload = () => {
+                  if (addressBar) {
+                    addressBar.classList.remove('load-failed');
+                  }
+                };
+                checkForIframeReady(iframe, shadowRoot);
+              }
+            }).catch(() => {});
+        } catch (e) {}
       };
       container.appendChild(img);
     } else {
