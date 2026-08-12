@@ -152,7 +152,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const preconnectUrl = new URL(request.url);
         const isAllowedScheme = preconnectUrl.protocol === 'https:' || preconnectUrl.protocol === 'http:';
         const hostname = preconnectUrl.hostname;
-        const isPrivate = /^(127\.)|(10\.)|(192\.168\.)|(172\.(1[6-9]|2[0-9]|3[01])\.)|(0\.0\.0\.0)|(localhost)$/.test(hostname);
+        const isPrivate = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|0\.0\.0\.0$|localhost$|\[::1\]$)/.test(hostname);
         if (isAllowedScheme && !isPrivate) {
           fetch(request.url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
         }
