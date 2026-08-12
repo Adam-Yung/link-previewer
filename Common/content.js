@@ -79,11 +79,15 @@ document.addEventListener('mouseover', e => {
   }
   const link = e.target.closest('a');
   if (link && link.href && link.href !== lastHoveredUrl) {
-    lastHoveredUrl = link.href;
+    const href = link.href;
+    if (!/^https?:/.test(href)) {
+      return;
+    }
+    lastHoveredUrl = href;
     clearTimeout(hoverTimer); // Debounce the event.
     // Wait a moment before preconnecting to avoid doing it for every link the mouse passes over.
     hoverTimer = setTimeout(() => {
-      chrome.runtime.sendMessage({ action: message.preconnect, url: link.href }).catch(() => {});
+      chrome.runtime.sendMessage({ action: message.preconnect, url: href }).catch(() => {});
     }, 100);
   }
 });
