@@ -48,10 +48,35 @@ function saveOptions(e) {
   e.preventDefault();
   if (saveButton.classList.contains('is-saved')) return;
 
+  const dimensionPattern = /^\d+(\.\d+)?(px|%|vw|vh|vmin|vmax)?$/;
+  const dimensionInputs = ['width', 'height', 'userTop', 'userLeft'];
+  let hasError = false;
+
+  dimensionInputs.forEach(id => {
+    const input = document.getElementById(id);
+    if (!dimensionPattern.test(input.value.trim())) {
+      input.classList.add('input-error');
+      hasError = true;
+    } else {
+      input.classList.remove('input-error');
+    }
+  });
+
+  const durationInput = document.getElementById('duration');
+  const durationValue = parseInt(durationInput.value, 10);
+  if (isNaN(durationValue) || durationValue < 100 || durationValue > 10000) {
+    durationInput.classList.add('input-error');
+    hasError = true;
+  } else {
+    durationInput.classList.remove('input-error');
+  }
+
+  if (hasError) return;
+
   const keyToSave = closeKeyInput.textContent || closeKeyInput.dataset.placeholder;
 
   const generalSettings = {
-    duration: document.getElementById('duration').value,
+    duration: durationValue,
     modifier: document.getElementById('modifier').value,
     theme: themeToggle.checked ? 'dark' : 'light',
     closeKey: keyToSave,

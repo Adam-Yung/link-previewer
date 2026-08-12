@@ -341,3 +341,8 @@ input:checked + .slider:before { transform: translateX(22px); }
 }
 body.light-theme .separator { background-color: var(--border-light); }
 body.dark-theme .separator { background-color: var(--border-dark); }
+/* Input validation error state */
+.input-error {
+  border-color: #e53935 !important;
+  box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.2) !important;
+}
