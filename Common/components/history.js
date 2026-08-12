@@ -96,6 +96,14 @@ class HistoryManager {
       }
     }).catch(err => {
       console.error('Failed to copy URL to clipboard:', err);
+      if (!this.#copyButton.classList.contains('copy-failed')) {
+        this.#copyButton.classList.add('copy-failed');
+        this.#copyButton.title = 'Copy failed';
+        setTimeout(() => {
+          this.#copyButton.classList.remove('copy-failed');
+          this.#copyButton.title = 'Copy URL';
+        }, 2000);
+      }
     });
   }
 
