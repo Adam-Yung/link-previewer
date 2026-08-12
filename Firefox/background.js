@@ -153,3 +153,14 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
   }
 });
+
+// Clean up when a tab is closed.
+browser.tabs.onRemoved.addListener((tabId) => {
+  if (previewingTabs.has(tabId)) {
+    previewingTabs.delete(tabId);
+    log(`[BACKGROUND] Preview tab ${tabId} closed, removed from map.`);
+    if (previewingTabs.size === 0) {
+      unregisterListeners();
+    }
+  }
+});
