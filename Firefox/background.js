@@ -44,7 +44,7 @@ function requestHeadersListener(details) {
 
 // --- Listener to modify response headers ---
 function responseHeadersListener(details) {
-  const isPreviewFrame = details.type === 'sub_frame' && previewingTabs.size > 0;
+  const isPreviewFrame = details.type === 'sub_frame' && previewingTabs.has(details.tabId);
   const isPreconnectRequest = details.type === 'xhr' || details.type === 'xmlhttprequest';
 
   if (isPreviewFrame || isPreconnectRequest) {
