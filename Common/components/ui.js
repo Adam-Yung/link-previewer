@@ -122,7 +122,7 @@ function createPreview(url) {
       urlSpan.textContent = urlToRender;
     }
 
-    const isImage = /.*\.(jpeg|jpg|gif|png)$/i.test(urlToRender);
+    const isImage = /\.(jpeg|jpg|gif|png|webp|svg|avif|bmp|ico)(\?|#|$)/i.test(urlToRender);
     const existingIframe = shadowRoot.getElementById('link-preview-iframe');
     const existingImage = shadowRoot.getElementById('link-preview-image');
 
@@ -171,6 +171,26 @@ function createPreview(url) {
                   }
                 };
                 checkForIframeReady(iframe, shadowRoot);
+
+              // Timeout: if iframe hasn't loaded in 15 seconds, show error
+              const loadTimeout = setTimeout(() => {
+                if (!iframe.classList.contains('loaded')) {
+                  if (iframe._rafId) {
+                    cancelAnimationFrame(iframe._rafId);
+                    iframe._rafId = null;
+                  }
+                  iframe.classList.add('loaded');
+                  if (addressBar) {
+                    addressBar.classList.remove('is-loading', 'ocean-blue', 'ocean-orange', 'ocean-magenta');
+                  }
+                  const urlSpan = shadowRoot.querySelector('.link-preview-url');
+                  if (urlSpan) {
+                    urlSpan.textContent = 'Page took too long to load';
+                  }
+                }
+              }, 15000);
+
+              iframe.addEventListener('load', () => clearTimeout(loadTimeout), { once: true });
               }
             }).catch(() => {});
         } catch (e) {}
