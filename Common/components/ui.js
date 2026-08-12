@@ -6,8 +6,8 @@
  * @param {string} url The URL to be loaded in the preview iframe.
  */
 function createPreview(url) {
-  // Prevent multiple previews.
-  if (state.isPreviewing) return;
+  // Prevent multiple previews (also block during fade-out animation).
+  if (state.isPreviewing || state.isClosing) return;
   state.isPreviewing = true;
   clearTimeout(state.longClickTimer); // Cancel any pending long-click timer.
 
@@ -93,7 +93,7 @@ function createPreview(url) {
         <button id="link-preview-forward" title="Go forward" disabled>${forwardIcon}</button>
       </div>
       <div class="url-container">
-        <span class="link-preview-url">${url}</span>
+        <span class="link-preview-url"></span>
         <button id="link-preview-copy" title="Copy URL">
             ${copyIcon}
             ${tickIcon}
@@ -105,6 +105,7 @@ function createPreview(url) {
         <button id="link-preview-close" title="Close preview">${closeIcon}</button>
       </div>
     `;
+  addressBar.querySelector('.link-preview-url').textContent = url;
   container.appendChild(addressBar);
 
   // Attach drag listener once on the address bar. Content element is looked up dynamically.
@@ -367,6 +368,9 @@ function createPreview(url) {
 function closePreview() {
   if (!state.isPreviewing) return;
 
+  state.isPreviewing = false;
+  state.isClosing = true;
+
   toggleDisableParentPage(false);
   attachResizeHandler();
   scrollLock(false);
@@ -394,7 +398,7 @@ function closePreview() {
       state.messageListener = null;
     }
     chrome.runtime.sendMessage({ action: message.clearPreview }).catch(() => {});
-    state.isPreviewing = false;
+    state.isClosing = false;
   }, 200); // Delay should be slightly less than animation duration.
 }
 
