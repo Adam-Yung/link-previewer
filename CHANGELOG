@@ -1,3 +1,74 @@
+## [2.3.0] - 2025-08-12
+
+### Fixed
+
+* Fix Firefox 153 compatibility (replaced placeholder gecko ID)
+* Add visual feedback when clipboard copy fails
+* Remove invalid bare attribute from details element
+* Add input validation for dimension settings and parse duration correctly
+* Save default values to storage when reset button is clicked
+* Prevent XSS in address bar initial URL render
+* Add 15-second iframe load timeout with automatic error state
+* Validate preconnect URLs in Chrome background
+* Cancel rAF polling loop on successful iframe load
+* Remove transform from fadeInCenter animation to fix rendering
+* Add tabs.onUpdated listener for same-tab navigation cleanup
+* Block dangerous URI schemes (javascript:, data:, etc.) in link preview
+
+### Changed
+
+* Use clientWidth/clientHeight instead of innerWidth/innerHeight for layout accuracy
+* Cap navigation history at 50 entries
+* Filter preconnect to only http(s) URLs
+* Use inset:0 instead of 100vw/100vh on overlay
+
+---
+
+## [2.2.3] - 2025-08-12
+
+### Fixed
+
+* Make build script compatible with macOS stock Bash 3.2
+* Serialize DNR rule updates to prevent interleaving race conditions
+* Add try/catch around new URL() in navigateTo to handle malformed URLs
+* Add .catch() to all runtime.sendMessage and storage calls
+* Guard against sender.tab being undefined in Chrome message handler
+* Use per-tab Map instead of single previewingUrl in Firefox background
+* Scope Chrome DNR rules to only the previewing tab IDs
+* Use non-throwing DOM lookups in teardown path of toggleDisableParentPage
+* Hoist pauseStyle to module scope to prevent style element leaks
+* Use targeted sed replacement in build to avoid corrupting string literals
+* Scope Firefox header stripping to previewing tabs only
+* Persist previewingTabIds to session storage for service worker restarts
+
+### Changed
+
+* Use getElementById instead of querySelector for content element
+* Limit stack trace parsing in log() to only the caller frame
+* Prune timeoutIDs Map entries after timeout fires
+* Only activate content_iframe.js inside the preview iframe
+* Dynamically register/unregister Firefox webRequest listeners
+
+---
+
+## [2.2.0] - 2025-08-21
+
+### Added
+
+* GitHub Actions release workflow for automated builds
+
+### Fixed
+
+* Fix blurry text in center stage, Facebook embed failures, and GPU scroll stress
+* Fix listener leaks: message listener, resize handler, and drag handler
+* Fix full screen mode layout issues
+
+### Changed
+
+* Reduce layout thrashing: scope pause style, remove forceReflow hack
+
+---
+
 ## [2.1.2] - 2025-08-21
 
 ### Changed

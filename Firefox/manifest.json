@@ -61,9 +61,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "{d4e8f5a2-b7c3-4f1a-9e6d-2a8b5c7f0e3d}",
-      "strict_min_version": "57.0",
-      "strict_max_version": "*"
+      "id": "link-previewer@example.com"
     }
   }
 }

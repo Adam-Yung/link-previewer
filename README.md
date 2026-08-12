@@ -1,7 +1,7 @@
 # Link Previewer ✨
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/Adam-Yung/link-previewer.git)
-[![Version](https://img.shields.io/badge/version-2.1.0-blue)](https://github.com/Adam-Yung/link-previewer.git)
+[![Version](https://img.shields.io/badge/version-2.3.0-blue)](https://github.com/Adam-Yung/link-previewer.git)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL3.0-yellow.svg)](https://opensource.org/licenses/GPL)
 
 📢 Stop opening new tabs for search results‼️
