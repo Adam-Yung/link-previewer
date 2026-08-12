@@ -17,8 +17,8 @@ function checkIframeInBounds(element) {
   }
 
   const rect = element.getBoundingClientRect();
-  const winWidth = window.innerWidth;
-  const winHeight = window.innerHeight;
+  const winWidth = document.documentElement.clientWidth;
+  const winHeight = document.documentElement.clientHeight;
   let left = rect.left;
   let top = rect.top;
 
@@ -127,8 +127,8 @@ function initDrag(e, element, contentElement) {
     let newTop = moveEvent.clientY - offsetY;
 
     // Constrain position within window bounds
-    const winWidth = window.innerWidth;
-    const winHeight = window.innerHeight;
+    const winWidth = document.documentElement.clientWidth;
+    const winHeight = document.documentElement.clientHeight;
     const elemWidth = element.offsetWidth;
     const elemHeight = element.offsetHeight;
 
