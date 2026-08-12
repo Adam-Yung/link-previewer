@@ -147,10 +147,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
       break;
     case message.preconnect:
-      // Preconnect to warm up the connection (no changes needed here).
-      fetch(request.url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {
-        // This is an optimization; ignore errors.
-      });
+      // Preconnect to warm up the connection.
+      try {
+        const preconnectUrl = new URL(request.url);
+        const isAllowedScheme = preconnectUrl.protocol === 'https:' || preconnectUrl.protocol === 'http:';
+        const hostname = preconnectUrl.hostname;
+        const isPrivate = /^(127\.)|(10\.)|(192\.168\.)|(172\.(1[6-9]|2[0-9]|3[01])\.)|(0\.0\.0\.0)|(localhost)$/.test(hostname);
+        if (isAllowedScheme && !isPrivate) {
+          fetch(request.url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
+        }
+      } catch (e) {
+        // Invalid URL; skip preconnect.
+      }
       break;
     case message.iFrameHasFocus:
       chrome.tabs.sendMessage(sender.tab.id, { action: message.iFrameHasFocus });
@@ -164,6 +172,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case message.closePreviewFromIframe:
       chrome.tabs.sendMessage(sender.tab.id, { action: message.closePreviewFromIframe });
       break;
+  }
+});
+
+// Clean up when a tab navigates away (same-tab navigation).
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.url && previewingTabIds.has(tabId)) {
+    previewingTabIds.delete(tabId);
+    persistPreviewingTabIds();
+    log(`[BACKGROUND] Tab ${tabId} navigated away, removing from preview set.`);
+    if (previewingTabIds.size === 0) {
+      disableRule();
+    } else {
+      enableRule();
+    }
   }
 });
 
