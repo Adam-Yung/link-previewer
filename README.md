@@ -91,7 +91,7 @@ Firefox's **Enhanced Tracking Protection** is cool, but it might break Link Prev
 * [Git LFS](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)
   * Git LFS is used to store the large .gif files more efficiently
 * [Node.js](https://nodejs.org/) (which includes npm)
-  * *only if you want to run npm build wrapper around `build/build.sh`*
+  * *only if you want to run npm build wrapper around `tools/build.sh`*
 
 ### Steps
 
