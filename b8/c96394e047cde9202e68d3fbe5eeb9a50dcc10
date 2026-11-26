@@ -1,0 +1,19 @@
+README.md
+  s_60aa61f858ab93::t_26d69f718b796c 90,111,117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "b8c96394e047cde9202e68d3fbe5eeb9a50dcc10",
+  "prompts": {},
+  "sessions": {
+    "s_60aa61f858ab93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e0c0ee27-70b6-49ba-bfa6-ce15aa5f6280",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Yung <adyung@paloaltonetworks.com>"
+    }
+  }
+}
