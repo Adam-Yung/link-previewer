@@ -1,6 +1,6 @@
 // background.js (Chrome, MV3 service worker). `components/shared.js` is prepended at build time.
 
-// Tabs with an open preview, mapped to the hostname of the page that hosts the preview. Kept in session storage because the service
+// Tabs with an open preview, mapped to { host: hostname of the page hosting it, speculative: still hidden, loading during a hold }. Kept in session storage because the service
 // worker can be stopped while a preview is open.
 const previewingTabs = new Map();
 
@@ -15,9 +15,14 @@ const FRAME_RESPONSE_HEADERS = [
   { header: 'cross-origin-opener-policy', operation: 'remove' },
   { header: 'cross-origin-embedder-policy', operation: 'remove' },
   { header: 'cross-origin-resource-policy', operation: 'remove' },
-  // Cookies set inside a cross-site frame are rejected unless SameSite=None, which breaks consent and login flows in the preview.
-  { header: 'set-cookie', operation: 'append', value: '; SameSite=None; Secure' }
 ];
+// Cookies set inside a cross-site frame are rejected unless SameSite=None, which breaks consent and login flows in the preview. Only
+// for a preview the user has seen: a hidden one may be an ordinary click, and a downgraded cookie outlives the preview.
+const COOKIE_DOWNGRADE = { header: 'set-cookie', operation: 'append', value: '; SameSite=None; Secure' };
+
+function responseHeaders(speculative) {
+  return speculative ? FRAME_RESPONSE_HEADERS : [...FRAME_RESPONSE_HEADERS, COOKIE_DOWNGRADE];
+}
 
 // Fetch metadata that says "top-level navigation", so servers that refuse to be framed serve the page.
 const FRAME_REQUEST_HEADERS = [
@@ -44,14 +49,15 @@ function hostnameOf(url) {
  * condition), so they cover every sub_frame in the tab while the preview is open. Subresource rewriting is what the previewed page's
  * own requests need; it excludes requests the host page itself starts, and is left out entirely when the host has no domain to exclude.
  */
-function rulesForTab(tabId, host) {
+function rulesForTab(tabId, { host, speculative }) {
+  const headers = responseHeaders(speculative);
   const rules = [
-    { action: { type: 'modifyHeaders', responseHeaders: FRAME_RESPONSE_HEADERS }, condition: { resourceTypes: ['sub_frame'], tabIds: [tabId] } },
+    { action: { type: 'modifyHeaders', responseHeaders: headers }, condition: { resourceTypes: ['sub_frame'], tabIds: [tabId] } },
     { action: { type: 'modifyHeaders', requestHeaders: FRAME_REQUEST_HEADERS }, condition: { resourceTypes: ['sub_frame'], tabIds: [tabId] } }
   ];
   if (host) {
     rules.push({
-      action: { type: 'modifyHeaders', responseHeaders: FRAME_RESPONSE_HEADERS },
+      action: { type: 'modifyHeaders', responseHeaders: headers },
       condition: { resourceTypes: SUBRESOURCE_TYPES, tabIds: [tabId], excludedInitiatorDomains: [host] }
     });
   }
@@ -59,7 +65,7 @@ function rulesForTab(tabId, host) {
 }
 
 function buildRules() {
-  const rules = [...previewingTabs].flatMap(([tabId, host]) => rulesForTab(tabId, host));
+  const rules = [...previewingTabs].flatMap(([tabId, preview]) => rulesForTab(tabId, preview));
   return rules.map((rule, i) => ({ id: i + 1, priority: 1, ...rule }));
 }
 
@@ -81,8 +87,8 @@ function persistPreviewingTabs() {
   chrome.storage.session.set({ previewingTabs: [...previewingTabs] });
 }
 
-function startPreview(tabId, hostUrl) {
-  previewingTabs.set(tabId, hostnameOf(hostUrl));
+function startPreview(tabId, hostUrl, speculative) {
+  previewingTabs.set(tabId, { host: hostnameOf(hostUrl), speculative: Boolean(speculative) });
   persistPreviewingTabs();
   syncRules();
 }
@@ -106,7 +112,9 @@ function relayToTab(tabId, request) {
 // restore first; otherwise the event finds an empty map and the restore puts the tab back afterwards.
 const restored = new Promise((resolve) => {
   chrome.storage.session.get('previewingTabs', (result) => {
-    for (const [tabId, host] of result?.previewingTabs || []) previewingTabs.set(tabId, host);
+    for (const [tabId, preview] of result?.previewingTabs || []) {
+      if (preview && typeof preview === 'object') previewingTabs.set(tabId, preview);
+    }
     resolve();
   });
 });
@@ -123,7 +131,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const tabId = sender.tab.id;
   if (request.action === message.prepareToPreview) {
     afterRestore(() => {
-      startPreview(tabId, sender.url || sender.tab.url);
+      startPreview(tabId, sender.url || sender.tab.url, request.speculative);
       sendResponse({ ready: true });
     })();
     return true; // answered asynchronously

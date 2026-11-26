@@ -134,3 +134,16 @@ test('a preview opened after a restart replaces the old rules instead of failing
   const tabs = new Set((await second.liveRules()).flatMap((r) => r.condition.tabIds));
   assert.deepEqual([...tabs].sort(), [7, 9]);
 });
+
+const cookieRewrites = (rules) => rules.filter((r) => r.action.responseHeaders?.some((h) => h.header === 'set-cookie'));
+
+test('a preview still hidden during the hold never downgrades cookies; revealing it does', async () => {
+  const env = load();
+  env.api.runtime.onMessage.fire({ action: env.message.prepareToPreview, speculative: true },
+    { tab: { id: 7, url: 'https://host.test/' }, url: 'https://host.test/' }, () => {});
+  await flush();
+  assert.equal(cookieRewrites(await env.liveRules()).length, 0);
+  env.send(env.message.prepareToPreview, 7);
+  await flush();
+  assert.ok(cookieRewrites(await env.liveRules()).length > 0);
+});

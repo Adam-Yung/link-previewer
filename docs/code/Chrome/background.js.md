@@ -11,6 +11,8 @@ preview iframe and the page hosting it. `components/shared.js` (message names, `
 - Per tab, two `sub_frame` rules (response: drop framing and isolation headers, sandbox CSP, `SameSite=None` on cookies; request: fetch
   metadata that looks like a top-level navigation) and one subresource rule for the previewed page's own XHR, scripts, styles, images
   and fonts.
+- A preview still hidden (loading during the hold, `speculative`) gets the same rules without the cookie rewrite: it may be an
+  ordinary click, and a downgraded cookie outlives the preview. The reveal sends `prepareToPreview` again to add it.
 - **Invariant (brief priority 1):** the subresource rule carries `excludedInitiatorDomains: [host]`, so nothing the host page itself
   requests is rewritten. With no hostname (a `file:` page, an IPv6 literal that DNR would reject) the subresource rule is left out: fail
   closed. Tests:

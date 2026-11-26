@@ -8,9 +8,11 @@
  */
 function createPreview(url, { hidden = false } = {}) {
   // Prevent multiple previews (also block during fade-out animation).
-  if (state.isPreviewing || state.isClosing) return;
+  if (state.isPreviewing || state.isClosing || !document.body) return;
   if (hidden && url.startsWith('http://')) return;
   state.isPreviewing = true;
+  // Set before the first render so its prepareToPreview asks for the speculative (cookie-safe) rules.
+  state.isSpeculative = hidden;
 
   // If the link is insecure HTTP, show a warning pop-up instead of a preview
   if (url.startsWith('http://')) {
@@ -124,7 +126,7 @@ function createPreview(url, { hidden = false } = {}) {
         iframe.style.pointerEvents = 'none';
         container.appendChild(iframe);
         try {
-          chrome.runtime.sendMessage({ action: message.prepareToPreview, url: urlToRender })
+          chrome.runtime.sendMessage({ action: message.prepareToPreview, url: urlToRender, speculative: state.isSpeculative })
             .then(response => {
               if (response && response.ready) {
                 iframe.src = urlToRender;
@@ -166,7 +168,7 @@ function createPreview(url, { hidden = false } = {}) {
       iframe.style.pointerEvents = 'none';
       container.appendChild(iframe);
       try {
-        chrome.runtime.sendMessage({ action: message.prepareToPreview, url: urlToRender })
+        chrome.runtime.sendMessage({ action: message.prepareToPreview, url: urlToRender, speculative: state.isSpeculative })
           .then(response => {
             if (response && response.ready) {
               iframe.src = urlToRender;
@@ -186,15 +188,15 @@ function createPreview(url, { hidden = false } = {}) {
               checkForIframeReady(iframe, shadowRoot);
             } else {
               log('Background script not ready.', LOGGING.ERROR);
-              showContextExpiredPopup();
+              reportContextLost(iframe);
             }
           }).catch(error => {
             log(`Error sending prepareToPreview message: ${error}`, LOGGING.ERROR);
-            showContextExpiredPopup();
+            reportContextLost(iframe);
           });
       } catch (error) {
         log(`Error: ${error}`, LOGGING.ERROR);
-        showContextExpiredPopup();
+        reportContextLost(iframe);
       }
     }
   }
@@ -263,8 +265,7 @@ function createPreview(url, { hidden = false } = {}) {
   attachResizeHandler(container);
   attachContainerFocus(container);
 
-  state.isSpeculative = true;
-  if (!hidden) revealPreview();
+  if (!hidden) showPreview();
 }
 
 /**
@@ -332,11 +333,39 @@ function applyInitialGeometry(container) {
 }
 
 /**
- * Shows a preview built by createPreview() and takes over the host page (close key, center-stage dimming).
+ * The extension was reloaded under this page, so previews cannot work until it reloads. Said when the user can see it: at once for a
+ * shown preview, at reveal for one still loading during the hold, never for a preview that is already gone.
+ */
+function reportContextLost(iframe) {
+  if (!iframe.isConnected) return;
+  if (state.isSpeculative) {
+    state.contextLost = true;
+    return;
+  }
+  showContextExpiredPopup();
+}
+
+/**
+ * Shows a preview built hidden by createPreview(), and upgrades its header rules to the full set (cookies included) now that the user
+ * asked for it.
  */
 function revealPreview() {
-  if (!state.isSpeculative) return;
+  if (!state.isSpeculative || !state.isPreviewing) return;
   state.isSpeculative = false;
+  if (state.contextLost) {
+    state.contextLost = false;
+    discardHiddenPreviewElements();
+    showContextExpiredPopup();
+    return;
+  }
+  chrome.runtime.sendMessage({ action: message.prepareToPreview, speculative: false }).catch(() => {});
+  showPreview();
+}
+
+/**
+ * Makes the preview visible and takes over the host page (close key, center-stage dimming).
+ */
+function showPreview() {
   clearTimeout(state.longClickTimer);
   const pageOverlay = document.getElementById('link-preview-page-overlay');
   const previewHost = document.getElementById('link-preview-host');
@@ -354,6 +383,14 @@ function revealPreview() {
 function discardSpeculativePreview() {
   if (!state.isSpeculative) return false;
   state.isSpeculative = false;
+  state.contextLost = false;
+  discardHiddenPreviewElements();
+  chrome.runtime.sendMessage({ action: message.clearPreview }).catch(() => {});
+  state.isPreviewing = false;
+  return true;
+}
+
+function discardHiddenPreviewElements() {
   attachResizeHandler();
   document.getElementById('link-preview-host')?.remove();
   document.getElementById('link-preview-page-overlay')?.remove();
@@ -361,9 +398,6 @@ function discardSpeculativePreview() {
     chrome.runtime.onMessage.removeListener(state.messageListener);
     state.messageListener = null;
   }
-  chrome.runtime.sendMessage({ action: message.clearPreview }).catch(() => {});
-  state.isPreviewing = false;
-  return true;
 }
 
 /**
@@ -386,7 +420,9 @@ function closePreview() {
   if (!state.isPreviewing) return;
 
   state.isPreviewing = false;
+  state.isSpeculative = false;
   state.isClosing = true;
+  clearTimeout(state.longClickTimer);
 
   toggleDisableParentPage(false);
   attachResizeHandler();

@@ -76,3 +76,13 @@ The README promises a theme that "adapts to your system's theme", but the only v
 as the default; anyone who saved settings keeps their stored `light` or `dark`. Weighed a three-way control in the settings popup
 (more UI for a rare need) against keeping `auto` implicit until the switch is flipped; chose the latter. Reverse: default back to
 `light` in `global.js` and `options.js`.
+
+## 2026-11-26 · Reviewer findings: loading during the hold made later and cookie-safe
+The reviewer showed the 150 ms start caught ordinary clicks (trackpad clicks often last longer), and on those clicks the header rules
+appended `SameSite=None` to the linked site's cookies, a downgrade that outlives the preview: against the brief's anti-goal. Fixed
+fail-closed: a hidden preview gets no cookie rewrite (added at reveal), and loading starts 250 ms before the hold ends, never before
+300 ms. Wait on a 400 ms page: 227 ms (first spike 71, before 417). Residual cost (one-time links spent by a 300 ms+ click, a brief
+hidden autoplay) is an owner question in the handoff. Also fixed from the review: rules surviving a worker restart (security),
+a hidden preview closed from inside being revealed later, a context-expired popup during a click, IPv6 hosts, SVG links, pages
+without a body. Not fixed (recorded): an SPA host changing its URL with `pushState` while a preview is open ends the preview's header
+rules; telling `pushState` from a real navigation needs a Chrome run of its own (`docs/todo.md`).

@@ -35,6 +35,7 @@ function hostPage(origin, query) {
 <a id="slow" href="https://target.test:${origin.port}/slow.html?ms=400">slow target</a>
 <a id="same" href="https://host.test:${origin.port}/other.html">same-site page</a>
 <a id="plain" href="https://other.test:${origin.port}/page.html">plain</a>
+<a id="spa" href="https://target.test:${origin.port}/page.html" onclick="event.preventDefault()">in-app link</a>
 <div id="spinner" style="width:10px;height:10px;background:#09f;animation:spin 1s linear infinite"></div>
 <style>@keyframes spin { to { transform: rotate(360deg) } }</style>
 <div id="filler">${rows}</div>

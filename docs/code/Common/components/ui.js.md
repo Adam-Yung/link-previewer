@@ -6,7 +6,13 @@ Builds, navigates and closes the preview window.
   and host are `visibility: hidden` (not hit-tested, so the click the user may still be making reaches the page) and the fade-in is
   held. `revealPreview()` shows it and only then takes over the host page (close key, center-stage dimming).
   `discardSpeculativePreview()` removes an unrevealed preview and clears the header rules. `createPreview(url)` without `hidden`
-  builds and reveals at once. `state.isSpeculative` is true from build to reveal.
+  builds and shows at once. `state.isSpeculative` is true from build to reveal, and is sent with `prepareToPreview` so the background
+  holds back the cookie rewrite until the reveal asks for the full rules.
+- `closePreview()` clears `isSpeculative` and the long-press timer, so a preview closed while hidden (Escape inside the frame) can
+  never be revealed afterwards onto a page it would lock.
+- A lost extension context (`prepareToPreview` fails) is reported when the user can see it: at once for a shown preview, at reveal for
+  a hidden one, never for one already discarded.
+- Nothing is built on a page without `document.body` (framesets, XML), so `state.isPreviewing` cannot get stuck.
 
 - The window lives in an open shadow root on `#link-preview-host`, so page CSS cannot reach it; the page overlay is outside the shadow
   root because it must cover the page's own stacking contexts.

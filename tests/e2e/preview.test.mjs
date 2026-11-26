@@ -36,9 +36,65 @@ test('a short click does not open a preview', async () => {
   assert.match(await page.eval('location.href'), /host\.test.*other\.html/);
 });
 
+const liveRules = () => env.worker.eval('chrome.declarativeNetRequest.getSessionRules()');
+const hostState = (page) => page.eval(`(() => {
+  const host = document.getElementById('link-preview-host');
+  if (!host) return null;
+  return { visibility: getComputedStyle(host).visibility, src: host.shadowRoot.getElementById('link-preview-iframe')?.getAttribute('src') };
+})()`);
+
+test('late in the hold the preview is already loading, hidden and without cookie rewriting', async () => {
+  const page = await openHost();
+  const { x, y } = await page.center('#target');
+  await page.mouse('mouseMoved', x, y, { button: 'none' });
+  await page.mouse('mousePressed', x, y, { buttons: 1 });
+  await sleep(HOLD_MS - 80);
+  const hidden = await hostState(page);
+  const rules = await liveRules();
+  await page.mouse('mouseReleased', x, y);
+  assert.equal(hidden?.visibility, 'hidden');
+  assert.match(hidden?.src || '', /\/page\.html$/);
+  assert.ok(rules.length > 0, 'header rules on for the hidden preview');
+  assert.ok(rules.every((r) => !r.action.responseHeaders?.some((h) => h.header === 'set-cookie')), 'no cookie rewriting yet');
+});
+
+test('a shown preview gets the full header rules', async () => {
+  const page = await openHost();
+  await openPreview(page);
+  const rules = await waitUntil(async () => {
+    const live = await liveRules();
+    return live.some((r) => r.action.responseHeaders?.some((h) => h.header === 'set-cookie')) ? live : null;
+  });
+  assert.ok(rules, 'cookie rule installed after reveal');
+});
+
+test('a press released late on an in-app link (no navigation) leaves no preview or header rule behind', async () => {
+  const page = await openHost();
+  await page.longPress('#spa', HOLD_MS - 80);
+  assert.ok(await waitUntil(async () => (await hostState(page)) === null), 'hidden preview removed');
+  assert.ok(await waitUntil(async () => (await liveRules()).length === 0), 'header rules removed');
+});
+
+test('a hidden preview closed from inside before the hold ends is not revealed later', async () => {
+  const page = await openHost();
+  await env.worker.eval(`chrome.storage.local.set({ isExpanded: true, duration: 2500 })`);
+  const { x, y } = await page.center('#target');
+  await page.mouse('mouseMoved', x, y, { button: 'none' });
+  await page.mouse('mousePressed', x, y, { buttons: 1 });
+  // Loading starts at 2250 ms; close it from inside the frame before the hold ends at 2500 ms.
+  const frame = await page.frameSession(env.fixtures.url('target.test', '/page.html'), 2400);
+  assert.ok(frame, 'hidden preview loading');
+  await frame.extensionWorld();
+  await frame.eval(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`);
+  await sleep(600);
+  await page.mouse('mouseReleased', x, y);
+  assert.equal((await previewState(page)).open, false);
+  assert.equal(await page.eval('getComputedStyle(document.body).pointerEvents'), 'auto', 'host page left usable');
+});
+
 test('a press released mid-hold follows the link and leaves no preview or header rule behind', async () => {
   const page = await openHost();
-  await page.longPress('#target', 300);
+  await page.longPress('#target', HOLD_MS - 80);
   await waitUntil(async () => (await page.eval('location.href')).includes('target.test'));
   assert.match(await page.eval('location.href'), /target\.test.*page\.html/);
   const rules = await waitUntil(async () => (await env.worker.eval('chrome.declarativeNetRequest.getSessionRules()')).length === 0);

@@ -1,6 +1,6 @@
 // background.js for Firefox (Manifest V2)
 
-// Tabs with an open preview, mapped to the hostname of the page hosting it.
+// Tabs with an open preview, mapped to { host: hostname of the page hosting it, speculative: still hidden, loading during a hold }.
 const previewingTabs = new Map();
 
 function requestHeadersListener(details) {
@@ -69,7 +69,7 @@ function isWithinDomain(hostname, domain) {
 function shouldRewrite(details) {
   if (!previewingTabs.has(details.tabId)) return false;
   if (details.type === 'sub_frame') return true;
-  const host = previewingTabs.get(details.tabId);
+  const { host } = previewingTabs.get(details.tabId);
   return Boolean(host) && !isWithinDomain(hostnameOf(details.originUrl), host);
 }
 
@@ -77,9 +77,12 @@ function responseHeadersListener(details) {
   if (!shouldRewrite(details)) return { responseHeaders: details.responseHeaders };
 
   const newHeaders = details.responseHeaders.filter(header => !STRIPPED_RESPONSE_HEADERS.has(header.name.toLowerCase()));
-  // Cookies set inside a cross-site frame are rejected unless SameSite=None, which breaks consent and login flows in the preview.
-  for (const header of newHeaders) {
-    if (header.name.toLowerCase() === 'set-cookie') header.value += '; SameSite=None; Secure';
+  // Cookies set inside a cross-site frame are rejected unless SameSite=None, which breaks consent and login flows in the preview. Only
+  // for a preview the user has seen: a hidden one may be an ordinary click, and a downgraded cookie outlives the preview.
+  if (!previewingTabs.get(details.tabId).speculative) {
+    for (const header of newHeaders) {
+      if (header.name.toLowerCase() === 'set-cookie') header.value += '; SameSite=None; Secure';
+    }
   }
   newHeaders.push({
     name: 'Content-Security-Policy',
@@ -123,7 +126,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case message.prepareToPreview:
       log(`[BACKGROUND] Preparing for preview: ${request.url}`);
-      previewingTabs.set(tabId, hostnameOf(sender.url || sender.tab.url));
+      previewingTabs.set(tabId, { host: hostnameOf(sender.url || sender.tab.url), speculative: Boolean(request.speculative) });
       registerListeners();
       sendResponse({ ready: true });
       return true;

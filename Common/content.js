@@ -2,16 +2,19 @@
 
 // A press that travels further than this is a drag or a text selection, not a long press.
 const LONG_PRESS_SLOP_PX = 8;
-// A press held this long is no longer an ordinary click (those last about 100 ms), so the preview starts loading, hidden, while the
-// rest of the hold runs. Only when the hold is long enough for that head start to matter.
-const SPECULATE_AFTER_MS = 150;
+// The preview starts loading, hidden, this long before the hold ends, but never before SPECULATE_MIN_MS into the press: ordinary
+// clicks can last 150 ms or more on a trackpad, and a hidden load during a click still costs a request to the linked page (a one-time
+// link would be spent). Skipped when the head start would be under 100 ms.
+const SPECULATE_LEAD_MS = 250;
+const SPECULATE_MIN_MS = 300;
 const UNPREVIEWABLE_SCHEME = /^(javascript|data|blob|file|chrome-extension|moz-extension):/i;
 
 let pressStart = null;
 
 function previewableLinkAt(e) {
   const link = e.target.closest?.('a');
-  if (!link || !link.href || UNPREVIEWABLE_SCHEME.test(link.href)) return null;
+  // SVG links have an SVGAnimatedString href, not a URL string.
+  if (!link || typeof link.href !== 'string' || !link.href || UNPREVIEWABLE_SCHEME.test(link.href)) return null;
   return link;
 }
 
@@ -39,12 +42,17 @@ function preconnect(url) {
   }, 10000);
 }
 
+// When to start loading during a hold of `duration` ms, or null for no head start.
+function speculationDelay(duration) {
+  const at = Math.max(SPECULATE_MIN_MS, duration - SPECULATE_LEAD_MS);
+  return duration - at >= 100 ? at : null;
+}
+
 function startLongPress(e, href) {
   pressStart = { x: e.clientX, y: e.clientY };
   preconnect(href);
-  if (settings.duration >= SPECULATE_AFTER_MS * 2) {
-    state.speculateTimer = setTimeout(() => createPreview(href, { hidden: true }), SPECULATE_AFTER_MS);
-  }
+  const speculateAt = speculationDelay(settings.duration);
+  if (speculateAt !== null) state.speculateTimer = setTimeout(() => createPreview(href, { hidden: true }), speculateAt);
   state.longClickTimer = setTimeout(() => {
     pressStart = null;
     if (state.isSpeculative) revealPreview();

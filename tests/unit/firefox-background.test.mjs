@@ -71,3 +71,14 @@ test('navigating the previewing tab away ends its rewriting', () => {
   env.api.tabs.onUpdated.fire(7, { url: 'https://elsewhere.test/' });
   assert.equal(env.api.webRequest.onHeadersReceived.listeners.length, 0);
 });
+
+test('a preview still hidden during the hold never downgrades cookies', () => {
+  const env = load();
+  env.api.runtime.onMessage.fire({ action: env.message.prepareToPreview, speculative: true },
+    { tab: { id: 7, url: 'https://host.test/' }, url: 'https://host.test/' }, () => {});
+  const { responseHeaders } = env.responseHeadersListener({
+    type: 'sub_frame', tabId: 7, url: 'https://target.test/page', originUrl: 'https://host.test/', responseHeaders: frameHeaders(),
+  });
+  assert.equal(responseHeaders.find((h) => h.name.toLowerCase() === 'set-cookie').value, 'sid=1; SameSite=Strict');
+  assert.ok(!names(responseHeaders).includes('x-frame-options'));
+});
