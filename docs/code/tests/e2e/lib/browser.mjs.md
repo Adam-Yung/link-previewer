@@ -1,7 +1,11 @@
 # tests/e2e/lib/browser.mjs
 
-Starts Chrome for Testing (the Playwright cache build, or `LP_CHROME`) headless with the unpacked extension in a fresh profile, deleted
-on close. Never the user's own Chrome.
+Starts Chrome headless in a fresh profile, deleted on close: Chrome for Testing from the Playwright cache, or any Chrome binary in
+`LP_CHROME`. Never the user's own Chrome profile.
+
+- The extension is installed with `Extensions.loadUnpacked` (needs `--enable-unsafe-extension-debugging` and the pipe), the same
+  unpacked installer as Load unpacked on `chrome://extensions`. Branded Google Chrome ignores `--load-extension` since 137, so the
+  flag would only work in Chrome for Testing. Verified on Google Chrome 156 on prisma-vm: 23/23 (2026-11-26).
 
 - `*.test` hosts resolve to 127.0.0.1 and certificate errors are ignored, so the local fixtures act like real HTTPS sites on different
   sites (`host.test`, `target.test`). The extension refuses to preview plain HTTP, so HTTPS is required.

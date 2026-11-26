@@ -1,23 +1,26 @@
-// Minimal Chrome DevTools Protocol client over Node's built-in WebSocket, so the e2e suite needs no npm packages.
+// Minimal Chrome DevTools Protocol client over Chrome's --remote-debugging-pipe, so the e2e suite needs no npm packages. The pipe
+// (rather than a debugging port) is what makes Extensions.loadUnpacked available.
 
 export class Cdp {
-  #ws;
+  #out;
+  #buffer = '';
   #nextId = 1;
   #pending = new Map();
   #listeners = new Set();
 
-  static async connect(url) {
-    const ws = new WebSocket(url);
-    await new Promise((resolve, reject) => {
-      ws.addEventListener('open', resolve, { once: true });
-      ws.addEventListener('error', reject, { once: true });
+  // out: Chrome's fd 3 (commands in), input: its fd 4 (replies and events out); messages are NUL-terminated JSON.
+  constructor(out, input) {
+    this.#out = out;
+    input.setEncoding('utf8');
+    input.on('data', (chunk) => {
+      this.#buffer += chunk;
+      let end;
+      while ((end = this.#buffer.indexOf('\0')) >= 0) {
+        const text = this.#buffer.slice(0, end);
+        this.#buffer = this.#buffer.slice(end + 1);
+        this.#onMessage(JSON.parse(text));
+      }
     });
-    return new Cdp(ws);
-  }
-
-  constructor(ws) {
-    this.#ws = ws;
-    ws.addEventListener('message', (event) => this.#onMessage(JSON.parse(event.data)));
   }
 
   #onMessage(msg) {
@@ -38,7 +41,7 @@ export class Cdp {
     if (sessionId) payload.sessionId = sessionId;
     return new Promise((resolve, reject) => {
       this.#pending.set(id, { resolve, reject, method });
-      this.#ws.send(JSON.stringify(payload));
+      this.#out.write(`${JSON.stringify(payload)}\0`);
     });
   }
 
@@ -64,6 +67,6 @@ export class Cdp {
   }
 
   close() {
-    this.#ws.close();
+    this.#out.end();
   }
 }

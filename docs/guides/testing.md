@@ -1,13 +1,14 @@
 # Testing
 
-> Verified: 2026-11-26 15:33 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `tests/e2e/firefox-smoke.mjs`, `package.json`
+> Verified: 2026-11-26 15:52 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `tests/e2e/firefox-smoke.mjs`, `package.json`
 
 Everything runs offline against local pages; nothing is downloaded at test time.
 
 ## One-time setup
 - `scripts/owner/install-deps.sh --run` installs the linter (dev only).
-- e2e needs Chrome for Testing. It is found in the Playwright cache (`~/Library/Caches/ms-playwright/chromium-*`), or set `LP_CHROME`
-  to the binary. It runs headless with a throwaway profile. Branded Google Chrome ignores `--load-extension`, so it cannot stand in.
+- e2e needs a Chrome binary: Chrome for Testing from the Playwright cache (`~/Library/Caches/ms-playwright/chromium-*`), or any Chrome
+  in `LP_CHROME`, including an installed Google Chrome (`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`). It runs
+  headless with a throwaway profile.
 - The Firefox smoke test needs an installed Firefox (`/Applications/Firefox.app`, or `LP_FIREFOX`); headless, throwaway profile.
 
 ## Commands

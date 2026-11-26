@@ -1,7 +1,9 @@
-// Launches Chrome for Testing with the unpacked extension in a throwaway profile and wraps the CDP calls the e2e suite needs.
+// Launches Chrome (Chrome for Testing, or an installed Google Chrome through LP_CHROME) in a throwaway profile, installs the unpacked
+// extension through Extensions.loadUnpacked (the installer chrome://extensions' Load unpacked uses; branded Chrome ignores
+// --load-extension), and wraps the CDP calls the e2e suite needs.
 // Never point this at the user's own Chrome: the profile is fresh and deleted on close.
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -19,26 +21,15 @@ export function findChrome() {
   return null;
 }
 
-async function waitForFile(path, timeoutMs) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (existsSync(path)) {
-      const text = readFileSync(path, 'utf8');
-      if (text.includes('\n')) return text;
-    }
-    await sleep(50);
-  }
-  throw new Error(`Chrome did not write ${path}`);
-}
-
 export async function launchBrowser(extensionDir) {
   const bin = findChrome();
-  if (!bin) throw new Error('Chrome for Testing not found (set LP_CHROME)');
+  if (!bin) throw new Error('Chrome not found (install Chrome for Testing via Playwright, or set LP_CHROME)');
   const profile = mkdtempSync(join(tmpdir(), 'lp-profile-'));
   const proc = spawn(bin, [
     '--headless=new',
     `--user-data-dir=${profile}`,
-    '--remote-debugging-port=0',
+    '--remote-debugging-pipe',
+    '--enable-unsafe-extension-debugging',
     '--no-first-run',
     '--no-default-browser-check',
     '--disable-background-networking',
@@ -46,12 +37,10 @@ export async function launchBrowser(extensionDir) {
     '--disable-sync',
     '--ignore-certificate-errors',
     '--host-resolver-rules=MAP *.test 127.0.0.1',
-    `--disable-extensions-except=${extensionDir}`,
-    `--load-extension=${extensionDir}`,
     '--window-size=1280,900',
-  ], { stdio: 'ignore' });
-  const [port, path] = (await waitForFile(join(profile, 'DevToolsActivePort'), 15000)).trim().split('\n');
-  const cdp = await Cdp.connect(`ws://127.0.0.1:${port}${path}`);
+  ], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
+  const cdp = new Cdp(proc.stdio[3], proc.stdio[4]);
+  await cdp.send('Extensions.loadUnpacked', { path: extensionDir });
   await cdp.send('Target.setDiscoverTargets', { discover: true });
   return new Browser(cdp, proc, profile);
 }
