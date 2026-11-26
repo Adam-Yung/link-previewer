@@ -1,6 +1,6 @@
 # Testing
 
-> Verified: 2026-11-26 12:48 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `package.json`
+> Verified: 2026-11-26 12:58 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `package.json`
 
 Everything runs offline against local pages; nothing is downloaded at test time.
 
@@ -20,7 +20,9 @@ Everything runs offline against local pages; nothing is downloaded at test time.
 `LP_NO_E2E=1` skips e2e in the gate on purpose (say why in the commit). `LP_SKIP_BUILD=1` reuses `out/dist`.
 
 ## Writing tests
-- A unit test loads the real files: `loadScripts(['Common/components/shared.js', 'Chrome/background.js'], ['message'])`.
+- A unit test loads the real files: `loadScripts(['Common/components/shared.js', 'Chrome/background.js'], ['message'])`. Passing the
+  same `persisted` object (4th argument) to a second load simulates a service-worker restart: session storage and session rules carry
+  over, memory does not.
 - An e2e test that asserts "nothing happened" must first prove the extension is live in that frame (`frame.extensionWorld()`), or it
   passes for the wrong reason.
 - Inside the cross-site preview frame, send input as page-world events (see `pressInFrame` in `tests/e2e/preview.test.mjs`); real

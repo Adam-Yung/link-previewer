@@ -2,23 +2,25 @@ import assert from 'node:assert';
 import { test } from 'node:test';
 import { flush, loadScripts } from '../helpers/sandbox.mjs';
 
-function load() {
-  const env = loadScripts(['Common/components/shared.js', 'Chrome/background.js'], ['message']);
+function load(persisted = {}) {
+  const env = loadScripts(['Common/components/shared.js', 'Chrome/background.js'], ['message'], {}, persisted);
   const send = (action, tabId, url = 'https://host.test/search?q=x') => {
-    let reply;
-    env.api.runtime.onMessage.fire({ action }, { tab: { id: tabId, url }, url }, (r) => { reply = r; });
+    const reply = {};
+    env.api.runtime.onMessage.fire({ action }, { tab: { id: tabId, url }, url }, (r) => Object.assign(reply, r));
     return reply;
   };
   const lastRules = () => env.api.calls.updateSessionRules.at(-1);
-  return { ...env, send, lastRules };
+  const liveRules = () => env.api.declarativeNetRequest.getSessionRules();
+  return { ...env, send, lastRules, liveRules, persisted };
 }
 
-const SUBRESOURCES = ['xmlhttprequest', 'script', 'stylesheet', 'image', 'font'];
+const SUBRESOURCE_TYPES = ['xmlhttprequest', 'script', 'stylesheet', 'image', 'font'];
 
 test('prepareToPreview answers ready and installs rules scoped to that tab only', async () => {
   const env = load();
-  assert.deepEqual(env.send(env.message.prepareToPreview, 7), { ready: true });
+  const reply = env.send(env.message.prepareToPreview, 7);
   await flush();
+  assert.deepEqual(reply, { ready: true });
   const { addRules } = env.lastRules();
   assert.ok(addRules.length > 0);
   for (const rule of addRules) assert.deepEqual(rule.condition.tabIds, [7]);
@@ -29,7 +31,7 @@ test("the host page's own requests are never rewritten", async () => {
   env.send(env.message.prepareToPreview, 7);
   await flush();
   for (const rule of env.lastRules().addRules) {
-    const touchesSubresources = rule.condition.resourceTypes.some((t) => SUBRESOURCES.includes(t));
+    const touchesSubresources = rule.condition.resourceTypes.some((t) => SUBRESOURCE_TYPES.includes(t));
     if (!touchesSubresources) continue;
     assert.ok(rule.condition.excludedInitiatorDomains?.includes('host.test'),
       `rule ${rule.id} rewrites subresources without excluding the host page`);
@@ -47,22 +49,25 @@ test('each previewing tab excludes its own host', async () => {
   assert.deepEqual(byTab, { 7: ['a.test'], 9: ['b.test'] });
 });
 
-test('a host without a domain gets no subresource rewriting at all (fail closed)', async () => {
-  const env = load();
-  env.send(env.message.prepareToPreview, 7, 'file:///tmp/page.html');
-  await flush();
-  const rules = env.lastRules().addRules;
-  assert.ok(rules.every((r) => !r.condition.resourceTypes.some((t) => SUBRESOURCES.includes(t))));
-});
+for (const url of ['file:///tmp/page.html', 'https://[::1]:8443/']) {
+  test(`a host without a domain gets no subresource rewriting at all (fail closed): ${url}`, async () => {
+    const env = load();
+    env.send(env.message.prepareToPreview, 7, url);
+    await flush();
+    const rules = env.lastRules().addRules;
+    assert.ok(rules.length > 0);
+    assert.ok(rules.every((r) => !r.condition.resourceTypes.some((t) => SUBRESOURCE_TYPES.includes(t))));
+  });
+}
 
 test('clearing the last preview removes every rule', async () => {
   const env = load();
   env.send(env.message.prepareToPreview, 7);
+  await flush();
+  assert.ok((await env.liveRules()).length > 0);
   env.send(env.message.clearPreview, 7);
   await flush();
-  const last = env.lastRules();
-  assert.equal(last.addRules, undefined);
-  assert.ok(last.removeRuleIds.length >= 2);
+  assert.deepEqual(await env.liveRules(), []);
 });
 
 test('closing one of two previewing tabs keeps only the other tab in the rules', async () => {
@@ -101,4 +106,31 @@ test('no rule is left behind after previews open and close in any order', async 
   env.send(env.message.clearPreview, 11);
   await flush();
   assert.equal(installedAfter(env.api.calls.updateSessionRules).size, 0);
+});
+
+test('a preview closed after the service worker restarted leaves no rule behind', async () => {
+  const persisted = {};
+  const first = load(persisted);
+  first.send(first.message.prepareToPreview, 7);
+  await flush();
+  assert.ok((await first.liveRules()).length > 0);
+
+  // The worker idles out and wakes for the message that closes the preview.
+  const second = load(persisted);
+  second.send(second.message.clearPreview, 7);
+  await flush();
+  assert.deepEqual(await second.liveRules(), []);
+  assert.deepEqual(persisted.session.previewingTabs, []);
+});
+
+test('a preview opened after a restart replaces the old rules instead of failing on their ids', async () => {
+  const persisted = {};
+  const first = load(persisted);
+  first.send(first.message.prepareToPreview, 7);
+  await flush();
+  const second = load(persisted);
+  second.send(second.message.prepareToPreview, 9, 'https://other.test/');
+  await flush();
+  const tabs = new Set((await second.liveRules()).flatMap((r) => r.condition.tabIds));
+  assert.deepEqual([...tabs].sort(), [7, 9]);
 });

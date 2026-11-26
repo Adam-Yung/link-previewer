@@ -3,9 +3,6 @@
 // Tabs with an open preview, mapped to the hostname of the page that hosts the preview. Kept in session storage because the service
 // worker can be stopped while a preview is open.
 const previewingTabs = new Map();
-// Ids of the session rules currently installed, so every rebuild removes exactly what the last one added.
-let installedRuleIds = [];
-const LEGACY_RULE_IDS = [1, 2];
 
 const FRAME_RESPONSE_HEADERS = [
   { header: 'x-frame-options', operation: 'remove' },
@@ -31,9 +28,12 @@ const FRAME_REQUEST_HEADERS = [
 
 const SUBRESOURCE_TYPES = ['xmlhttprequest', 'script', 'stylesheet', 'image', 'font'];
 
+// '' when there is no domain to exclude by: a file: page, or an IPv6 literal, which DNR rejects as a domain (and one rejected rule
+// fails the whole update, for every tab).
 function hostnameOf(url) {
   try {
-    return new URL(url).hostname;
+    const { hostname } = new URL(url);
+    return hostname.startsWith('[') ? '' : hostname;
   } catch {
     return '';
   }
@@ -65,14 +65,14 @@ function buildRules() {
 
 let ruleUpdateQueue = Promise.resolve();
 
-// Rule updates are asynchronous; chaining them keeps a slow update from landing after a newer one.
+// Rule updates are asynchronous; chaining them keeps a slow update from landing after a newer one. The extension owns every session
+// rule, so each rebuild removes whatever is installed: session rules outlive a service-worker restart, in-memory bookkeeping does not.
 function syncRules() {
   ruleUpdateQueue = ruleUpdateQueue.then(async () => {
     const addRules = buildRules();
-    const removeRuleIds = [...new Set([...installedRuleIds, ...LEGACY_RULE_IDS])];
+    const removeRuleIds = (await chrome.declarativeNetRequest.getSessionRules()).map((r) => r.id);
     const change = addRules.length ? { removeRuleIds, addRules } : { removeRuleIds };
     await chrome.declarativeNetRequest.updateSessionRules(change);
-    installedRuleIds = addRules.map((r) => r.id);
     log(`[BACKGROUND] Header rules now cover tabs: ${[...previewingTabs.keys()].join(', ') || 'none'}`);
   }).catch((error) => log(`[BACKGROUND] Rule update failed: ${error}`, LOGGING.ERROR));
 }
@@ -102,35 +102,41 @@ function relayToTab(tabId, request) {
   chrome.tabs.sendMessage(tabId, relayed);
 }
 
-chrome.storage.session.get('previewingTabs', (result) => {
-  if (!Array.isArray(result?.previewingTabs)) return;
-  for (const [tabId, host] of result.previewingTabs) previewingTabs.set(tabId, host);
-  if (previewingTabs.size > 0) syncRules();
+// The worker may have been woken by the very event that ends a preview, so every handler that reads previewingTabs waits for the
+// restore first; otherwise the event finds an empty map and the restore puts the tab back afterwards.
+const restored = new Promise((resolve) => {
+  chrome.storage.session.get('previewingTabs', (result) => {
+    for (const [tabId, host] of result?.previewingTabs || []) previewingTabs.set(tabId, host);
+    resolve();
+  });
 });
+const afterRestore = (fn) => (...args) => { restored.then(() => fn(...args)); };
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(afterRestore(() => {
   previewingTabs.clear();
   persistPreviewingTabs();
   syncRules();
-});
+}));
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (!sender.tab) return;
   const tabId = sender.tab.id;
   if (request.action === message.prepareToPreview) {
-    startPreview(tabId, sender.url || sender.tab.url);
-    sendResponse({ ready: true });
-    return;
+    afterRestore(() => {
+      startPreview(tabId, sender.url || sender.tab.url);
+      sendResponse({ ready: true });
+    })();
+    return true; // answered asynchronously
   }
   if (request.action === message.clearPreview) {
-    stopPreview(tabId);
+    afterRestore(stopPreview)(tabId);
     return;
   }
   if (RELAYED.has(request.action)) relayToTab(tabId, request);
 });
 
 // A preview never survives its tab navigating or closing.
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+chrome.tabs.onUpdated.addListener(afterRestore((tabId, changeInfo) => {
   if (changeInfo.url) stopPreview(tabId);
-});
-chrome.tabs.onRemoved.addListener((tabId) => stopPreview(tabId));
+}));
+chrome.tabs.onRemoved.addListener(afterRestore((tabId) => stopPreview(tabId)));
