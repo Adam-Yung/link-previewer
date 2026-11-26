@@ -1,0 +1,27 @@
+docs/code/tools/build.sh.md
+  s_60aa61f858ab93::t_08dc2350e142be 12-14
+docs/guides/build-release.md
+  s_60aa61f858ab93::t_0ddeecb503368c 3
+docs/status.md
+  s_60aa61f858ab93::t_0dffce5fd50839 8
+tests/unit/build.test.mjs
+  s_60aa61f858ab93::t_dd1d8f4e79dccf 23
+tools/build.sh
+  s_60aa61f858ab93::t_f1ab39a3eb12b8 72-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "9c72ccfabb9b209729d8a95124a099de00abca0a",
+  "prompts": {},
+  "sessions": {
+    "s_60aa61f858ab93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e0c0ee27-70b6-49ba-bfa6-ce15aa5f6280",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Yung <adyung@paloaltonetworks.com>"
+    }
+  }
+}
