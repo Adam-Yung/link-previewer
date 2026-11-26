@@ -2,6 +2,12 @@
 
 Builds, navigates and closes the preview window.
 
+- **Two-step open.** `createPreview(url, { hidden: true })` builds everything and starts the load while showing nothing: the overlay
+  and host are `visibility: hidden` (not hit-tested, so the click the user may still be making reaches the page) and the fade-in is
+  held. `revealPreview()` shows it and only then takes over the host page (close key, center-stage dimming).
+  `discardSpeculativePreview()` removes an unrevealed preview and clears the header rules. `createPreview(url)` without `hidden`
+  builds and reveals at once. `state.isSpeculative` is true from build to reveal.
+
 - The window lives in an open shadow root on `#link-preview-host`, so page CSS cannot reach it; the page overlay is outside the shadow
   root because it must cover the page's own stacking contexts.
 - The iframe is named `link-previewer-frame`; `content_iframe.js` uses the name to know it is inside a preview.

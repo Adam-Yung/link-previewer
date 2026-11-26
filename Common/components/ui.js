@@ -1,15 +1,16 @@
 // components/ui.js
 
 /**
- * Creates and displays the link preview modal.
- * This includes the overlay, shadow DOM container, iframe, and all UI controls.
+ * Creates the link preview modal: overlay, shadow DOM container, iframe and controls.
+ * With `hidden`, everything is built and the page starts loading, but nothing is shown and nothing on the host page changes until
+ * revealPreview(); a long press uses this to load during the hold (see docs/code/Common/components/ui.js.md).
  * @param {string} url The URL to be loaded in the preview iframe.
  */
-function createPreview(url) {
+function createPreview(url, { hidden = false } = {}) {
   // Prevent multiple previews (also block during fade-out animation).
   if (state.isPreviewing || state.isClosing) return;
+  if (hidden && url.startsWith('http://')) return;
   state.isPreviewing = true;
-  clearTimeout(state.longClickTimer); // Cancel any pending long-click timer.
 
   // If the link is insecure HTTP, show a warning pop-up instead of a preview
   if (url.startsWith('http://')) {
@@ -19,69 +20,30 @@ function createPreview(url) {
 
   log(`Starting preview for: ${url}`);
 
-  // Create a full-page overlay to dim the background.
-  const pageOverlay = document.createElement('div');
-  pageOverlay.id = 'link-preview-page-overlay';
-  Object.assign(pageOverlay.style, {
-    position: 'fixed',
-    inset: '0',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: '2147483646', // High z-index to be on top of most elements.
-    opacity: '0',
-    transition: 'opacity 0.3s ease'
-  });
-  document.body.appendChild(pageOverlay);
+  document.body.appendChild(createPageOverlay());
 
-  // Create the host element for the shadow DOM.
   const previewHost = document.createElement('div');
   previewHost.id = 'link-preview-host';
-
-  // Add the host to the body BEFORE hiding other elements
   document.body.appendChild(previewHost);
-
-  // Attach a shadow root to encapsulate the preview's styles and DOM.
   const shadowRoot = previewHost.attachShadow({ mode: 'open' });
 
-  // Link the external stylesheet for the preview UI inside the shadow DOM.
   const styleLink = document.createElement('link');
   styleLink.rel = 'stylesheet';
   styleLink.href = chrome.runtime.getURL('preview_style.css');
   shadowRoot.appendChild(styleLink);
 
-  // Create a click interceptor inside the shadow DOM to close the preview when clicking outside the container.
+  // Clicking outside the window (on this full-size layer) closes the preview in center stage.
   const clickInterceptor = document.createElement('div');
   clickInterceptor.id = 'link-preview-click-interceptor';
   shadowRoot.appendChild(clickInterceptor);
 
-  // Create the main container for the preview window.
   const container = document.createElement('div');
   container.id = 'link-preview-container';
   container.classList.add(settings.theme);
   container.style.pointerEvents = 'none';
   state.container = container;
-
-  // Apply size and position from settings.
-  state.isExpanded = settings.isExpanded;
-  if (state.isExpanded) {
-    container.style.width = settings.width;
-    container.style.height = settings.height;
-    container.style.top = settings.top;
-    container.style.left = settings.left;
-    container.classList.add('is-centered');
-    // After the fade-in animation ends, switch to margin-based centering
-    // to avoid sub-pixel blurriness from transform: translate(-50%, -50%)
-    container.addEventListener('animationend', () => {
-      if (container.classList.contains('is-centered')) {
-        container.classList.add('rendered');
-      }
-    }, { once: true });
-  } else {
-    container.style.width = settings.userWidth;
-    container.style.height = settings.userHeight;
-    container.style.top = settings.userTop;
-    container.style.left = settings.userLeft;
-  }
-
+  applyInitialGeometry(container);
+  if (hidden) hideUntilReveal(previewHost, container);
   shadowRoot.appendChild(container);
 
   // Create the address bar with URL display and control buttons.
@@ -295,46 +257,113 @@ function createPreview(url) {
     window.open(_url, '_blank');
     closePreview();
   });
-  // Restore the preview window to its default size and position and save it.
-  shadowRoot.getElementById('link-preview-restore').addEventListener('click', () => {
-    state.isExpanded = !state.isExpanded;
-    if (state.isExpanded) {
-      container.classList.add('is-centered');
-      container.classList.remove('rendered');
-      container.style.width = '90vw';
-      container.style.height = '90vh';
-      container.style.top = '50%';
-      container.style.left = '50%';
-      // Switch to non-transform centering once animation completes
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          container.classList.add('rendered');
-        });
-      });
-    } else {
-      container.classList.remove('is-centered', 'rendered');
-      container.style.width = settings.userWidth;
-      container.style.height = settings.userHeight;
-      container.style.top = settings.userTop;
-      container.style.left = settings.userLeft;
-    }
+  shadowRoot.getElementById('link-preview-restore').addEventListener('click', () => toggleCenterStage(container, shadowRoot));
 
-    shadowRoot.getElementById('link-preview-restore').innerHTML = state.isExpanded ? minimizedIcon : maximizedIcon;
-    // Save the restored state to storage.
-    chrome.storage.local.set({
-      isExpanded: state.isExpanded
-    });
-    toggleDisableParentPage(state.isExpanded);
-  });
-
-  state.historyManager = new HistoryManager(shadowRoot, url, navigateTo)
-
-  document.addEventListener('keydown', handleEsc);
-
-  toggleDisableParentPage(isInCenterStage());
+  state.historyManager = new HistoryManager(shadowRoot, url, navigateTo);
   attachResizeHandler(container);
   attachContainerFocus(container);
-  checkIframeInBounds(container);
+
+  state.isSpeculative = true;
+  if (!hidden) revealPreview();
+}
+
+/**
+ * Switches between center stage and the pocket window, and remembers the choice.
+ */
+function toggleCenterStage(container, shadowRoot) {
+  state.isExpanded = !state.isExpanded;
+  if (state.isExpanded) {
+    container.classList.add('is-centered');
+    container.classList.remove('rendered');
+    Object.assign(container.style, { width: '90vw', height: '90vh', top: '50%', left: '50%' });
+    // Switch to non-transform centering once the class change has rendered.
+    requestAnimationFrame(() => requestAnimationFrame(() => container.classList.add('rendered')));
+  } else {
+    container.classList.remove('is-centered', 'rendered');
+    Object.assign(container.style, { width: settings.userWidth, height: settings.userHeight, top: settings.userTop, left: settings.userLeft });
+  }
+  shadowRoot.getElementById('link-preview-restore').innerHTML = state.isExpanded ? minimizedIcon : maximizedIcon;
+  chrome.storage.local.set({ isExpanded: state.isExpanded });
+  toggleDisableParentPage(state.isExpanded);
+}
+
+/**
+ * The full-page layer that dims the host page in center stage. Outside the shadow root so it covers the page's own stacking contexts.
+ */
+function createPageOverlay() {
+  const pageOverlay = document.createElement('div');
+  pageOverlay.id = 'link-preview-page-overlay';
+  Object.assign(pageOverlay.style, {
+    position: 'fixed',
+    inset: '0',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: '2147483646',
+    opacity: '0',
+    transition: 'opacity 0.3s ease'
+  });
+  return pageOverlay;
+}
+
+/**
+ * Hidden elements are not hit-tested, so a speculative preview cannot catch the click the user may still be making. The fade-in is
+ * held back so it plays on reveal.
+ */
+function hideUntilReveal(previewHost, container) {
+  document.getElementById('link-preview-page-overlay').style.visibility = 'hidden';
+  previewHost.style.visibility = 'hidden';
+  container.style.animation = 'none';
+}
+
+/**
+ * Size and position from settings: center stage, or the user's last pocket geometry.
+ */
+function applyInitialGeometry(container) {
+  state.isExpanded = settings.isExpanded;
+  if (!state.isExpanded) {
+    Object.assign(container.style, { width: settings.userWidth, height: settings.userHeight, top: settings.userTop, left: settings.userLeft });
+    return;
+  }
+  Object.assign(container.style, { width: settings.width, height: settings.height, top: settings.top, left: settings.left });
+  container.classList.add('is-centered');
+  // After the fade-in, switch to margin-based centering: transform-based centering renders text blurry at sub-pixel offsets.
+  container.addEventListener('animationend', () => {
+    if (container.classList.contains('is-centered')) container.classList.add('rendered');
+  }, { once: true });
+}
+
+/**
+ * Shows a preview built by createPreview() and takes over the host page (close key, center-stage dimming).
+ */
+function revealPreview() {
+  if (!state.isSpeculative) return;
+  state.isSpeculative = false;
+  clearTimeout(state.longClickTimer);
+  const pageOverlay = document.getElementById('link-preview-page-overlay');
+  const previewHost = document.getElementById('link-preview-host');
+  if (pageOverlay) pageOverlay.style.visibility = '';
+  if (previewHost) previewHost.style.visibility = '';
+  state.container.style.animation = '';
+  document.addEventListener('keydown', handleEsc);
+  toggleDisableParentPage(isInCenterStage());
+  checkIframeInBounds(state.container);
+}
+
+/**
+ * Drops a preview that was never shown (the press ended early). Returns whether there was one.
+ */
+function discardSpeculativePreview() {
+  if (!state.isSpeculative) return false;
+  state.isSpeculative = false;
+  attachResizeHandler();
+  document.getElementById('link-preview-host')?.remove();
+  document.getElementById('link-preview-page-overlay')?.remove();
+  if (state.messageListener) {
+    chrome.runtime.onMessage.removeListener(state.messageListener);
+    state.messageListener = null;
+  }
+  chrome.runtime.sendMessage({ action: message.clearPreview }).catch(() => {});
+  state.isPreviewing = false;
+  return true;
 }
 
 /**

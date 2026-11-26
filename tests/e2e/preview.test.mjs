@@ -36,6 +36,26 @@ test('a short click does not open a preview', async () => {
   assert.match(await page.eval('location.href'), /host\.test.*other\.html/);
 });
 
+test('a press released mid-hold follows the link and leaves no preview or header rule behind', async () => {
+  const page = await openHost();
+  await page.longPress('#target', 300);
+  await waitUntil(async () => (await page.eval('location.href')).includes('target.test'));
+  assert.match(await page.eval('location.href'), /target\.test.*page\.html/);
+  const rules = await waitUntil(async () => (await env.worker.eval('chrome.declarativeNetRequest.getSessionRules()')).length === 0);
+  assert.ok(rules, 'header rules removed');
+});
+
+test('hovering links sends no requests', async () => {
+  const page = await openHost();
+  const since = Date.now();
+  for (const selector of ['#target', '#slow', '#plain']) {
+    const { x, y } = await page.center(selector);
+    await page.mouse('mouseMoved', x, y, { button: 'none' });
+    await sleep(250);
+  }
+  assert.deepEqual(env.fixtures.requests.filter((r) => r.at >= since), []);
+});
+
 test('host page headers untouched while a preview is open', async () => {
   const page = await openHost();
   const before = await page.eval('window.headerProbe()');

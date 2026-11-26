@@ -52,3 +52,21 @@ Weighed: (a) drop subresource rewriting entirely (simplest; may break logins and
 subresource part excludes the host page's domain as initiator**. (c) keeps what the previewed page needs and stops the leak.
 Kept as the owner built it: `sub_frame` rewriting for the whole previewing tab, and `SameSite=None` on cookies set inside the preview
 (owner design; listed as a question in the handoff). Reverse: `git revert` the commit.
+
+## 2026-11-26 · Performance spike: load during the hold, preconnect from the page, no hover requests
+Baseline: the background round trip that installs header rules takes 0–11 ms, so it is not worth optimizing; the user's wait is the page
+load, which only started after the 500 ms hold. Hovering sent a `HEAD` request to every link, from the background, where the
+connection could not be reused by the preview (network partitioning).
+Weighed: (a) pre-arm the header rule at mousedown (saves ~10 ms, widens when rules are active); (b) prefetch on hover (requests for
+links never pressed: privacy); **(c) build the preview hidden after a 150 ms still press and reveal it at the hold's end, with an
+in-page preconnect at press start and no hover requests.** (c) cut the wait after the preview appears from 417 ms to 71 ms on a slow
+page and to 0 on a fast one, and hovering now sends nothing.
+Trade-off accepted: a press held 150–500 ms that is then released loads the page once in a hidden frame before the tab navigates to
+it; header rules are on for that tab while the hidden preview exists (it is a preview, just not shown; discarded on release).
+Reverse: set `SPECULATE_AFTER_MS` above any hold (or remove the speculate timer in `Common/content.js`); the hover preconnect is in git
+history (`acb1fb3`).
+
+## 2026-11-26 · Firefox `requestHeadersListener` kept
+With the background no longer fetching, this listener may be dead code, or it may be what spoofs the preview iframe's request headers
+on Firefox (if Firefox attributes the content script's iframe load to the extension). Cannot check tonight (no Firefox run allowed), so
+it stays. Question for the owner in the handoff.

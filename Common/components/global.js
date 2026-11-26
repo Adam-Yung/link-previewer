@@ -1,6 +1,8 @@
 // Global state object
 const state = {
   longClickTimer: null,
+  speculateTimer: null,
+  isSpeculative: false, // a preview built during a long press, loading but not shown yet
   isPreviewing: false,
   isCurrentSiteDisabled: false,
   isCenterStageMode: false,

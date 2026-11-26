@@ -2,6 +2,9 @@
 
 // A press that travels further than this is a drag or a text selection, not a long press.
 const LONG_PRESS_SLOP_PX = 8;
+// A press held this long is no longer an ordinary click (those last about 100 ms), so the preview starts loading, hidden, while the
+// rest of the hold runs. Only when the hold is long enough for that head start to matter.
+const SPECULATE_AFTER_MS = 150;
 const UNPREVIEWABLE_SCHEME = /^(javascript|data|blob|file|chrome-extension|moz-extension):/i;
 
 let pressStart = null;
@@ -14,7 +17,39 @@ function previewableLinkAt(e) {
 
 function cancelLongPress() {
   clearTimeout(state.longClickTimer);
+  clearTimeout(state.speculateTimer);
   pressStart = null;
+  discardSpeculativePreview();
+}
+
+// Opens the connection (DNS, TCP, TLS) from the page itself, so the preview iframe, which shares the page's network partition, can
+// reuse it. No HTTP request is sent.
+const preconnectedOrigins = new Set();
+function preconnect(url) {
+  const { origin, protocol } = new URL(url);
+  if (!/^https?:$/.test(protocol) || preconnectedOrigins.has(origin)) return;
+  preconnectedOrigins.add(origin);
+  const hint = document.createElement('link');
+  hint.rel = 'preconnect';
+  hint.href = origin;
+  document.head.appendChild(hint);
+  setTimeout(() => {
+    hint.remove();
+    preconnectedOrigins.delete(origin);
+  }, 10000);
+}
+
+function startLongPress(e, href) {
+  pressStart = { x: e.clientX, y: e.clientY };
+  preconnect(href);
+  if (settings.duration >= SPECULATE_AFTER_MS * 2) {
+    state.speculateTimer = setTimeout(() => createPreview(href, { hidden: true }), SPECULATE_AFTER_MS);
+  }
+  state.longClickTimer = setTimeout(() => {
+    pressStart = null;
+    if (state.isSpeculative) revealPreview();
+    else createPreview(href);
+  }, settings.duration);
 }
 
 function swallow(e) {
@@ -37,11 +72,7 @@ function onMouseDown(e) {
     createPreview(link.href);
     return;
   }
-  pressStart = { x: e.clientX, y: e.clientY };
-  state.longClickTimer = setTimeout(() => {
-    pressStart = null;
-    createPreview(link.href);
-  }, settings.duration);
+  startLongPress(e, link.href);
 }
 
 function onMouseMove(e) {
@@ -76,30 +107,3 @@ document.addEventListener('mousemove', onMouseMove, true);
 document.addEventListener('dragstart', cancelLongPress, true);
 document.addEventListener('mouseup', onMouseUp, true);
 document.addEventListener('click', onClick, true);
-
-
-// --- Preconnect Optimization ---
-
-let hoverTimer = null;
-let lastHoveredUrl = null;
-
-// When a user hovers over a link, send a message to the background script to preconnect.
-// This can speed up the eventual loading of the page in the preview.
-document.addEventListener('mouseover', e => {
-  if (state.isCurrentSiteDisabled) return;
-  const link = e.target.closest('a');
-  if (!link || !link.href || link.href === lastHoveredUrl || !/^https?:/.test(link.href)) return;
-  const href = link.href;
-  lastHoveredUrl = href;
-  clearTimeout(hoverTimer); // Debounce the event.
-  hoverTimer = setTimeout(() => {
-    chrome.runtime.sendMessage({ action: message.preconnect, url: href }).catch(() => {});
-  }, 100);
-});
-
-document.addEventListener('mouseout', e => {
-  if (e.target.closest('a')) {
-    clearTimeout(hoverTimer);
-    lastHoveredUrl = null;
-  }
-});

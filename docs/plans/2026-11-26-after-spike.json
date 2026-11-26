@@ -1,0 +1,36 @@
+{
+  "holdMs": 500,
+  "fastPage": {
+    "runs": 8,
+    "builtMs": 163,
+    "shownMs": 510,
+    "srcSetMs": 163,
+    "loadedMs": 201,
+    "waitAfterShownMs": 0
+  },
+  "slowPage400ms": {
+    "runs": 8,
+    "builtMs": 162,
+    "shownMs": 510,
+    "srcSetMs": 166,
+    "loadedMs": 579,
+    "waitAfterShownMs": 71
+  },
+  "hover": {
+    "linksHovered": 4,
+    "requestsSent": 0,
+    "methods": []
+  },
+  "openCloseCost": {
+    "pocket": {
+      "hostNodes": 20000,
+      "recalcStyleMs": 5,
+      "layoutMs": 6
+    },
+    "centerStage": {
+      "hostNodes": 20000,
+      "recalcStyleMs": 46,
+      "layoutMs": 6
+    }
+  }
+}

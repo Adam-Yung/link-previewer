@@ -12,7 +12,8 @@
       "Common/content.js",
       "Common/components/shared.js",
       "Common/components/popups.js",
-      "Common/components/ui.js"
+      "Common/components/ui.js",
+      "Common/components/global.js"
     ],
     "exclude": [
       "scripts/owner/*"

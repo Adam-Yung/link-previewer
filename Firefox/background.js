@@ -135,20 +135,6 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
       break;
 
-    case message.preconnect: {
-      const controller = new AbortController();
-      const signal = controller.signal;
-      log(`[BACKGROUND] Preconnecting to: ${request.url}`);
-      // Use GET as it's more widely supported than HEAD
-      fetch(request.url, { method: 'GET', mode: 'cors', signal }).catch(() => {
-        // Errors are expected as we abort the request. This is fine.
-      });
-
-      // Abort the request immediately. We don't need the body,
-      // just the act of making the request is enough to warm up the connection.
-      controller.abort();
-      break;
-    }
     case message.iFrameHasFocus:
       browser.tabs.sendMessage(sender.tab.id, { action: message.iFrameHasFocus });
       break;

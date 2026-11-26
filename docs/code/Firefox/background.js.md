@@ -8,6 +8,7 @@ only while at least one tab has a preview open.
   With no host hostname, only frames are rewritten. Tests: `tests/unit/firefox-background.test.mjs`. Not run in a real Firefox on
   2026-11-26 (owner allowed Chromium only).
 - `isWithinDomain()` matches Chrome's `excludedInitiatorDomains`: the domain and its subdomains.
-- `requestHeadersListener` only touches requests the extension itself starts (its `originUrl` is the extension); the preview frame's
-  own requests come from the host page and are not spoofed on Firefox.
+- `requestHeadersListener` spoofs Origin, Referer and fetch metadata on requests whose `originUrl` is the extension. Since the hover
+  preconnect is gone the background starts no requests, so what remains is whatever Firefox attributes to the content script, possibly
+  the preview iframe it creates. Not verified in Firefox (2026-11-26); kept so Firefox previews cannot regress unseen.
 - A tab that navigates or closes loses its preview; the listeners go when the last preview does.

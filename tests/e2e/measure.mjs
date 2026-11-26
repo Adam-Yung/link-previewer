@@ -6,7 +6,8 @@ import { HOLD_MS, clearStorage, setup, teardown, waitUntil } from './lib/harness
 
 const RUNS = Number(process.argv[2] || 8);
 
-// Page-world probe: mousedown time, when the preview UI appears, when the iframe gets its src, when the iframe fires load.
+// Page-world probe: mousedown time, when the preview is built, when it becomes visible (a preview can be built hidden during the hold),
+// when the iframe gets its src, when the iframe fires load.
 const INSTRUMENT = `(() => {
   const t = window.__lp = {};
   document.addEventListener('mousedown', () => { t.down = performance.now(); }, true);
@@ -14,11 +15,12 @@ const INSTRUMENT = `(() => {
     const host = document.getElementById('link-preview-host');
     const frame = host?.shadowRoot?.getElementById('link-preview-iframe');
     if (host && t.host === undefined) t.host = performance.now();
+    if (host && t.shown === undefined && getComputedStyle(host).visibility !== 'hidden') t.shown = performance.now();
     if (frame?.getAttribute('src') && t.src === undefined) {
       t.src = performance.now();
       frame.addEventListener('load', () => { t.load = performance.now(); }, { once: true });
     }
-    if (t.load === undefined) requestAnimationFrame(tick);
+    if (t.load === undefined || t.shown === undefined) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 })()`;
@@ -35,16 +37,18 @@ async function openLatency(env, selector) {
     const page = await env.browser.newPage(env.fixtures.url('host.test', '/host.html'));
     await page.eval(INSTRUMENT);
     await page.longPress(selector, HOLD_MS + 100);
-    const t = await waitUntil(() => page.eval('window.__lp.load !== undefined && window.__lp'), 8000);
-    if (t) samples.push({ ui: t.host - t.down, src: t.src - t.down, load: t.load - t.down });
+    const t = await waitUntil(() => page.eval('window.__lp.load !== undefined && window.__lp.shown !== undefined && window.__lp'), 8000);
+    if (t) samples.push({ built: t.host - t.down, shown: t.shown - t.down, src: t.src - t.down, load: t.load - t.down });
     await env.browser.closePages();
   }
   return {
     runs: samples.length,
-    uiShownMs: median(samples.map((s) => s.ui)),
+    builtMs: median(samples.map((s) => s.built)),
+    shownMs: median(samples.map((s) => s.shown)),
     srcSetMs: median(samples.map((s) => s.src)),
     loadedMs: median(samples.map((s) => s.load)),
-    afterHoldLoadedMs: median(samples.map((s) => s.load - HOLD_MS)),
+    // What the user waits once the preview is on screen.
+    waitAfterShownMs: median(samples.map((s) => Math.max(0, s.load - s.shown))),
   };
 }
 

@@ -4,7 +4,6 @@
 const message = {
   prepareToPreview: 'prepareToPreview',
   clearPreview: 'clearPreview',
-  preconnect: 'preconnect',
   iFrameHasFocus: 'iFrameHasFocus',
   focusPreview: 'focusPreview',
   updatePreviewUrl: 'updatePreviewUrl',

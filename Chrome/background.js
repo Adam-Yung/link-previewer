@@ -102,18 +102,6 @@ function relayToTab(tabId, request) {
   chrome.tabs.sendMessage(tabId, relayed);
 }
 
-// Warms a connection to a hovered link. Private and non-http(s) targets are skipped.
-function preconnect(url) {
-  try {
-    const target = new URL(url);
-    const isAllowedScheme = target.protocol === 'https:' || target.protocol === 'http:';
-    const isPrivate = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|0\.0\.0\.0$|localhost$|\[::1\]$)/.test(target.hostname);
-    if (isAllowedScheme && !isPrivate) fetch(url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
-  } catch {
-    // Invalid URL; nothing to warm.
-  }
-}
-
 chrome.storage.session.get('previewingTabs', (result) => {
   if (!Array.isArray(result?.previewingTabs)) return;
   for (const [tabId, host] of result.previewingTabs) previewingTabs.set(tabId, host);
@@ -136,10 +124,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   if (request.action === message.clearPreview) {
     stopPreview(tabId);
-    return;
-  }
-  if (request.action === message.preconnect) {
-    preconnect(request.url);
     return;
   }
   if (RELAYED.has(request.action)) relayToTab(tabId, request);
