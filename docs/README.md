@@ -11,4 +11,5 @@
 | `docs/guides/` | How to run, test and release, with a `Verified · Sources` header |
 | `docs/code/` | One mirror per source file: why, invariants, ordering; never a restatement of the code |
 
-Guides: `docs/guides/testing.md`, `docs/guides/build-release.md`. Features: `docs/features/performance.md`.
+Guides: `docs/guides/testing.md`, `docs/guides/build-release.md`. Features: `docs/features/performance.md`. Latest handoff:
+`docs/plans/2026-11-26-HANDOFF.md`.
