@@ -1,3 +1,30 @@
+## [Unreleased]
+
+### Security
+
+* Header rewriting no longer touches the host page's own requests (Chrome: per-tab rules excluding the host domain; Firefox: same scoping, and no more rewriting of every XHR in every tab)
+* Header rules are rebuilt from session state, so a service-worker restart can no longer leave a closed preview's rules on
+* A preview still loading during the hold never rewrites cookies to SameSite=None
+
+### Fixed
+
+* Right, middle and Ctrl/Cmd-click on links inside the preview keep their browser meaning
+* Dragging a link or selecting text across it no longer opens a preview; the middle button no longer long-presses
+* Modifier click works normally on sites where Link Previewer is disabled
+* A Space close key now closes the preview
+* A host page that rewrites its URL (pushState) keeps a working preview (Chrome)
+* `clean` in the build script no longer deletes every zip in the repository
+
+### Changed
+
+* The preview starts loading during the long press and appears already loaded (400 ms page: 417 -> 227 ms wait once shown)
+* Hovering links sends no requests; a preconnect is made from the page when a press starts
+* Center stage pauses only the host page's running animations (less style work on large pages)
+* Theme follows the system appearance by default
+* `build/` renamed to `tools/`
+
+---
+
 ## [2.3.0] - 2026-08-12
 
 ### Fixed
