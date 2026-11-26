@@ -62,6 +62,14 @@ async function pressInFrame(frame, selector, init) {
   })()`);
 }
 
+test('a close key set to Space closes the preview', async () => {
+  const page = await openHost();
+  await env.worker.eval(`chrome.storage.local.set({ closeKey: 'Space' })`);
+  await openPreview(page);
+  await page.key(' ', 'Space');
+  assert.ok(await waitUntil(async () => !(await previewState(page)).open), 'preview closed');
+});
+
 test('clicking a link inside the preview navigates the preview', async () => {
   const page = await openHost();
   const frame = await openPreview(page);

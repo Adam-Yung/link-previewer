@@ -239,45 +239,20 @@ function createPreview(url) {
 
   function navigateTo(newUrl, oldUrl = "", historyNeedTruncate = true) {
     const currentUrl = oldUrl || state.historyManager.getCurrentUrl();
-
     if (newUrl.startsWith('http://')) {
       createHttpWarningPopup(newUrl, true);
       return;
     }
-
-    let currentUrlObj, newUrlObj;
-    try {
-      currentUrlObj = new URL(currentUrl);
-      newUrlObj = new URL(newUrl);
-    } catch (e) {
-      // Malformed URL — skip hash-change optimization, do a full navigation
-      if (historyNeedTruncate) state.historyManager.addNewEntry(newUrl);
+    if (historyNeedTruncate) state.historyManager.addNewEntry(newUrl);
+    if (!isSameDocument(currentUrl, newUrl)) {
       renderUrl(newUrl);
       return;
     }
-
-    // Check if it's an in-page navigation (same origin and pathname, different hash)
-    if (currentUrlObj.origin === newUrlObj.origin && currentUrlObj.pathname === newUrlObj.pathname) {
-      const iframe = shadowRoot.getElementById('link-preview-iframe');
-      if (iframe) {
-        // Just updating the src with a new hash is efficient.
-        // The browser will scroll to the new anchor without a full reload.
-        iframe.src = newUrl;
-      }
-
-      if (historyNeedTruncate) state.historyManager.addNewEntry(newUrl);
-
-      const urlSpan = shadowRoot.querySelector('.link-preview-url');
-      if (urlSpan) {
-        urlSpan.textContent = newUrl;
-      }
-      return; // Exit here to prevent calling renderUrl
-    }
-
-    // If we are navigating from a point in history, truncate the future history
-    if (historyNeedTruncate) state.historyManager.addNewEntry(newUrl);
-
-    renderUrl(newUrl);
+    // Only the fragment changed: setting src scrolls the frame to the anchor without reloading it.
+    const iframe = shadowRoot.getElementById('link-preview-iframe');
+    if (iframe) iframe.src = newUrl;
+    const urlSpan = shadowRoot.querySelector('.link-preview-url');
+    if (urlSpan) urlSpan.textContent = newUrl;
   }
 
   const messageListener = (request) => {
@@ -363,6 +338,19 @@ function createPreview(url) {
 }
 
 /**
+ * Whether two URLs differ only in their fragment. Unparseable URLs are never the same document.
+ */
+function isSameDocument(a, b) {
+  try {
+    const from = new URL(a);
+    const to = new URL(b);
+    return from.origin === to.origin && from.pathname === to.pathname && from.search === to.search;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Closes the preview window and cleans up all related elements and event listeners.
  */
 function closePreview() {
@@ -408,7 +396,7 @@ function closePreview() {
  * @param {KeyboardEvent} e The keydown event.
  */
 function handleEsc(e) {
-  if (e.key === settings.closeKey) {
+  if (isCloseKey(e, settings.closeKey)) {
     closePreview();
   }
 }

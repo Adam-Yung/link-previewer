@@ -48,7 +48,7 @@ function createWarningPopup({ id, icon, title, message, buttons, fromIframe }) {
   };
 
   const handleWarningEsc = (e) => {
-    if (e.key === settings.closeKey) {
+    if (isCloseKey(e, settings.closeKey)) {
       closePopup();
     }
   };

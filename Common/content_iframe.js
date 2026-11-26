@@ -36,7 +36,7 @@ function initPreviewFrame() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === closeKey) chrome.runtime.sendMessage({ action: message.closePreviewFromIframe }).catch(() => {});
+    if (isCloseKey(e, closeKey)) chrome.runtime.sendMessage({ action: message.closePreviewFromIframe }).catch(() => {});
   });
   document.addEventListener('mousedown', onPreviewMouseDown, true);
   window.addEventListener('focus', () => {

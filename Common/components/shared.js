@@ -11,6 +11,14 @@ const message = {
   closePreviewFromIframe: 'closePreviewFromIframe'
 }
 
+/**
+ * Whether a keydown is the user's close key. The settings page stores the space bar as 'Space' (a bare ' ' would be invisible in the
+ * key field), while KeyboardEvent.key reports ' '.
+ */
+function isCloseKey(event, closeKey) {
+  return event.key === closeKey || (closeKey === 'Space' && event.key === ' ');
+}
+
 const ALLOW_DEBUGGING = false;
 const LOGGING = {
   INFO: 'info',
