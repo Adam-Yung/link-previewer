@@ -1,59 +1,50 @@
-// content_iframe.js
+// content_iframe.js: runs in every frame, acts only inside the extension's preview iframe.
 
-// Only activate inside the extension's preview iframe
-if (window.self !== window.top && window.name === 'link-previewer-frame') {
-  /**
-   * Handling CloseKey Logic
-   */
-  let closeKey = "Escape";
+function isPreviewFrame() {
+  return window.self !== window.top && window.name === 'link-previewer-frame';
+}
 
+// Only a plain primary click keeps browsing inside the preview. Right, middle and modifier clicks (open in new tab, context menu,
+// download) belong to the browser.
+function isPlainPrimaryPress(e) {
+  return e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey;
+}
+
+function previewableLink(e) {
+  const link = e.target.closest?.('a');
+  if (!link || !link.href || link.hasAttribute('download')) return null;
+  return /^https?:/i.test(link.href) ? link : null;
+}
+
+function onPreviewMouseDown(e) {
+  if (!isPlainPrimaryPress(e)) return;
+  const link = previewableLink(e);
+  if (!link) return;
+  log(`[IFRAME] User clicked a link inside of the iFrame: ${link.href}`);
+  e.preventDefault();
+  e.stopPropagation();
+  chrome.runtime.sendMessage({ action: message.updatePreviewUrl, url: link.href }).catch(() => {});
+}
+
+function initPreviewFrame() {
+  let closeKey = 'Escape';
   chrome.storage.local.get('closeKey').then(result => {
-    closeKey = result.closeKey || "Escape";
+    closeKey = result.closeKey || 'Escape';
   }).catch(() => {});
-
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local') {
-      if (Object.hasOwn(changes, "closeKey")) {
-        closeKey = changes["closeKey"].newValue;
-      }
-    }
+    if (area === 'local' && Object.hasOwn(changes, 'closeKey')) closeKey = changes.closeKey.newValue;
   });
 
   document.addEventListener('keydown', (e) => {
-      if (e.key === closeKey) {
-        chrome.runtime.sendMessage({ action: message.closePreviewFromIframe}).catch(() => {});
-    }
+    if (e.key === closeKey) chrome.runtime.sendMessage({ action: message.closePreviewFromIframe }).catch(() => {});
   });
-
-  
-  /**
-   * Handling User Clicking other links within the IFrame
-   */
-  document.addEventListener('mousedown', e => {
-    const link = e.target.closest('a');
-    // Check if the target is a valid link to preview.
-    if (link && link.href && !link.href.startsWith('javascript:')) {
-      const url = link.href;
-      log(`[IFRAME] User clicked a link inside of the iFrame: ${url}`);
-      e.preventDefault();
-      e.stopPropagation();
-      chrome.runtime.sendMessage({ action: message.updatePreviewUrl, url: url }).catch(() => {});
-    }
-  }, true);
-
-
-  /**
-   * Handling IFrame receiving Focus
-   */
+  document.addEventListener('mousedown', onPreviewMouseDown, true);
   window.addEventListener('focus', () => {
-    chrome.runtime.sendMessage({ action: message.iFrameHasFocus}).catch(() => {});
-  })
-
+    chrome.runtime.sendMessage({ action: message.iFrameHasFocus }).catch(() => {});
+  });
   chrome.runtime.onMessage.addListener((request) => {
-    switch (request.action) {
-      case message.focusPreview:
-        window.focus();
-        break;
-    }
+    if (request.action === message.focusPreview) window.focus();
   });
 }
+
+if (isPreviewFrame()) initPreviewFrame();

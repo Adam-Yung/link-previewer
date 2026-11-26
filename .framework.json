@@ -7,7 +7,8 @@
       "tests/e2e/lib/*.mjs",
       "tests/e2e/measure.mjs",
       "Chrome/*.js",
-      "Firefox/*.js"
+      "Firefox/*.js",
+      "Common/content_iframe.js"
     ],
     "exclude": [
       "scripts/owner/*"

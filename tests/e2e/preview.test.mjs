@@ -75,7 +75,7 @@ test('clicking a link inside the preview navigates the preview', async () => {
 
 for (const [name, init] of [['right-click', { button: 2 }], ['middle-click', { button: 1 }], ['ctrl-click', { button: 0, ctrlKey: true }],
   ['cmd-click', { button: 0, metaKey: true }]]) {
-  test(`${name} on a link inside the preview leaves the preview where it is`, { todo: 'bug, fixed in a later commit' }, async () => {
+  test(`${name} on a link inside the preview leaves the preview where it is`, async () => {
     const page = await openHost();
     const frame = await openPreview(page);
     await pressInFrame(frame, '#next', init);
