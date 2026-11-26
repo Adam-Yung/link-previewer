@@ -1,0 +1,27 @@
+tests/e2e/preview.test.mjs
+  s_60aa61f858ab93::t_5ffb119fead16d 78
+Common/content_iframe.js
+  s_60aa61f858ab93::t_356e46448710f3 1-30,32,35,39,41,43-44,46,48-50
+.framework.json
+  s_60aa61f858ab93::t_b1a599e378d098 10-11
+docs/status.md
+  s_60aa61f858ab93::t_b1a599e378d098 7
+docs/code/Common/content_iframe.js.md
+  s_60aa61f858ab93::t_b1a599e378d098 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "5a8fa651f66a626a61b2771a1090cb906a78b183",
+  "prompts": {},
+  "sessions": {
+    "s_60aa61f858ab93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e0c0ee27-70b6-49ba-bfa6-ce15aa5f6280",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Yung <adyung@paloaltonetworks.com>"
+    }
+  }
+}
