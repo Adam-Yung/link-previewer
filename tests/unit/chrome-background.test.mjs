@@ -24,7 +24,7 @@ test('prepareToPreview answers ready and installs rules scoped to that tab only'
   for (const rule of addRules) assert.deepEqual(rule.condition.tabIds, [7]);
 });
 
-test("the host page's own requests are never rewritten", { todo: 'bug: header leak, fixed in a later commit' }, async () => {
+test("the host page's own requests are never rewritten", async () => {
   const env = load();
   env.send(env.message.prepareToPreview, 7);
   await flush();
@@ -37,7 +37,7 @@ test("the host page's own requests are never rewritten", { todo: 'bug: header le
   }
 });
 
-test('each previewing tab excludes its own host', { todo: 'bug: header leak, fixed in a later commit' }, async () => {
+test('each previewing tab excludes its own host', async () => {
   const env = load();
   env.send(env.message.prepareToPreview, 7, 'https://a.test/');
   env.send(env.message.prepareToPreview, 9, 'https://b.test/');
@@ -47,7 +47,7 @@ test('each previewing tab excludes its own host', { todo: 'bug: header leak, fix
   assert.deepEqual(byTab, { 7: ['a.test'], 9: ['b.test'] });
 });
 
-test('a host without a domain gets no subresource rewriting at all (fail closed)', { todo: 'bug: header leak, fixed in a later commit' }, async () => {
+test('a host without a domain gets no subresource rewriting at all (fail closed)', async () => {
   const env = load();
   env.send(env.message.prepareToPreview, 7, 'file:///tmp/page.html');
   await flush();
@@ -75,15 +75,30 @@ test('closing one of two previewing tabs keeps only the other tab in the rules',
   assert.deepEqual([...tabs], [9]);
 });
 
-test('rule ids removed always cover the ids previously added', async () => {
+// Replays every recorded update against a model of the browser's session rules.
+function installedAfter(updates) {
+  const rules = new Map();
+  for (const { removeRuleIds = [], addRules = [] } of updates) {
+    for (const id of removeRuleIds) rules.delete(id);
+    for (const rule of addRules) {
+      assert.ok(!rules.has(rule.id), `rule id ${rule.id} added twice`);
+      rules.set(rule.id, rule);
+    }
+  }
+  return rules;
+}
+
+test('no rule is left behind after previews open and close in any order', async () => {
   const env = load();
   env.send(env.message.prepareToPreview, 7);
   env.send(env.message.prepareToPreview, 9);
-  await flush();
-  const added = env.lastRules().addRules.map((r) => r.id);
   env.send(env.message.clearPreview, 7);
-  env.send(env.message.clearPreview, 9);
+  env.send(env.message.prepareToPreview, 11);
   await flush();
-  const removed = env.lastRules().removeRuleIds;
-  for (const id of added) assert.ok(removed.includes(id), `rule ${id} left behind`);
+  const live = installedAfter(env.api.calls.updateSessionRules);
+  assert.deepEqual([...new Set([...live.values()].flatMap((r) => r.condition.tabIds))].sort(), [11, 9]);
+  env.send(env.message.clearPreview, 9);
+  env.send(env.message.clearPreview, 11);
+  await flush();
+  assert.equal(installedAfter(env.api.calls.updateSessionRules).size, 0);
 });

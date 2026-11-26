@@ -1,204 +1,152 @@
-// background.js
+// background.js (Chrome, MV3 service worker). `components/shared.js` is prepended at build time.
 
-const RULE_ID = 1;
-const RULE_ID_REQUEST = 2;
-// Use a Set to store the IDs of all tabs with an active preview.
-const previewingTabIds = new Set();
+// Tabs with an open preview, mapped to the hostname of the page that hosts the preview. Kept in session storage because the service
+// worker can be stopped while a preview is open.
+const previewingTabs = new Map();
+// Ids of the session rules currently installed, so every rebuild removes exactly what the last one added.
+let installedRuleIds = [];
+const LEGACY_RULE_IDS = [1, 2];
 
-// Restore previewingTabIds from session storage on service worker startup
-chrome.storage.session.get('previewingTabIds', (result) => {
-  if (result.previewingTabIds && Array.isArray(result.previewingTabIds)) {
-    result.previewingTabIds.forEach(id => previewingTabIds.add(id));
-    if (previewingTabIds.size > 0) {
-      enableRule();
-    }
+const FRAME_RESPONSE_HEADERS = [
+  { header: 'x-frame-options', operation: 'remove' },
+  {
+    header: 'content-security-policy',
+    operation: 'set',
+    value: 'sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation allow-popups;'
+  },
+  { header: 'x-content-type-options', operation: 'remove' },
+  { header: 'cross-origin-opener-policy', operation: 'remove' },
+  { header: 'cross-origin-embedder-policy', operation: 'remove' },
+  { header: 'cross-origin-resource-policy', operation: 'remove' },
+  // Cookies set inside a cross-site frame are rejected unless SameSite=None, which breaks consent and login flows in the preview.
+  { header: 'set-cookie', operation: 'append', value: '; SameSite=None; Secure' }
+];
+
+// Fetch metadata that says "top-level navigation", so servers that refuse to be framed serve the page.
+const FRAME_REQUEST_HEADERS = [
+  { header: 'sec-fetch-dest', operation: 'set', value: 'document' },
+  { header: 'sec-fetch-mode', operation: 'set', value: 'navigate' },
+  { header: 'sec-fetch-site', operation: 'set', value: 'none' }
+];
+
+const SUBRESOURCE_TYPES = ['xmlhttprequest', 'script', 'stylesheet', 'image', 'font'];
+
+function hostnameOf(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
   }
-});
-
-function persistPreviewingTabIds() {
-  chrome.storage.session.set({ previewingTabIds: [...previewingTabIds] });
 }
 
-// Rule to modify response headers (remove frame restrictions)
-const responseHeaderRule = {
-  id: RULE_ID,
-  priority: 1,
-  action: {
-    type: 'modifyHeaders',
-    responseHeaders: [
-      { header: 'x-frame-options', operation: 'remove' },
-      {
-        header: 'content-security-policy',
-        operation: 'set',
-        value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation allow-popups;"
-      },
-      { header: 'x-content-type-options', operation: 'remove' },
-      { header: 'cross-origin-opener-policy', operation: 'remove' },
-      { header: 'cross-origin-embedder-policy', operation: 'remove' },
-      { header: 'cross-origin-resource-policy', operation: 'remove' },
-      {
-        "header": "Set-Cookie",
-        "operation": "append",
-        "value": "; SameSite=None; Secure"
-      }
-    ]
-  },
-  condition: {
-    resourceTypes: ['sub_frame', 'xmlhttprequest', 'script', 'stylesheet', 'image', 'font']
+/**
+ * The rules for one previewing tab. The frame rules cannot tell the preview frame from the host page's other frames (DNR has no frame
+ * condition), so they cover every sub_frame in the tab while the preview is open. Subresource rewriting is what the previewed page's
+ * own requests need; it excludes requests the host page itself starts, and is left out entirely when the host has no domain to exclude.
+ */
+function rulesForTab(tabId, host) {
+  const rules = [
+    { action: { type: 'modifyHeaders', responseHeaders: FRAME_RESPONSE_HEADERS }, condition: { resourceTypes: ['sub_frame'], tabIds: [tabId] } },
+    { action: { type: 'modifyHeaders', requestHeaders: FRAME_REQUEST_HEADERS }, condition: { resourceTypes: ['sub_frame'], tabIds: [tabId] } }
+  ];
+  if (host) {
+    rules.push({
+      action: { type: 'modifyHeaders', responseHeaders: FRAME_RESPONSE_HEADERS },
+      condition: { resourceTypes: SUBRESOURCE_TYPES, tabIds: [tabId], excludedInitiatorDomains: [host] }
+    });
   }
-};
+  return rules;
+}
 
-// Rule to modify request headers (spoof fetch metadata so sites don't detect framing)
-const requestHeaderRule = {
-  id: RULE_ID_REQUEST,
-  priority: 1,
-  action: {
-    type: 'modifyHeaders',
-    requestHeaders: [
-      { header: 'sec-fetch-dest', operation: 'set', value: 'document' },
-      { header: 'sec-fetch-mode', operation: 'set', value: 'navigate' },
-      { header: 'sec-fetch-site', operation: 'set', value: 'none' }
-    ]
-  },
-  condition: {
-    resourceTypes: ['sub_frame']
-  }
-};
-
-// --- Helper Functions to Manage the DNR Rule ---
+function buildRules() {
+  const rules = [...previewingTabs].flatMap(([tabId, host]) => rulesForTab(tabId, host));
+  return rules.map((rule, i) => ({ id: i + 1, priority: 1, ...rule }));
+}
 
 let ruleUpdateQueue = Promise.resolve();
 
-function serializedRuleUpdate(fn) {
-  ruleUpdateQueue = ruleUpdateQueue.then(fn).catch(() => {});
+// Rule updates are asynchronous; chaining them keeps a slow update from landing after a newer one.
+function syncRules() {
+  ruleUpdateQueue = ruleUpdateQueue.then(async () => {
+    const addRules = buildRules();
+    const removeRuleIds = [...new Set([...installedRuleIds, ...LEGACY_RULE_IDS])];
+    const change = addRules.length ? { removeRuleIds, addRules } : { removeRuleIds };
+    await chrome.declarativeNetRequest.updateSessionRules(change);
+    installedRuleIds = addRules.map((r) => r.id);
+    log(`[BACKGROUND] Header rules now cover tabs: ${[...previewingTabs.keys()].join(', ') || 'none'}`);
+  }).catch((error) => log(`[BACKGROUND] Rule update failed: ${error}`, LOGGING.ERROR));
 }
 
-/**
- * Enables the header modification rules scoped to currently previewing tabs.
- * Rebuilds rules with the current set of tab IDs to ensure only preview tabs
- * have their security headers stripped.
- */
-function enableRule() {
-  serializedRuleUpdate(async () => {
-    const tabIds = [...previewingTabIds];
-    if (tabIds.length === 0) return;
-
-    const scopedResponseRule = {
-      ...responseHeaderRule,
-      condition: { ...responseHeaderRule.condition, tabIds }
-    };
-    const scopedRequestRule = {
-      ...requestHeaderRule,
-      condition: { ...requestHeaderRule.condition, tabIds }
-    };
-
-    await chrome.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [RULE_ID, RULE_ID_REQUEST],
-      addRules: [scopedResponseRule, scopedRequestRule]
-    });
-    log('[BACKGROUND] Header modification rules ENABLED for tabs: ' + tabIds.join(', '));
-  });
+function persistPreviewingTabs() {
+  chrome.storage.session.set({ previewingTabs: [...previewingTabs] });
 }
 
-
-/**
- * Disables the header modification rules. This function is idempotent.
- */
-function disableRule() {
-  serializedRuleUpdate(async () => {
-    await chrome.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [RULE_ID, RULE_ID_REQUEST]
-    });
-    log('[BACKGROUND] Header modification rules DISABLED.');
-  });
+function startPreview(tabId, hostUrl) {
+  previewingTabs.set(tabId, hostnameOf(hostUrl));
+  persistPreviewingTabs();
+  syncRules();
 }
 
+function stopPreview(tabId) {
+  if (!previewingTabs.delete(tabId)) return;
+  persistPreviewingTabs();
+  syncRules();
+}
 
-// --- Event Listeners ---
+// Messages the background only forwards to the tab's top frame (between the preview iframe and the page hosting it).
+const RELAYED = new Set([message.iFrameHasFocus, message.focusPreview, message.updatePreviewUrl, message.closePreviewFromIframe]);
 
-// On installation, clear any existing session rules.
-chrome.runtime.onInstalled.addListener(() => {
-  disableRule();
+function relayToTab(tabId, request) {
+  const relayed = { action: request.action };
+  if (request.url) relayed.url = request.url;
+  chrome.tabs.sendMessage(tabId, relayed);
+}
+
+// Warms a connection to a hovered link. Private and non-http(s) targets are skipped.
+function preconnect(url) {
+  try {
+    const target = new URL(url);
+    const isAllowedScheme = target.protocol === 'https:' || target.protocol === 'http:';
+    const isPrivate = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|0\.0\.0\.0$|localhost$|\[::1\]$)/.test(target.hostname);
+    if (isAllowedScheme && !isPrivate) fetch(url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
+  } catch {
+    // Invalid URL; nothing to warm.
+  }
+}
+
+chrome.storage.session.get('previewingTabs', (result) => {
+  if (!Array.isArray(result?.previewingTabs)) return;
+  for (const [tabId, host] of result.previewingTabs) previewingTabs.set(tabId, host);
+  if (previewingTabs.size > 0) syncRules();
 });
 
-// Listens for messages from content scripts.
+chrome.runtime.onInstalled.addListener(() => {
+  previewingTabs.clear();
+  persistPreviewingTabs();
+  syncRules();
+});
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (!sender.tab) return;
   const tabId = sender.tab.id;
-  switch (request.action) {
-    case message.prepareToPreview:
-      log(`[BACKGROUND] Activating preview for tab: ${tabId}`);
-      previewingTabIds.add(tabId);
-      persistPreviewingTabIds();
-      // Enable the rule immediately since this tab is now actively previewing.
-      enableRule();
-      sendResponse({ ready: true });
-      break;
-    case message.clearPreview:
-      if (previewingTabIds.has(tabId)) {
-        log(`[BACKGROUND] Deactivating preview for tab: ${tabId}`);
-        previewingTabIds.delete(tabId);
-        persistPreviewingTabIds();
-        if (previewingTabIds.size === 0) {
-          disableRule();
-        } else {
-          enableRule();
-        }
-      }
-      break;
-    case message.preconnect:
-      // Preconnect to warm up the connection.
-      try {
-        const preconnectUrl = new URL(request.url);
-        const isAllowedScheme = preconnectUrl.protocol === 'https:' || preconnectUrl.protocol === 'http:';
-        const hostname = preconnectUrl.hostname;
-        const isPrivate = /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|0\.0\.0\.0$|localhost$|\[::1\]$)/.test(hostname);
-        if (isAllowedScheme && !isPrivate) {
-          fetch(request.url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
-        }
-      } catch (e) {
-        // Invalid URL; skip preconnect.
-      }
-      break;
-    case message.iFrameHasFocus:
-      chrome.tabs.sendMessage(sender.tab.id, { action: message.iFrameHasFocus });
-      break;
-    case message.focusPreview:
-      chrome.tabs.sendMessage(sender.tab.id, { action: message.focusPreview });
-      break;
-    case message.updatePreviewUrl:
-      chrome.tabs.sendMessage(sender.tab.id, { action: message.updatePreviewUrl, url: request.url });
-      break;
-    case message.closePreviewFromIframe:
-      chrome.tabs.sendMessage(sender.tab.id, { action: message.closePreviewFromIframe });
-      break;
+  if (request.action === message.prepareToPreview) {
+    startPreview(tabId, sender.url || sender.tab.url);
+    sendResponse({ ready: true });
+    return;
   }
+  if (request.action === message.clearPreview) {
+    stopPreview(tabId);
+    return;
+  }
+  if (request.action === message.preconnect) {
+    preconnect(request.url);
+    return;
+  }
+  if (RELAYED.has(request.action)) relayToTab(tabId, request);
 });
 
-// Clean up when a tab navigates away (same-tab navigation).
+// A preview never survives its tab navigating or closing.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.url && previewingTabIds.has(tabId)) {
-    previewingTabIds.delete(tabId);
-    persistPreviewingTabIds();
-    log(`[BACKGROUND] Tab ${tabId} navigated away, removing from preview set.`);
-    if (previewingTabIds.size === 0) {
-      disableRule();
-    } else {
-      enableRule();
-    }
-  }
+  if (changeInfo.url) stopPreview(tabId);
 });
-
-// Clean up when a tab is closed.
-chrome.tabs.onRemoved.addListener((tabId) => {
-  if (previewingTabIds.has(tabId)) {
-    previewingTabIds.delete(tabId);
-    persistPreviewingTabIds();
-    log(`[BACKGROUND] Preview tab ${tabId} closed, removed from set.`);
-    if (previewingTabIds.size === 0) {
-      disableRule();
-    } else {
-      enableRule();
-    }
-  }
-});
+chrome.tabs.onRemoved.addListener((tabId) => stopPreview(tabId));

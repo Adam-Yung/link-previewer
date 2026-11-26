@@ -1,5 +1,6 @@
 // background.js for Firefox (Manifest V2)
 
+// Tabs with an open preview, mapped to the hostname of the page hosting it.
 const previewingTabs = new Map();
 
 function requestHeadersListener(details) {
@@ -42,42 +43,50 @@ function requestHeadersListener(details) {
 }
 
 
-// --- Listener to modify response headers ---
-function responseHeadersListener(details) {
-  const isPreviewFrame = details.type === 'sub_frame' && previewingTabs.has(details.tabId);
-  const isPreconnectRequest = details.type === 'xhr' || details.type === 'xmlhttprequest';
+const STRIPPED_RESPONSE_HEADERS = new Set([
+  'content-security-policy', 'x-frame-options', 'x-content-type-options', 'cross-origin-embedder-policy',
+  'cross-origin-opener-policy', 'cross-origin-resource-policy', 'referrer-policy'
+]);
 
-  if (isPreviewFrame || isPreconnectRequest) {
-    // Filter out the headers we want to remove or modify.
-    const newHeaders = details.responseHeaders.filter(header => {
-      const headerName = header.name.toLowerCase();
-      return !(
-        headerName === 'content-security-policy' || // Remove the original CSP
-        headerName === 'x-frame-options' ||
-        headerName === 'x-content-type-options' ||
-        headerName === 'cross-origin-embedder-policy' ||
-        headerName === 'cross-origin-opener-policy' ||
-        headerName === 'cross-origin-resource-policy' ||
-        headerName === 'referrer-policy'
-      );
-    });
-
-    // Modify Set-Cookie headers to allow cross-site usage
-    newHeaders.forEach(header => {
-      if (header.name.toLowerCase() === 'set-cookie') {
-        header.value += '; SameSite=None; Secure';
-      }
-    });
-
-    newHeaders.push({
-      name: 'Content-Security-Policy',
-      value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation allow-popups;"
-    });
-
-    log(`[BACKGROUND] Modified response headers for iframe display`);
-    return { responseHeaders: newHeaders };
+function hostnameOf(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
   }
-  return { responseHeaders: details.responseHeaders };
+}
+
+// Same meaning as Chrome's excludedInitiatorDomains: the domain itself and its subdomains.
+function isWithinDomain(hostname, domain) {
+  return hostname === domain || hostname.endsWith(`.${domain}`);
+}
+
+/**
+ * Only requests of a previewing tab are rewritten: its frames (webRequest cannot tell the preview frame from the host page's other
+ * frames) and XHRs the previewed page starts. XHRs the host page starts are left alone, and so is everything when the host has no
+ * domain to tell them apart.
+ */
+function shouldRewrite(details) {
+  if (!previewingTabs.has(details.tabId)) return false;
+  if (details.type === 'sub_frame') return true;
+  const host = previewingTabs.get(details.tabId);
+  return Boolean(host) && !isWithinDomain(hostnameOf(details.originUrl), host);
+}
+
+function responseHeadersListener(details) {
+  if (!shouldRewrite(details)) return { responseHeaders: details.responseHeaders };
+
+  const newHeaders = details.responseHeaders.filter(header => !STRIPPED_RESPONSE_HEADERS.has(header.name.toLowerCase()));
+  // Cookies set inside a cross-site frame are rejected unless SameSite=None, which breaks consent and login flows in the preview.
+  for (const header of newHeaders) {
+    if (header.name.toLowerCase() === 'set-cookie') header.value += '; SameSite=None; Secure';
+  }
+  newHeaders.push({
+    name: 'Content-Security-Policy',
+    value: "sandbox allow-scripts allow-same-origin allow-forms allow-modals allow-presentation allow-popups;"
+  });
+  log(`[BACKGROUND] Modified response headers for iframe display`);
+  return { responseHeaders: newHeaders };
 }
 
 // --- Dynamic listener registration ---
@@ -114,7 +123,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case message.prepareToPreview:
       log(`[BACKGROUND] Preparing for preview: ${request.url}`);
-      previewingTabs.set(tabId, request.url);
+      previewingTabs.set(tabId, hostnameOf(sender.url || sender.tab.url));
       registerListeners();
       sendResponse({ ready: true });
       return true;
@@ -164,4 +173,9 @@ browser.tabs.onRemoved.addListener((tabId) => {
       unregisterListeners();
     }
   }
+});
+
+// A preview never survives its tab navigating away (parity with Chrome).
+browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.url && previewingTabs.delete(tabId) && previewingTabs.size === 0) unregisterListeners();
 });

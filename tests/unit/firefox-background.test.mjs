@@ -27,7 +27,7 @@ test('the preview frame of a previewing tab can be framed', () => {
   assert.ok(!names(responseHeaders).includes('x-frame-options'));
 });
 
-test('requests from tabs that are not previewing are untouched', { todo: 'bug: header leak, fixed in a later commit' }, () => {
+test('requests from tabs that are not previewing are untouched', () => {
   const env = load();
   env.send(env.message.prepareToPreview, 7);
   for (const type of ['xmlhttprequest', 'sub_frame']) {
@@ -39,7 +39,7 @@ test('requests from tabs that are not previewing are untouched', { todo: 'bug: h
   }
 });
 
-test("the host page's own XHRs are untouched while it previews", { todo: 'bug: header leak, fixed in a later commit' }, () => {
+test("the host page's own XHRs are untouched while it previews", () => {
   const env = load();
   env.send(env.message.prepareToPreview, 7);
   const original = frameHeaders();
@@ -62,5 +62,12 @@ test('after the preview closes nothing is rewritten', () => {
   const env = load();
   env.send(env.message.prepareToPreview, 7);
   env.send(env.message.clearPreview, 7);
+  assert.equal(env.api.webRequest.onHeadersReceived.listeners.length, 0);
+});
+
+test('navigating the previewing tab away ends its rewriting', () => {
+  const env = load();
+  env.send(env.message.prepareToPreview, 7);
+  env.api.tabs.onUpdated.fire(7, { url: 'https://elsewhere.test/' });
   assert.equal(env.api.webRequest.onHeadersReceived.listeners.length, 0);
 });

@@ -42,3 +42,13 @@ reworked tonight, so a mirror is written once, for the code as it ends up.
 ## 2026-11-26 · README skipped by the link check
 The doc gate reads `docs/...` inside the Chrome Web Store badge URL as a repo path. README.md is skipped by the link check
 (`.framework.json`); it links to no repo docs today. Reverse: remove it from `links.skip` if README starts linking docs.
+
+## 2026-11-26 · Header rewriting excludes the host page's own requests
+Measured before the fix: with a preview open, the host page's own same-origin `fetch` lost `Cross-Origin-Resource-Policy` and
+`X-Content-Type-Options`, and its cookies were rewritten to `SameSite=None` (Chrome); on Firefox every XHR in every tab was rewritten
+while any preview was open. That breaks brief priority 1.
+Weighed: (a) drop subresource rewriting entirely (simplest; may break logins and consent cookies inside the preview, priority 2);
+(b) per-URL rules for the previewed page (breaks on redirects, which are common on search results); **(c) per-tab rules whose
+subresource part excludes the host page's domain as initiator**. (c) keeps what the previewed page needs and stops the leak.
+Kept as the owner built it: `sub_frame` rewriting for the whole previewing tab, and `SameSite=None` on cookies set inside the preview
+(owner design; listed as a question in the handoff). Reverse: `git revert` the commit.

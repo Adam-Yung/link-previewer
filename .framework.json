@@ -5,7 +5,9 @@
       "scripts/*.sh",
       "tests/helpers/*.mjs",
       "tests/e2e/lib/*.mjs",
-      "tests/e2e/measure.mjs"
+      "tests/e2e/measure.mjs",
+      "Chrome/*.js",
+      "Firefox/*.js"
     ],
     "exclude": [
       "scripts/owner/*"

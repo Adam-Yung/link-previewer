@@ -36,7 +36,7 @@ test('a short click does not open a preview', async () => {
   assert.match(await page.eval('location.href'), /host\.test.*other\.html/);
 });
 
-test('host page headers untouched while a preview is open', { todo: 'bug, fixed in a later commit' }, async () => {
+test('host page headers untouched while a preview is open', async () => {
   const page = await openHost();
   const before = await page.eval('window.headerProbe()');
   assert.deepEqual(before, { corp: 'same-origin', xcto: 'nosniff' });
