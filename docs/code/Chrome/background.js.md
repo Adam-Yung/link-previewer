@@ -27,7 +27,8 @@ preview iframe and the page hosting it. `components/shared.js` (message names, `
 ## Lifecycle
 - `previewingTabs` is mirrored to `chrome.storage.session` because the worker can stop while a preview is open. The restore is
   asynchronous and the worker may have been woken by the very event that ends the preview, so every handler waits for `restored`
-  first; `prepareToPreview` is therefore answered asynchronously.
+  first; `prepareToPreview` is therefore answered asynchronously. The restore also rebuilds the rules once, so rules left by a
+  crash or an older format are removed at start.
 - Rule updates are chained on one promise so a slow update can never land after a newer one.
 - A tab that closes loses its preview and its rules. A URL change (`tabs.onUpdated` with a `url`) is either a real navigation or the
   page rewriting its own URL (`pushState`, hash), reported identically (status `loading` in both). The background asks the document

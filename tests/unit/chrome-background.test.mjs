@@ -164,3 +164,11 @@ test('the host page rewriting its URL (pushState) keeps the preview; a real navi
   await flush();
   assert.deepEqual(await env.liveRules(), []);
 });
+
+test('a worker that starts with rules nothing accounts for removes them', async () => {
+  const stray = { id: 4, priority: 1, action: { type: 'modifyHeaders', responseHeaders: [] }, condition: { tabIds: [3], resourceTypes: ['sub_frame'] } };
+  const persisted = { session: { previewingTabs: [[3, 'host.test']] }, rules: new Map([[4, stray]]) };
+  const env = load(persisted);
+  await flush();
+  assert.deepEqual(await env.liveRules(), []);
+});

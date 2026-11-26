@@ -115,6 +115,8 @@ const restored = new Promise((resolve) => {
     for (const [tabId, preview] of result?.previewingTabs || []) {
       if (preview && typeof preview === 'object') previewingTabs.set(tabId, preview);
     }
+    // Self-healing start: installed rules are rebuilt from what was restored, so rules nothing accounts for go at once.
+    syncRules();
     resolve();
   });
 });

@@ -75,20 +75,26 @@ test('a press released late on an in-app link (no navigation) leaves no preview 
   assert.ok(await waitUntil(async () => (await liveRules()).length === 0), 'header rules removed');
 });
 
-test('a hidden preview closed from inside before the hold ends is not revealed later', async () => {
+test('a hidden preview closed from inside just before the hold ends is not revealed later', async () => {
   const page = await openHost();
   await env.worker.eval(`chrome.storage.local.set({ isExpanded: true, duration: 2500 })`);
   const { x, y } = await page.center('#target');
   await page.mouse('mouseMoved', x, y, { button: 'none' });
+  const pressedAt = Date.now();
   await page.mouse('mousePressed', x, y, { buttons: 1 });
-  // Loading starts at 2250 ms; close it from inside the frame before the hold ends at 2500 ms.
+  // Loading starts at 2250 ms. Close from inside at about 2400 ms, so the hold's end (2500 ms) falls inside the 200 ms close
+  // animation, while the closed preview's elements still exist: the moment a stale reveal would lock the host page.
   const frame = await page.frameSession(env.fixtures.url('target.test', '/page.html'), 2400);
   assert.ok(frame, 'hidden preview loading');
   await frame.extensionWorld();
+  await sleep(Math.max(0, 2400 - (Date.now() - pressedAt)));
   await frame.eval(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`);
-  await sleep(600);
+  await sleep(150);
+  const bodyDuringClose = await page.eval('getComputedStyle(document.body).pointerEvents');
+  await sleep(450);
   await page.mouse('mouseReleased', x, y);
   assert.equal((await previewState(page)).open, false);
+  assert.equal(bodyDuringClose, 'auto', 'host page never locked');
   assert.equal(await page.eval('getComputedStyle(document.body).pointerEvents'), 'auto', 'host page left usable');
 });
 
