@@ -87,7 +87,7 @@ Firefox's **Enhanced Tracking Protection** is cool, but it might break Link Prev
 ### Prerequisites
 
 * POSIX-compliant system
-  * The [build script](build/build.sh) is written in BASH, though it is not hard to adapt the script for Windows
+  * The [build script](tools/build.sh) is written in BASH, though it is not hard to adapt the script for Windows
 * [Git LFS](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)
   * Git LFS is used to store the large .gif files more efficiently
 * [Node.js](https://nodejs.org/) (which includes npm)
@@ -108,13 +108,13 @@ Firefox's **Enhanced Tracking Protection** is cool, but it might break Link Prev
     * **For Google Chrome:**
 
         ```bash
-        npm run build chrome # Or equivalently ./build/build.sh chrome
+        npm run build chrome # Or equivalently ./tools/build.sh chrome
         ```
 
     * **For Mozilla Firefox:**
 
         ```bash
-        npm run build firefox # Or equivalently ./build/build.sh firefox
+        npm run build firefox # Or equivalently ./tools/build.sh firefox
         ```
 
     After running a build command, the complete, unpacked extension will be available in the `out/` directory.
