@@ -1,0 +1,27 @@
+tests/e2e/lib/browser.mjs
+  s_60aa61f858ab93::t_e9288bcffc3edd 1-3,6,26,31-32,41-43
+docs/code/tests/e2e/lib/cdp.mjs.md
+  s_60aa61f858ab93::t_ca729d1938bd06 3-6,9
+docs/guides/testing.md
+  s_60aa61f858ab93::t_ca729d1938bd06 3,9-11
+docs/code/tests/e2e/lib/browser.mjs.md
+  s_60aa61f858ab93::t_ca729d1938bd06 3-8
+tests/e2e/lib/cdp.mjs
+  s_60aa61f858ab93::t_e9288bcffc3edd 1-2,5-6,11-22,44,70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "dd0c5849ada0a974d7f146e3f1d4be3d8626d8f0",
+  "prompts": {},
+  "sessions": {
+    "s_60aa61f858ab93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e0c0ee27-70b6-49ba-bfa6-ce15aa5f6280",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Yung <adyung@paloaltonetworks.com>"
+    }
+  }
+}
