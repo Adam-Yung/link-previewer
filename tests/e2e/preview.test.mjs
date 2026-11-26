@@ -82,6 +82,26 @@ async function pressInFrame(frame, selector, init) {
   })()`);
 }
 
+test('with default settings the preview follows a dark system appearance', async () => {
+  const page = await openHost();
+  await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] });
+  await openPreview(page);
+  const classes = await page.eval(`document.getElementById('link-preview-host').shadowRoot.getElementById('link-preview-container').className`);
+  assert.match(classes, /\bdark\b/);
+});
+
+test('the settings page shows the system theme by default and saves auto unless the switch is flipped', async () => {
+  await clearStorage(env.worker);
+  const id = await env.worker.eval('chrome.runtime.id');
+  const page = await env.browser.newPage();
+  await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] });
+  await page.goto(`chrome-extension://${id}/options/options.html`);
+  assert.equal(await page.eval(`document.getElementById('theme-toggle').checked`), true);
+  await page.eval(`document.getElementById('save-button').click()`);
+  const theme = await waitUntil(async () => (await env.worker.eval(`chrome.storage.local.get('theme')`)).theme);
+  assert.equal(theme, 'auto');
+});
+
 test('a close key set to Space closes the preview', async () => {
   const page = await openHost();
   await env.worker.eval(`chrome.storage.local.set({ closeKey: 'Space' })`);

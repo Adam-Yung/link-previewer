@@ -6,3 +6,4 @@
   `docs/code/Chrome/background.js.md`.
 - A long press loads the preview during the hold and shows it already loaded; hovering links sends no requests
   (`docs/features/performance.md`).
+- The preview and settings follow the system's light or dark appearance unless the user picks one.

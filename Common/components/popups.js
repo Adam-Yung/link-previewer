@@ -21,7 +21,7 @@ function createWarningPopup({ id, icon, title, message, buttons, fromIframe }) {
   const popup = document.createElement('div');
   popup.id = id;
   popup.className = 'link-preview-warning-popup';
-  popup.classList.add(settings.theme); // Add theme class for styling
+  popup.classList.add(resolveTheme(settings.theme));
 
   // Generate button HTML
   const buttonsHTML = buttons.map(btn => `<button id="${btn.id}">${btn.text}</button>`).join('');

@@ -70,3 +70,9 @@ history (`acb1fb3`).
 With the background no longer fetching, this listener may be dead code, or it may be what spoofs the preview iframe's request headers
 on Firefox (if Firefox attributes the content script's iframe load to the extension). Cannot check tonight (no Firefox run allowed), so
 it stays. Question for the owner in the handoff.
+
+## 2026-11-26 · Theme defaults to the system appearance
+The README promises a theme that "adapts to your system's theme", but the only values were `light` (default) and `dark`. Added `auto`
+as the default; anyone who saved settings keeps their stored `light` or `dark`. Weighed a three-way control in the settings popup
+(more UI for a rare need) against keeping `auto` implicit until the switch is flipped; chose the latter. Reverse: default back to
+`light` in `global.js` and `options.js`.

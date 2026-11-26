@@ -18,7 +18,7 @@ let currentHostname = '';
 const defaults = {
     duration: 500,
     modifier: 'shiftKey',
-    theme: 'light',
+    theme: 'auto',
     closeKey: 'Escape',
     userWidth: '40%',
     userHeight: '80%',
@@ -29,12 +29,15 @@ const defaults = {
     loadingAnimation: 'blue' // Default loading animation
 };
 
+// The stored choice: 'auto' until the user flips the theme switch.
+let themeChoice = defaults.theme;
+
 /**
- * Applies the selected theme (light/dark) to the options page.
- * @param {string} theme - The theme to apply ('light' or 'dark').
+ * Applies a theme choice ('auto', 'light' or 'dark') to the options page.
  */
 function applyTheme(theme) {
-    const isDark = theme === 'dark';
+    themeChoice = theme;
+    const isDark = resolveTheme(theme) === 'dark';
     document.body.className = isDark ? 'dark-theme' : 'light-theme';
     document.documentElement.className = isDark ? 'dark-theme' : '';
     themeToggle.checked = isDark;
@@ -78,7 +81,7 @@ function saveOptions(e) {
   const generalSettings = {
     duration: durationValue,
     modifier: document.getElementById('modifier').value,
-    theme: themeToggle.checked ? 'dark' : 'light',
+    theme: themeChoice,
     closeKey: keyToSave,
     userWidth: document.getElementById('width').value,
     userHeight: document.getElementById('height').value,
@@ -122,8 +125,7 @@ function resetSettings(e) {
     document.getElementById('userLeft').value = defaults.userLeft;
     document.getElementById('loadingAnimation').value = defaults.loadingAnimation;
 
-    // Set theme to light
-    applyTheme('light');
+    applyTheme(defaults.theme);
 
     // Re-enable site as default
     siteEnableToggle.checked = true;

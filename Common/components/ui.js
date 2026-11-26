@@ -39,7 +39,7 @@ function createPreview(url, { hidden = false } = {}) {
 
   const container = document.createElement('div');
   container.id = 'link-preview-container';
-  container.classList.add(settings.theme);
+  container.classList.add(resolveTheme(settings.theme));
   container.style.pointerEvents = 'none';
   state.container = container;
   applyInitialGeometry(container);

@@ -18,6 +18,14 @@ function isCloseKey(event, closeKey) {
   return event.key === closeKey || (closeKey === 'Space' && event.key === ' ');
 }
 
+/**
+ * 'auto' (the default) follows the system's light or dark appearance; 'light' and 'dark' are the user's explicit choice.
+ */
+function resolveTheme(theme) {
+  if (theme !== 'auto') return theme;
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 const ALLOW_DEBUGGING = false;
 const LOGGING = {
   INFO: 'info',

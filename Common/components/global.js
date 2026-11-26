@@ -17,7 +17,7 @@ const state = {
 const settings = {
   duration: 500,       // Milliseconds for a long press to trigger the preview.
   modifier: 'shiftKey',// Modifier key (e.g., 'shiftKey', 'ctrlKey', 'altKey') to trigger preview on click.
-  theme: 'light',      // The color theme for the preview window ('light' or 'dark').
+  theme: 'auto',       // 'auto' follows the system; 'light' or 'dark' when the user picks one.
   closeKey: 'Escape',  // Key to close the preview window.
   width: '90vw',       // Default width of the preview window.
   height: '90vh',      // Default height of the preview window.
