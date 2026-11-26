@@ -1,0 +1,42 @@
+tests/unit/theme.test.mjs
+  s_60aa61f858ab93::t_d95fad873e1465 1-23
+Common/options/options.html
+  s_60aa61f858ab93::t_45dd8030dac171 106
+Common/components/global.js
+  s_60aa61f858ab93::t_45dd8030dac171 20
+Common/components/ui.js
+  s_60aa61f858ab93::t_45dd8030dac171 42
+Common/options/options.js
+  s_60aa61f858ab93::t_45dd8030dac171 21,32-34,36,39-40,84,128
+Common/components/popups.js
+  s_60aa61f858ab93::t_45dd8030dac171 24
+Common/components/shared.js
+  s_60aa61f858ab93::t_45dd8030dac171 21-28
+tests/e2e/preview.test.mjs
+  s_60aa61f858ab93::t_d95fad873e1465 85-92,97,103
+  s_60aa61f858ab93::t_241cdffa3b8f69 93-96,98-102,104
+docs/code/Common/components/shared.js.md
+  s_60aa61f858ab93::t_5b554a7609efd2 3-5,9-10
+docs/code/Common/options/options.js.md
+  s_60aa61f858ab93::t_a361d8edf67333 8-9
+docs/decisions/overnight-2026-11-26.md
+  s_60aa61f858ab93::t_70a7ed1a3336b5 73-78
+docs/status.md
+  s_60aa61f858ab93::t_85fc5429e3517d 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "aab632cd410bcdc0796a97eec3c0d7d73016f972",
+  "prompts": {},
+  "sessions": {
+    "s_60aa61f858ab93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e0c0ee27-70b6-49ba-bfa6-ce15aa5f6280",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Yung <adyung@paloaltonetworks.com>"
+    }
+  }
+}
