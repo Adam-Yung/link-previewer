@@ -15,8 +15,8 @@ chrome.storage.local.get(settings).then(loadedSettings => {
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local') {
     let settingsChanged = false;
-    for (let key in changes) {
-      if (settings.hasOwnProperty(key)) {
+    for (const key in changes) {
+      if (Object.hasOwn(settings, key)) {
         settings[key] = changes[key].newValue;
         settingsChanged = true;
       }

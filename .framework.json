@@ -1,0 +1,29 @@
+{
+  "mirrors": {
+    "sources": [
+      "tools/*.sh",
+      "scripts/*.sh",
+      "tests/helpers/*.mjs",
+      "tests/e2e/lib/*.mjs",
+      "tests/e2e/measure.mjs"
+    ],
+    "exclude": [
+      "scripts/owner/*"
+    ]
+  },
+  "freshness": {
+    "folders": [
+      "docs/guides",
+      "docs/features"
+    ],
+    "exempt": []
+  },
+  "links": {
+    "skip": [
+      "docs/decisions/",
+      "docs/history/",
+      "docs/plans/",
+      "README.md"
+    ]
+  }
+}

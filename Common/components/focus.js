@@ -11,7 +11,7 @@ function previewTakeFocus(isTrue) {
 
 
 function attachContainerFocus(container) {
-  let previewTakeFocusTO = timeoutWrapper(previewTakeFocus);
+  const previewTakeFocusTO = timeoutWrapper(previewTakeFocus);
   if (container) {
     container.addEventListener('mouseleave', () => {previewTakeFocusTO(false)});
     container.addEventListener('mouseenter', () => {previewTakeFocusTO(true)});

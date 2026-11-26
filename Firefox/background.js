@@ -6,7 +6,7 @@ function requestHeadersListener(details) {
   if (details.initiator === browser.runtime.id || details.originUrl?.startsWith(browser.runtime.getURL(""))) {
     const targetOrigin = new URL(details.url).origin;
 
-    let originHeader = details.requestHeaders.find(h => h.name.toLowerCase() === 'origin');
+    const originHeader = details.requestHeaders.find(h => h.name.toLowerCase() === 'origin');
     if (originHeader) {
       originHeader.value = targetOrigin;
     } else {
@@ -14,21 +14,21 @@ function requestHeadersListener(details) {
     }
 
     // Spoof Sec-Fetch-* headers so the server doesn't detect iframe embedding
-    let secFetchDest = details.requestHeaders.find(h => h.name.toLowerCase() === 'sec-fetch-dest');
+    const secFetchDest = details.requestHeaders.find(h => h.name.toLowerCase() === 'sec-fetch-dest');
     if (secFetchDest) {
       secFetchDest.value = 'document';
     }
-    let secFetchMode = details.requestHeaders.find(h => h.name.toLowerCase() === 'sec-fetch-mode');
+    const secFetchMode = details.requestHeaders.find(h => h.name.toLowerCase() === 'sec-fetch-mode');
     if (secFetchMode) {
       secFetchMode.value = 'navigate';
     }
-    let secFetchSite = details.requestHeaders.find(h => h.name.toLowerCase() === 'sec-fetch-site');
+    const secFetchSite = details.requestHeaders.find(h => h.name.toLowerCase() === 'sec-fetch-site');
     if (secFetchSite) {
       secFetchSite.value = 'none';
     }
 
     // Spoof the Referer to match the target
-    let refererHeader = details.requestHeaders.find(h => h.name.toLowerCase() === 'referer');
+    const refererHeader = details.requestHeaders.find(h => h.name.toLowerCase() === 'referer');
     if (refererHeader) {
       refererHeader.value = details.url;
     } else {
@@ -49,7 +49,7 @@ function responseHeadersListener(details) {
 
   if (isPreviewFrame || isPreconnectRequest) {
     // Filter out the headers we want to remove or modify.
-    let newHeaders = details.responseHeaders.filter(header => {
+    const newHeaders = details.responseHeaders.filter(header => {
       const headerName = header.name.toLowerCase();
       return !(
         headerName === 'content-security-policy' || // Remove the original CSP
@@ -126,7 +126,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
       break;
 
-    case message.preconnect:
+    case message.preconnect: {
       const controller = new AbortController();
       const signal = controller.signal;
       log(`[BACKGROUND] Preconnecting to: ${request.url}`);
@@ -139,6 +139,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // just the act of making the request is enough to warm up the connection.
       controller.abort();
       break;
+    }
     case message.iFrameHasFocus:
       browser.tabs.sendMessage(sender.tab.id, { action: message.iFrameHasFocus });
       break;

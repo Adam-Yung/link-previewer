@@ -13,7 +13,7 @@ if (window.self !== window.top && window.name === 'link-previewer-frame') {
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local') {
-      if (changes.hasOwnProperty("closeKey")) {
+      if (Object.hasOwn(changes, "closeKey")) {
         closeKey = changes["closeKey"].newValue;
       }
     }

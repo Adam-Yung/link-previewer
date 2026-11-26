@@ -64,7 +64,7 @@ class HistoryManager {
    */
   goBack() {
     if (this.#currentIndex > 0) {
-      let old_url = this.#history[this.#currentIndex];
+      const old_url = this.#history[this.#currentIndex];
       this.#currentIndex--;
       this.#onNavigate(this.#history[this.#currentIndex], old_url, false);
       this.#updateNavButtons();
@@ -76,7 +76,7 @@ class HistoryManager {
    */
   goForward() {
     if (this.#currentIndex < this.#history.length - 1) {
-      let old_url = this.#history[this.#currentIndex];
+      const old_url = this.#history[this.#currentIndex];
       this.#currentIndex++;
       this.#onNavigate(this.#history[this.#currentIndex], old_url, false);
       this.#updateNavButtons();

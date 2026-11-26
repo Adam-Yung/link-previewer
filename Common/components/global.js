@@ -12,7 +12,7 @@ const state = {
 };
 
 // Default settings for the preview window.
-let settings = {
+const settings = {
   duration: 500,       // Milliseconds for a long press to trigger the preview.
   modifier: 'shiftKey',// Modifier key (e.g., 'shiftKey', 'ctrlKey', 'altKey') to trigger preview on click.
   theme: 'light',      // The color theme for the preview window ('light' or 'dark').
@@ -34,7 +34,7 @@ function timeoutWrapper(func, ms = 100) {
   // Return a new function that will be used as the event handler
   return function(...args) {
     // 'func' is the key to ensure the same timer is cleared and reset
-    let timeoutID = state.timeoutIDs.get(func);
+    const timeoutID = state.timeoutIDs.get(func);
     if (timeoutID) {
       clearTimeout(timeoutID);
     }

@@ -4,7 +4,13 @@
   "description": "Preview links in a popup without leaving your current page",
   "private": true,
   "scripts": {
-    "build": "cd build && ./build.sh",
-    "clean": "cd build && ./build.sh clean"
+    "build": "./tools/build.sh",
+    "clean": "./tools/build.sh clean",
+    "test": "node --test 'tests/unit/*.test.mjs'",
+    "e2e": "node --test --test-concurrency=1 --test-timeout=60000 'tests/e2e/*.test.mjs'",
+    "verify": "./scripts/verify.sh"
+  },
+  "devDependencies": {
+    "eslint": "10.13.0"
   }
 }

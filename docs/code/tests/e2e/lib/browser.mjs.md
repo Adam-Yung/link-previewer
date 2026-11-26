@@ -1,0 +1,14 @@
+# tests/e2e/lib/browser.mjs
+
+Starts Chrome for Testing (the Playwright cache build, or `LP_CHROME`) headless with the unpacked extension in a fresh profile, deleted
+on close. Never the user's own Chrome.
+
+- `*.test` hosts resolve to 127.0.0.1 and certificate errors are ignored, so the local fixtures act like real HTTPS sites on different
+  sites (`host.test`, `target.test`). The extension refuses to preview plain HTTP, so HTTPS is required.
+- The extension's service worker is found by manifest name: Chrome for Testing runs built-in component extensions with service workers
+  of their own.
+- The preview iframe is cross-site, so it is an out-of-process frame with its own target; `frameSession()` finds it by URL. Tests close
+  their tabs (`closePages()`) so a lookup can never pick a frame left from an earlier test.
+- `extensionWorld()` waits until the extension's content scripts have an isolated world in a frame; before that, input to the frame is
+  not seen by the extension and a "nothing happened" assertion would pass for the wrong reason.
+- `eval()` has a timeout: evaluating in a frame that navigates away never answers.
