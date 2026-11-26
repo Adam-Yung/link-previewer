@@ -1,6 +1,6 @@
 # Status
 
-- Version 2.3.0 is on the Chrome Web Store and AMO. `master` carries the next release; see the Unreleased section of `CHANGELOG`.
+- Version 2.4.0 is tagged and built (`CHANGELOG`); store submission is pending. 2.3.0 is what the Chrome Web Store and AMO serve.
 - The framework is adopted: brief, gate (`scripts/verify.sh`: unit tests, e2e in Chrome for Testing, eslint, structure ratchet, doc
   gates), a code mirror for every source file.
 - Header rewriting is limited to the preview's own requests in the previewing tab, holds back cookie rewriting until a preview is

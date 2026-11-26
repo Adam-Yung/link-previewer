@@ -1,6 +1,6 @@
 # Testing
 
-> Verified: 2026-11-26 15:52 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `tests/e2e/firefox-smoke.mjs`, `package.json`
+> Verified: 2026-11-26 15:55 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `tests/e2e/firefox-smoke.mjs`, `package.json`
 
 Everything runs offline against local pages; nothing is downloaded at test time.
 

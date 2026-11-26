@@ -44,3 +44,10 @@ test('firefox build has no chrome.* API calls left', () => {
     assert.doesNotMatch(readFileSync(file, 'utf8'), /\bchrome\.(runtime|storage|tabs|declarativeNetRequest)\b/, file);
   }
 });
+
+// AMO refuses to sign versions that lack the data collection declaration; the extension sends nothing anywhere, so it declares none.
+test('firefox build declares that it collects no data', () => {
+  build('firefox');
+  const manifest = JSON.parse(readFileSync(join(work, 'out/dist/manifest.json'), 'utf8'));
+  assert.deepEqual(manifest.browser_specific_settings.gecko.data_collection_permissions, { required: ['none'] });
+});

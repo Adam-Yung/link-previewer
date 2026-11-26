@@ -1,4 +1,4 @@
-## [Unreleased]
+## [2.4.0] - 2026-11-26
 
 ### Security
 
@@ -22,6 +22,7 @@
 * Center stage pauses only the host page's running animations (less style work on large pages)
 * Theme follows the system appearance by default
 * `build/` renamed to `tools/`
+* Firefox manifest declares that the extension collects no data (`data_collection_permissions`), as AMO now asks of every version
 
 ---
 
