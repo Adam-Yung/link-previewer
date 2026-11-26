@@ -20,7 +20,7 @@ function jsFiles(dir) {
     e.isDirectory() ? jsFiles(join(dir, e.name)) : e.name.endsWith('.js') ? [join(dir, e.name)] : []);
 }
 
-test('clean removes only build output, never zips elsewhere in the tree', { todo: 'bug: clean deletes every zip, fixed in a later commit' }, () => {
+test('clean removes only build output, never zips elsewhere in the tree', () => {
   mkdirSync(join(work, 'keep'), { recursive: true });
   writeFileSync(join(work, 'keep/archive.zip'), 'not ours');
   build('chrome');

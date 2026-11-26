@@ -69,9 +69,9 @@ get_version() {
 clean() {
   log "${C_YELLOW}" "🧹" "Cleaning up previous build artifacts..."
   rm -rf "${PROJECT_ROOT}/${OUT_DIR}"
-  # Remove the files people coming from older versions might have
-  [ -d dist ] && rm -rf dist
-  find . -type f -name "*.zip" | xargs rm -f 
+  # Older versions built into dist/ and zipped into the project root; remove only those, never other zips in the tree.
+  rm -rf "${PROJECT_ROOT}/dist"
+  rm -f "${PROJECT_ROOT}"/link-previewer-*.zip
 }
 
 show_tree() {

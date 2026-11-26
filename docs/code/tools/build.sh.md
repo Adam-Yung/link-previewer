@@ -9,6 +9,7 @@ Assembles one browser's unpacked extension in `out/dist` and zips it to `out/lin
   can in MV3 (`service_worker` takes one file); it carries the message names and `log()`.
 - Firefox: every `chrome.` in shipped JS becomes `browser.` (sed). The Firefox background is already written against `browser.`; the
   rewrite is for `Common/`. Never put a literal `chrome.` in a string that must survive a Firefox build.
-- `clean` deletes the whole `out/` directory before each build, so a build never mixes files from the other browser. It also deletes
-  every `*.zip` anywhere under the repo, including other worktrees (known bug; the test in `tests/unit/build.test.mjs` is marked todo).
+- `clean` deletes the whole `out/` directory before each build, so a build never mixes files from the other browser. It also removes
+  what older versions left (`dist/`, `link-previewer-*.zip` in the root) and nothing else: an earlier version deleted every `*.zip` in
+  the tree, other worktrees included (test: `tests/unit/build.test.mjs`).
 - Needs `jq`, `zip` and `rsync`. `-m` makes a minimal build with only the 48px icon.
