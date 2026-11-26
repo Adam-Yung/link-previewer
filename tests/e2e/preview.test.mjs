@@ -85,14 +85,25 @@ for (const [name, init] of [['right-click', { button: 2 }], ['middle-click', { b
   });
 }
 
-test('moving the mouse while holding a link does not open a preview (drag or text selection)', { todo: 'bug, fixed in a later commit' }, async () => {
+test('moving the mouse while holding a link does not open a preview (drag or text selection)', async () => {
   const page = await openHost();
   await page.longPress('#target', HOLD_MS + 150, { moveBy: 40 });
   await sleep(100);
   assert.equal((await previewState(page)).open, false);
 });
 
-test('modifier click on a disabled site follows the link normally', { todo: 'bug, fixed in a later commit' }, async () => {
+test('holding the middle button on a link does not open a preview', async () => {
+  const page = await openHost();
+  await page.eval(`document.addEventListener('auxclick', (e) => e.preventDefault(), true)`);
+  const { x, y } = await page.center('#target');
+  await page.mouse('mouseMoved', x, y, { button: 'none' });
+  await page.mouse('mousePressed', x, y, { button: 'middle', buttons: 4 });
+  await sleep(HOLD_MS + 150);
+  await page.mouse('mouseReleased', x, y, { button: 'middle' });
+  assert.equal((await previewState(page)).open, false);
+});
+
+test('modifier click on a disabled site follows the link normally', async () => {
   const page = await openHost();
   await env.worker.eval(`chrome.storage.local.set({ disabledSites: ['host.test'] })`);
   await sleep(100);

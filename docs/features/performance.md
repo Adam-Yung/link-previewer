@@ -1,6 +1,6 @@
 # Performance
 
-> Verified: 2026-11-26 12:34 · Sources: `tests/e2e/measure.mjs`, `Common/content.js`, `Common/components/ui.js`, `Chrome/background.js`
+> Verified: 2026-11-26 12:39 · Sources: `tests/e2e/measure.mjs`, `Common/content.js`, `Common/components/ui.js`, `Chrome/background.js`
 
 Measured with `node tests/e2e/measure.mjs 8` on the real extension in Chrome for Testing (headless, Apple Silicon laptop), against the
 local fixture sites. Medians of 8 runs (5 for style cost). Local pages have no DNS or TLS cost, so connection set-up savings do not show

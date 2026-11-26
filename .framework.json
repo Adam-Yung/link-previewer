@@ -8,7 +8,8 @@
       "tests/e2e/measure.mjs",
       "Chrome/*.js",
       "Firefox/*.js",
-      "Common/content_iframe.js"
+      "Common/content_iframe.js",
+      "Common/content.js"
     ],
     "exclude": [
       "scripts/owner/*"

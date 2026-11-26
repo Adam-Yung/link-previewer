@@ -4,5 +4,3 @@
 - The working framework is adopted on branch `overnight/revamp`: brief, gate (`scripts/verify.sh`), unit and e2e suites.
 - Header rewriting is limited to the preview's own requests in the previewing tab (Chrome and Firefox); see
   `docs/code/Chrome/background.js.md`.
-- Known bugs, each with a test marked todo until fixed: a held-and-dragged link opens a preview; modifier-click is swallowed on
-  disabled sites.
