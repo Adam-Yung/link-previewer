@@ -1,0 +1,133 @@
+tests/e2e/lib/fixtures.mjs
+  s_60aa61f858ab93::t_e4f44c975fc2f5 94
+  s_60aa61f858ab93::t_11c166e1888389 1-93,95-96
+docs/code/tests/e2e/lib/fixtures.mjs.md
+  s_60aa61f858ab93::t_3409b8b80b9c89 1-11
+Common/components/focus.js
+  s_60aa61f858ab93::t_bd31e902db88df 14
+docs/features/performance.md
+  s_60aa61f858ab93::t_1f63f1ccbc9c24 1-18
+docs/code/tests/e2e/lib/harness.mjs.md
+  s_60aa61f858ab93::t_3409b8b80b9c89 1-7
+tests/e2e/lib/browser.mjs
+  s_60aa61f858ab93::t_0ef771fb2ac164 130-133
+  s_60aa61f858ab93::t_54933144a51dc8 95-102
+  s_60aa61f858ab93::t_32c533aa7766d6 75-76
+  s_60aa61f858ab93::t_96c3d61b55abf6 70-72,74,77
+  s_60aa61f858ab93::t_16a59c512ba925 1-69,73,78-94,103-129,134-175,185,197-198
+  s_60aa61f858ab93::t_2144582b1d4816 176-183
+  s_60aa61f858ab93::t_d702560faf5ce7 184,186-196
+CLAUDE.md
+  s_60aa61f858ab93::t_0ba8cad6a7e9e1 1
+tests/e2e/lib/cdp.mjs
+  s_60aa61f858ab93::t_425ec68cf74f7d 1-69
+docs/decisions/overnight-2026-11-26.md
+  s_60aa61f858ab93::t_0e4e7ee71c7bd4 1-23
+  s_60aa61f858ab93::t_0d752c0e5f6ae3 24-44
+tests/unit/chrome-background.test.mjs
+  s_60aa61f858ab93::t_18bb173475aee5 2-26,28-39,41-49,51-89
+  s_60aa61f858ab93::t_26c886def0d57c 1
+  s_60aa61f858ab93::t_37ba4141bce8fb 27,40,50
+tests/unit/firefox-background.test.mjs
+  s_60aa61f858ab93::t_37ba4141bce8fb 30,42
+  s_60aa61f858ab93::t_26c886def0d57c 1
+  s_60aa61f858ab93::t_18bb173475aee5 2-29,31-41,43-66
+tests/unit/build.test.mjs
+  s_60aa61f858ab93::t_4efaeef63a3f92 1-22,24-46
+  s_60aa61f858ab93::t_37ba4141bce8fb 23
+docs/code/tests/e2e/measure.mjs.md
+  s_60aa61f858ab93::t_3409b8b80b9c89 1-10
+scripts/verify.sh
+  s_60aa61f858ab93::t_57d75b7bded953 1-10,12-17,19-31
+  s_60aa61f858ab93::t_4efaeef63a3f92 11,18
+docs/plans/2026-11-26-baseline.json
+  s_60aa61f858ab93::t_3409b8b80b9c89 1-36
+docs/guides/build-release.md
+  s_60aa61f858ab93::t_2706fd8d440fe2 1-9
+docs/guides/testing.md
+  s_60aa61f858ab93::t_2706fd8d440fe2 1-27
+Common/content_iframe.js
+  s_60aa61f858ab93::t_bd31e902db88df 16
+Firefox/background.js
+  s_60aa61f858ab93::t_bd31e902db88df 9,17,21,25,31,52
+  s_60aa61f858ab93::t_95a065be8357f1 129,142
+.gitignore
+  s_60aa61f858ab93::t_6a1be71091c1cf 7-8
+tests/e2e/preview.test.mjs
+  s_60aa61f858ab93::t_37ba4141bce8fb 1-105
+eslint.config.mjs
+  s_60aa61f858ab93::t_a4cd0f65236b04 4-19
+  s_60aa61f858ab93::t_15192a6adafe0f 1-3,20-31
+tests/e2e/measure.mjs
+  s_60aa61f858ab93::t_b511ac3bb50be5 1-106
+docs/code/tests/helpers/sandbox.mjs.md
+  s_60aa61f858ab93::t_3409b8b80b9c89 1-11
+docs/code/tools/build.sh.md
+  s_60aa61f858ab93::t_2706fd8d440fe2 12-13
+  s_60aa61f858ab93::t_3409b8b80b9c89 1-11,14
+docs/decisions/README.md
+  s_60aa61f858ab93::t_0e4e7ee71c7bd4 1-4
+.framework.json
+  s_60aa61f858ab93::t_3409b8b80b9c89 2-24,27-28
+  s_60aa61f858ab93::t_0ba8cad6a7e9e1 1,29
+  s_60aa61f858ab93::t_1f63f1ccbc9c24 25-26
+tests/helpers/sandbox.mjs
+  s_60aa61f858ab93::t_573a829276acad 1-87
+tests/unit/history.test.mjs
+  s_60aa61f858ab93::t_18bb173475aee5 1-63
+docs/code/scripts/verify.sh.md
+  s_60aa61f858ab93::t_3409b8b80b9c89 1-8
+docs/code/tests/e2e/lib/cdp.mjs.md
+  s_60aa61f858ab93::t_3409b8b80b9c89 1-8
+docs/todo.md
+  s_60aa61f858ab93::t_2706fd8d440fe2 1-7
+Common/components/global.js
+  s_60aa61f858ab93::t_bd31e902db88df 15,37
+docs/plans/2026-11-26-revamp-PLAN.md
+  s_60aa61f858ab93::t_0e4e7ee71c7bd4 1-33
+docs/code/tests/e2e/lib/browser.mjs.md
+  s_60aa61f858ab93::t_3409b8b80b9c89 1-14
+docs/README.md
+  s_60aa61f858ab93::t_2706fd8d440fe2 1-13
+  s_60aa61f858ab93::t_1f63f1ccbc9c24 14
+Common/components/settings.js
+  s_60aa61f858ab93::t_bd31e902db88df 18-19
+docs/brief.md
+  s_60aa61f858ab93::t_0ba8cad6a7e9e1 1-29
+Common/components/history.js
+  s_60aa61f858ab93::t_bd31e902db88df 67,79
+docs/status.md
+  s_60aa61f858ab93::t_2706fd8d440fe2 1-7
+scripts/owner/install-deps.sh
+  s_60aa61f858ab93::t_35953fb270b1cb 1-17
+tests/e2e/lib/harness.mjs
+  s_60aa61f858ab93::t_90dd101c10b156 1-59
+package.json
+  s_60aa61f858ab93::t_4efaeef63a3f92 9-10
+  s_60aa61f858ab93::t_6a1be71091c1cf 7
+  s_60aa61f858ab93::t_35953fb270b1cb 12-14
+  s_60aa61f858ab93::t_57d75b7bded953 8,11
+tools/build.sh
+  s_60aa61f858ab93::t_c2302363e7df4e 1-241
+AGENTS.md
+  s_60aa61f858ab93::t_0ba8cad6a7e9e1 1-20,22-24
+  s_60aa61f858ab93::t_4efaeef63a3f92 21
+package-lock.json
+  s_60aa61f858ab93::t_d39a16a8c61737 1-995
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "8800439e1a8dc2ac3f4ca3ee146836fa3b170da3",
+  "prompts": {},
+  "sessions": {
+    "s_60aa61f858ab93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e0c0ee27-70b6-49ba-bfa6-ce15aa5f6280",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Yung <adyung@paloaltonetworks.com>"
+    }
+  }
+}
