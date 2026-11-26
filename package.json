@@ -8,6 +8,7 @@
     "clean": "./tools/build.sh clean",
     "test": "node --test 'tests/unit/*.test.mjs'",
     "e2e": "node --test --test-concurrency=1 --test-timeout=60000 'tests/e2e/*.test.mjs'",
+    "e2e:firefox": "node tests/e2e/firefox-smoke.mjs",
     "verify": "./scripts/verify.sh"
   },
   "devDependencies": {

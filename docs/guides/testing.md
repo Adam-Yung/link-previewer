@@ -1,19 +1,21 @@
 # Testing
 
-> Verified: 2026-11-26 13:06 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `package.json`
+> Verified: 2026-11-26 15:33 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `tests/e2e/firefox-smoke.mjs`, `package.json`
 
 Everything runs offline against local pages; nothing is downloaded at test time.
 
 ## One-time setup
 - `scripts/owner/install-deps.sh --run` installs the linter (dev only).
 - e2e needs Chrome for Testing. It is found in the Playwright cache (`~/Library/Caches/ms-playwright/chromium-*`), or set `LP_CHROME`
-  to the binary. It runs headless with a throwaway profile.
+  to the binary. It runs headless with a throwaway profile. Branded Google Chrome ignores `--load-extension`, so it cannot stand in.
+- The Firefox smoke test needs an installed Firefox (`/Applications/Firefox.app`, or `LP_FIREFOX`); headless, throwaway profile.
 
 ## Commands
 | Command | What it runs |
 |---------|--------------|
 | `npm test` | Unit tests (`tests/unit/`): the shipped scripts loaded into a sandbox with a fake extension API, plus the build script in a scratch copy |
 | `npm run e2e` | Builds the Chrome target, then drives the real extension over CDP against local HTTPS fixtures (`tests/e2e/`) |
+| `npm run e2e:firefox` | Builds the Firefox target into `out/dist` (replacing the Chrome one) and drives it in Firefox over WebDriver BiDi: open, load a frame-forbidding page, host headers intact, navigate inside, close, shift+click, short click, drag. Not in the gate |
 | `node tests/e2e/measure.mjs 8` | The performance measurement; prints JSON (see `docs/features/performance.md`) |
 | `~/.claude-personal/framework/bin/gate` | `scripts/verify.sh`: unit, e2e, lint, structure ratchet, doc gates |
 

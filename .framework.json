@@ -8,7 +8,8 @@
       "scripts/*.sh",
       "tests/helpers/*.mjs",
       "tests/e2e/lib/*.mjs",
-      "tests/e2e/measure.mjs"
+      "tests/e2e/measure.mjs",
+      "tests/e2e/firefox-smoke.mjs"
     ],
     "exclude": [
       "scripts/owner/*"

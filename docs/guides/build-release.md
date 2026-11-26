@@ -1,6 +1,6 @@
 # Build and release
 
-> Verified: 2026-11-26 12:35 · Sources: `tools/build.sh`, `package.json`, `.github/workflows/release.yml`
+> Verified: 2026-11-26 15:34 · Sources: `tools/build.sh`, `package.json`, `.github/workflows/release.yml`
 
 - `npm run build chrome` or `npm run build firefox` runs `tools/build.sh`; the unpacked extension is in `out/dist`, the zip in `out/`.
 - Load it: Chrome `chrome://extensions` → Developer mode → Load unpacked → `out/dist`. Firefox `about:debugging` → This Firefox → Load
