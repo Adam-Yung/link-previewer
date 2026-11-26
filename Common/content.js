@@ -110,6 +110,11 @@ function onClick(e) {
   if (e[settings.modifier] || state.isPreviewing) swallow(e);
 }
 
+// The background asks after the tab's URL changed: still here (pushState, hash) or replaced by a navigation (no answer at all).
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === message.isPreviewAlive) sendResponse({ alive: state.isPreviewing });
+});
+
 document.addEventListener('mousedown', onMouseDown, true);
 document.addEventListener('mousemove', onMouseMove, true);
 document.addEventListener('dragstart', cancelLongPress, true);

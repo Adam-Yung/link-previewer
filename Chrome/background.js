@@ -87,8 +87,8 @@ function persistPreviewingTabs() {
   chrome.storage.session.set({ previewingTabs: [...previewingTabs] });
 }
 
-function startPreview(tabId, hostUrl, speculative) {
-  previewingTabs.set(tabId, { host: hostnameOf(hostUrl), speculative: Boolean(speculative) });
+function startPreview(tabId, hostUrl, speculative, documentId) {
+  previewingTabs.set(tabId, { host: hostnameOf(hostUrl), speculative: Boolean(speculative), documentId });
   persistPreviewingTabs();
   syncRules();
 }
@@ -131,7 +131,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const tabId = sender.tab.id;
   if (request.action === message.prepareToPreview) {
     afterRestore(() => {
-      startPreview(tabId, sender.url || sender.tab.url, request.speculative);
+      startPreview(tabId, sender.url || sender.tab.url, request.speculative, sender.documentId);
       sendResponse({ ready: true });
     })();
     return true; // answered asynchronously
@@ -143,8 +143,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (RELAYED.has(request.action)) relayToTab(tabId, request);
 });
 
-// A preview never survives its tab navigating or closing.
+/**
+ * A URL change is either a real navigation (the page hosting the preview is gone) or the page rewriting its own URL (pushState, hash),
+ * which tabs.onUpdated reports the same way. Asking the document that opened the preview tells them apart: a gone document cannot
+ * answer. Anything but a live "yes" ends the preview: fail closed.
+ */
+function checkPreviewSurvives(tabId) {
+  const preview = previewingTabs.get(tabId);
+  if (!preview) return;
+  if (!preview.documentId) {
+    stopPreview(tabId);
+    return;
+  }
+  chrome.tabs.sendMessage(tabId, { action: message.isPreviewAlive }, { documentId: preview.documentId })
+    .then((reply) => { if (!reply?.alive) stopPreview(tabId); })
+    .catch(() => stopPreview(tabId));
+}
+
+// A preview never survives its tab navigating away or closing.
 chrome.tabs.onUpdated.addListener(afterRestore((tabId, changeInfo) => {
-  if (changeInfo.url) stopPreview(tabId);
+  if (changeInfo.url) checkPreviewSurvives(tabId);
 }));
 chrome.tabs.onRemoved.addListener(afterRestore((tabId) => stopPreview(tabId)));

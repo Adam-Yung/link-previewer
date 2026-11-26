@@ -1,6 +1,6 @@
 # Testing
 
-> Verified: 2026-11-26 13:03 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `package.json`
+> Verified: 2026-11-26 13:06 · Sources: `scripts/verify.sh`, `tests/helpers/sandbox.mjs`, `tests/e2e/lib/browser.mjs`, `tests/e2e/lib/harness.mjs`, `tests/e2e/measure.mjs`, `package.json`
 
 Everything runs offline against local pages; nothing is downloaded at test time.
 

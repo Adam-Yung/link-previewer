@@ -16,4 +16,5 @@ The host page's triggers. Loaded last in the top frame's content scripts, so `st
 - **Modifier + click** opens at once on mousedown; the matching `click` is swallowed so the browser does not also open the link.
 - **Disabled site:** nothing is intercepted, the `click` included, so Shift/Ctrl/Cmd-click keep their browser meaning there.
 - While a preview is open, a link pressed on the host page retargets the preview instead of navigating the tab.
+- Answers the background's `isPreviewAlive` after the tab's URL changed, so a `pushState` on the host page does not end the preview.
 - Tests: the trigger cases in `tests/e2e/preview.test.mjs` (short click, drag, middle button, disabled site).

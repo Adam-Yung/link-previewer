@@ -178,6 +178,18 @@ test('a close key set to Space closes the preview', async () => {
   assert.ok(await waitUntil(async () => !(await previewState(page)).open), 'preview closed');
 });
 
+test('a host page that rewrites its URL (pushState) keeps a working preview', async () => {
+  const page = await openHost();
+  const frame = await openPreview(page);
+  await page.eval(`history.pushState({}, '', '/host.html?page=2')`);
+  await sleep(300);
+  await pressInFrame(frame, '#next', { button: 0 });
+  const next = await page.frameSession(env.fixtures.url('target.test', '/page2.html'));
+  assert.ok(next, 'preview moved on');
+  await next.extensionWorld();
+  assert.equal(await next.eval('document.title'), 'target two', 'frame-forbidding page still renders');
+});
+
 test('clicking a link inside the preview navigates the preview', async () => {
   const page = await openHost();
   const frame = await openPreview(page);

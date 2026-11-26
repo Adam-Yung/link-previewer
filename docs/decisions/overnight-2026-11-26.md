@@ -86,3 +86,10 @@ hidden autoplay) is an owner question in the handoff. Also fixed from the review
 a hidden preview closed from inside being revealed later, a context-expired popup during a click, IPv6 hosts, SVG links, pages
 without a body. Not fixed (recorded): an SPA host changing its URL with `pushState` while a preview is open ends the preview's header
 rules; telling `pushState` from a real navigation needs a Chrome run of its own (`docs/todo.md`).
+
+## 2026-11-26 · pushState on the host page no longer ends a preview (Chrome)
+Measured in Chrome for Testing: `pushState`, a hash change and a real navigation all reach `tabs.onUpdated` as `{status: 'loading',
+url}`, so the event alone cannot tell them apart. Weighed: the `webNavigation` permission (`onHistoryStateUpdated`; a new permission
+users must accept on update), ending previews from the content script on `pagehide` (misses a dead context, so rules could linger:
+not fail-closed), and **asking the document that opened the preview by `documentId`** (no new permission; a replaced document cannot
+answer, so the default is to end the preview). Chose the last. Firefox keeps ending the preview on any URL change.

@@ -29,4 +29,8 @@ preview iframe and the page hosting it. `components/shared.js` (message names, `
   asynchronous and the worker may have been woken by the very event that ends the preview, so every handler waits for `restored`
   first; `prepareToPreview` is therefore answered asynchronously.
 - Rule updates are chained on one promise so a slow update can never land after a newer one.
-- A tab that navigates (`tabs.onUpdated` with a `url`) or closes loses its preview and its rules.
+- A tab that closes loses its preview and its rules. A URL change (`tabs.onUpdated` with a `url`) is either a real navigation or the
+  page rewriting its own URL (`pushState`, hash), reported identically (status `loading` in both). The background asks the document
+  that opened the preview (`isPreviewAlive`, sent to its `documentId`): a replaced document cannot answer, and anything but a live
+  "yes" ends the preview (fail closed). Test: the pushState cases in `tests/unit/chrome-background.test.mjs` and
+  `tests/e2e/preview.test.mjs`. Firefox has no `documentId` on senders in MV2 and still ends the preview on any URL change.

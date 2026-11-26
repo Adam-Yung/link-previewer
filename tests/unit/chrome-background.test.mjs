@@ -6,7 +6,7 @@ function load(persisted = {}) {
   const env = loadScripts(['Common/components/shared.js', 'Chrome/background.js'], ['message'], {}, persisted);
   const send = (action, tabId, url = 'https://host.test/search?q=x') => {
     const reply = {};
-    env.api.runtime.onMessage.fire({ action }, { tab: { id: tabId, url }, url }, (r) => Object.assign(reply, r));
+    env.api.runtime.onMessage.fire({ action }, { tab: { id: tabId, url }, url, documentId: `doc-${tabId}` }, (r) => Object.assign(reply, r));
     return reply;
   };
   const lastRules = () => env.api.calls.updateSessionRules.at(-1);
@@ -146,4 +146,21 @@ test('a preview still hidden during the hold never downgrades cookies; revealing
   env.send(env.message.prepareToPreview, 7);
   await flush();
   assert.ok(cookieRewrites(await env.liveRules()).length > 0);
+});
+
+test('the host page rewriting its URL (pushState) keeps the preview; a real navigation ends it', async () => {
+  const env = load();
+  env.send(env.message.prepareToPreview, 7);
+  await flush();
+  env.api.tabs.reply = () => ({ alive: true });
+  env.api.tabs.onUpdated.fire(7, { url: 'https://host.test/search?page=2' });
+  await flush();
+  assert.ok((await env.liveRules()).length > 0, 'kept after pushState');
+  const ping = env.api.calls.tabsSendMessage.at(-1);
+  assert.equal(ping.options.documentId, 'doc-7');
+
+  env.api.tabs.reply = () => { throw new Error('No document with id doc-7'); };
+  env.api.tabs.onUpdated.fire(7, { url: 'https://elsewhere.test/' });
+  await flush();
+  assert.deepEqual(await env.liveRules(), []);
 });

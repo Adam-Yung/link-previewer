@@ -83,7 +83,12 @@ export function fakeExtensionApi(persisted = {}) {
     tabs: {
       onUpdated: event(),
       onRemoved: event(),
-      sendMessage: (tabId, msg) => { calls.tabsSendMessage.push({ tabId, msg }); },
+      // A test sets tabs.reply to answer (return a value, or throw for "no such document").
+      reply: () => undefined,
+      sendMessage: async (tabId, msg, options) => {
+        calls.tabsSendMessage.push({ tabId, msg, options });
+        return api.tabs.reply(tabId, msg, options);
+      },
     },
     webRequest: {
       onBeforeSendHeaders: event(),

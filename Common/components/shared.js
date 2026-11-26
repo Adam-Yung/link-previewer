@@ -7,7 +7,8 @@ const message = {
   iFrameHasFocus: 'iFrameHasFocus',
   focusPreview: 'focusPreview',
   updatePreviewUrl: 'updatePreviewUrl',
-  closePreviewFromIframe: 'closePreviewFromIframe'
+  closePreviewFromIframe: 'closePreviewFromIframe',
+  isPreviewAlive: 'isPreviewAlive'
 }
 
 /**
