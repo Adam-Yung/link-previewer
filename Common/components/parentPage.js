@@ -35,13 +35,33 @@ function scrollLock(disable) {
 }
 
 
-let pauseStyle = null;
+// Host-page animations paused for center stage, resumed on the way out. Pausing through the Web Animations API touches only the
+// running animations; the earlier `body *` !important rule restyled every element of the page on open and close.
+let pausedAnimations = [];
+
+function pauseHostAnimations() {
+  if (pausedAnimations.length) return;
+  const previewHost = document.getElementById('link-preview-host');
+  pausedAnimations = document.getAnimations().filter((animation) => {
+    const target = animation.effect?.target;
+    const isOurs = target === previewHost || target?.id === 'link-preview-page-overlay' || target?.getRootNode?.().host === previewHost;
+    return animation.playState === 'running' && !isOurs;
+  });
+  for (const animation of pausedAnimations) animation.pause();
+}
+
+function resumeHostAnimations() {
+  for (const animation of pausedAnimations) {
+    if (animation.playState === 'paused') animation.play();
+  }
+  pausedAnimations = [];
+}
 
 function toggleDisableParentPage(disable) {
   if (!disable) {
     // Teardown path: use non-throwing lookups since elements may already be removed
     document.body.style.pointerEvents = 'auto';
-    disablePauseStyle();
+    resumeHostAnimations();
 
     const pageOverlay = document.getElementById('link-preview-page-overlay');
     const previewHost = document.getElementById('link-preview-host');
@@ -78,7 +98,7 @@ function toggleDisableParentPage(disable) {
   log("Disabling Parent Page");
 
   document.body.style.pointerEvents = 'none';
-  addPauseStyle();
+  pauseHostAnimations();
 
   requestAnimationFrame(() => {
     pageOverlay.style.opacity = '1';
@@ -89,25 +109,4 @@ function toggleDisableParentPage(disable) {
   previewHost.style.pointerEvents = 'auto';
   clickInterceptor.style.pointerEvents = 'auto';
   clickInterceptor.addEventListener('click', closePreview);
-
-  function addPauseStyle() {
-    if (!pauseStyle) {
-      pauseStyle = document.createElement('style');
-      pauseStyle.id = 'link-preview-animation-pauzer';
-      pauseStyle.innerHTML = `
-              body *:not(#link-preview-host):not(#link-preview-host *) {
-                animation-play-state: paused !important;
-                transition: none !important;
-                scroll-behavior: auto !important;
-              }`;
-      document.head.appendChild(pauseStyle);
-    }
-  }
-
-  function disablePauseStyle() {
-    if (pauseStyle) {
-      pauseStyle.remove();
-      pauseStyle = null;
-    }
-  }
 }

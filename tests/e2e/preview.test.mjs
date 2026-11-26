@@ -102,6 +102,18 @@ test('the settings page shows the system theme by default and saves auto unless 
   assert.equal(theme, 'auto');
 });
 
+test('center stage pauses the host page animations and resumes them on close', async () => {
+  const page = await openHost();
+  await env.worker.eval(`chrome.storage.local.set({ isExpanded: true })`);
+  const spinner = `document.getElementById('spinner').getAnimations()[0].playState`;
+  assert.equal(await page.eval(spinner), 'running');
+  await openPreview(page);
+  assert.equal(await page.eval(spinner), 'paused');
+  await page.key('Escape');
+  await waitUntil(async () => !(await previewState(page)).open);
+  assert.equal(await page.eval(spinner), 'running');
+});
+
 test('a close key set to Space closes the preview', async () => {
   const page = await openHost();
   await env.worker.eval(`chrome.storage.local.set({ closeKey: 'Space' })`);

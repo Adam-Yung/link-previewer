@@ -1,6 +1,6 @@
 # Performance
 
-> Verified: 2026-11-26 12:52 · Sources: `tests/e2e/measure.mjs`, `Common/content.js`, `Common/components/ui.js`, `Chrome/background.js`
+> Verified: 2026-11-26 12:55 · Sources: `tests/e2e/measure.mjs`, `Common/content.js`, `Common/components/ui.js`, `Chrome/background.js`
 
 Measured with `node tests/e2e/measure.mjs 8` on the real extension in Chrome for Testing (headless, Apple Silicon laptop), against the
 local fixture sites. Medians of 8 runs (5 for style cost). Local pages have no DNS or TLS cost, so connection set-up savings do not show
@@ -38,6 +38,7 @@ the host page, so it could not have reused them (reasoned from Chrome's network 
 Cost of loading during the hold: a press held between 150 ms and the hold length loads the page once, hidden, and then the click
 loads it again in the tab. Previews also start being requested 350 ms earlier than before.
 
-## Open
-- Center stage pauses every animation on the host page with one `!important` rule over `body *`; on a 20,000-node page that is about
-  40 ms of style work per open and close. `document.getAnimations()` pausing would avoid the full recalc (`docs/todo.md`).
+## Center stage on a large page
+Center stage used to pause host-page animations with one `!important` rule over `body *`. It now pauses only the running animations
+through the Web Animations API. Style recalculation for one open and close of a 20,000-node page in center stage: 41–42 ms before,
+29 ms after (median of 5). What remains is mostly `pointer-events: none` on `body`, which is inherited by every element.
