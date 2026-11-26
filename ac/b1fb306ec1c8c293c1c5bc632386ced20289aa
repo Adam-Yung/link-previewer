@@ -1,0 +1,43 @@
+tests/unit/navigation.test.mjs
+  s_60aa61f858ab93::t_9fb9002721abe0 1-17
+.framework.json
+  s_60aa61f858ab93::t_3d4753effcd4de 12-15
+Common/content_iframe.js
+  s_60aa61f858ab93::t_672ee7d1fc2489 39
+Common/components/popups.js
+  s_60aa61f858ab93::t_672ee7d1fc2489 51
+tests/e2e/preview.test.mjs
+  s_60aa61f858ab93::t_adfa1f63674962 65-72
+Common/components/ui.js
+  s_60aa61f858ab93::t_672ee7d1fc2489 399
+  s_60aa61f858ab93::t_9fb9002721abe0 246-247,251-255,340-350
+  s_60aa61f858ab93::t_b85cfe0a1a3ff3 351-352
+docs/code/Common/components/popups.js.md
+  s_60aa61f858ab93::t_3d4753effcd4de 1-8
+tests/unit/close-key.test.mjs
+  s_60aa61f858ab93::t_672ee7d1fc2489 1-15
+docs/code/Common/components/shared.js.md
+  s_60aa61f858ab93::t_3d4753effcd4de 1-8
+docs/code/Common/components/ui.js.md
+  s_60aa61f858ab93::t_3d4753effcd4de 1-14
+Common/components/shared.js
+  s_60aa61f858ab93::t_672ee7d1fc2489 14-21
+docs/features/performance.md
+  s_60aa61f858ab93::t_3d4753effcd4de 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "acb1fb306ec1c8c293c1c5bc632386ced20289aa",
+  "prompts": {},
+  "sessions": {
+    "s_60aa61f858ab93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e0c0ee27-70b6-49ba-bfa6-ce15aa5f6280",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Yung <adyung@paloaltonetworks.com>"
+    }
+  }
+}
