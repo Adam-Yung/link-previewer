@@ -1,19 +1,14 @@
 {
   "mirrors": {
     "sources": [
+      "Common/*.js",
+      "Chrome/*.js",
+      "Firefox/*.js",
       "tools/*.sh",
       "scripts/*.sh",
       "tests/helpers/*.mjs",
       "tests/e2e/lib/*.mjs",
-      "tests/e2e/measure.mjs",
-      "Chrome/*.js",
-      "Firefox/*.js",
-      "Common/content_iframe.js",
-      "Common/content.js",
-      "Common/components/shared.js",
-      "Common/components/popups.js",
-      "Common/components/ui.js",
-      "Common/components/global.js"
+      "tests/e2e/measure.mjs"
     ],
     "exclude": [
       "scripts/owner/*"
