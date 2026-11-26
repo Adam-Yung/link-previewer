@@ -1,0 +1,43 @@
+Chrome/background.js
+  s_60aa61f858ab93::t_301c385c5b405e 90-91,134,146-163,165
+Common/components/shared.js
+  s_60aa61f858ab93::t_d33a0dabd7ff1a 10-11
+Common/content.js
+  s_60aa61f858ab93::t_b0a07aae61a60d 113-117
+docs/code/Chrome/background.js.md
+  s_60aa61f858ab93::t_8a4be3c905d2b1 32-36
+docs/code/Common/components/shared.js.md
+  s_60aa61f858ab93::t_1c12808d7aab5b 7
+docs/code/Common/content.js.md
+  s_60aa61f858ab93::t_d4328e59753405 19
+docs/decisions/overnight-2026-11-26.md
+  s_60aa61f858ab93::t_f86c23971f186d 89-95
+docs/features/performance.md
+  s_60aa61f858ab93::t_a79c6d96f75589 3
+docs/guides/testing.md
+  s_60aa61f858ab93::t_a7076e0e3b781e 3
+docs/todo.md
+  s_60aa61f858ab93::t_ad7bf0bf040395 6-7
+tests/e2e/preview.test.mjs
+  s_60aa61f858ab93::t_dfe09dc35c4e91 181-192
+tests/helpers/sandbox.mjs
+  s_60aa61f858ab93::t_051f874a0e330f 86-91
+tests/unit/chrome-background.test.mjs
+  s_60aa61f858ab93::t_8988bd8aa54c56 9,150-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "391ff9c0d310fb2f35adda37326efc07ecf78910",
+  "prompts": {},
+  "sessions": {
+    "s_60aa61f858ab93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e0c0ee27-70b6-49ba-bfa6-ce15aa5f6280",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Yung <adyung@paloaltonetworks.com>"
+    }
+  }
+}
